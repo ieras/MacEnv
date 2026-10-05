@@ -1,0 +1,12 @@
+# Xcode 构建产物与派生数据
+build/
+# Xcode 用户级设置（窗口位置、断点、折叠状态等）
+xcuserdata/
+*.xcuserstate
+# macOS
+.DS_Store
+reference/
+# 工具自身的工作目录
+.workbuddy-ai
+MacEnv技术方案.md
+AGENTS.md

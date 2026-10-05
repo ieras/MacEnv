@@ -1,0 +1,555 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000001 /* MacEnvApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* MacEnvApp.swift */; };
+		100000000000000000000003 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* Localization.swift */; };
+		100000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* Assets.xcassets */; };
+		100000000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000005 /* Localizable.strings */; };
+		100000000000000000000010 /* NginxDefaults in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* NginxDefaults */; };
+		100000000000000000000021 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000021 /* Models.swift */; };
+		100000000000000000000022 /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000022 /* ProcessRunner.swift */; };
+		100000000000000000000023 /* NginxService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000023 /* NginxService.swift */; };
+		100000000000000000000024 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000024 /* DatabaseService.swift */; };
+		100000000000000000000025 /* StaticCatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000025 /* StaticCatalogService.swift */; };
+		100000000000000000000026 /* PathService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000026 /* PathService.swift */; };
+		100000000000000000000027 /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000027 /* Services.swift */; };
+		100000000000000000000028 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000028 /* AppViewModel.swift */; };
+		100000000000000000000029 /* NginxViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000029 /* NginxViewModel.swift */; };
+		100000000000000000000030 /* DatabaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000030 /* DatabaseViewModel.swift */; };
+		100000000000000000000031 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000031 /* ContentView.swift */; };
+		100000000000000000000032 /* NginxViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000032 /* NginxViews.swift */; };
+		100000000000000000000033 /* DatabaseViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000033 /* DatabaseViews.swift */; };
+		100000000000000000000034 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000034 /* Components.swift */; };
+		100000000000000000000035 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* SettingsView.swift */; };
+		100000000000000000000036 /* Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000038 /* Brew.swift */; };
+		100000000000000000000037 /* PhpService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000039 /* PhpService.swift */; };
+		100000000000000000000038 /* PhpViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000040 /* PhpViewModel.swift */; };
+		100000000000000000000039 /* PhpViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000041 /* PhpViews.swift */; };
+		100000000000000000000040 /* PhpDefaults in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000042 /* PhpDefaults */; };
+		100000000000000000000041 /* SwooleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000043 /* SwooleService.swift */; };
+		100000000000000000000042 /* SwooleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000044 /* SwooleViewModel.swift */; };
+		100000000000000000000043 /* SwooleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000045 /* SwooleViews.swift */; };
+		100000000000000000000044 /* PhpFpmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000046 /* PhpFpmService.swift */; };
+		100000000000000000000045 /* ComposerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000047 /* ComposerService.swift */; };
+		100000000000000000000046 /* ComposerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000048 /* ComposerViewModel.swift */; };
+		100000000000000000000047 /* ComposerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000049 /* ComposerViews.swift */; };
+		100000000000000000000050 /* MacEnvTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000051 /* MacEnvTests.swift */; };
+		100000000000000000000052 /* HostModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000052 /* HostModels.swift */; };
+		100000000000000000000053 /* HostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000053 /* HostService.swift */; };
+		100000000000000000000054 /* HostViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000054 /* HostViewModel.swift */; };
+		100000000000000000000055 /* HostViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000055 /* HostViews.swift */; };
+		100000000000000000000056 /* HostDefaults in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000056 /* HostDefaults */; };
+		100000000000000000000061 /* RewriteDefaults in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000061 /* RewriteDefaults */; };
+		100000000000000000000057 /* GoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000057 /* GoService.swift */; };
+		100000000000000000000058 /* GoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000058 /* GoViewModel.swift */; };
+		100000000000000000000059 /* GoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000059 /* GoViews.swift */; };
+		100000000000000000000060 /* GoServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000060 /* GoServiceTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		910000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 500000000000000000000001;
+			remoteInfo = MacEnv;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		200000000000000000000001 /* MacEnvApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacEnvApp.swift; sourceTree = "<group>"; };
+		200000000000000000000003 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		200000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		200000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		200000000000000000000007 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		200000000000000000000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		200000000000000000000009 /* MacEnv.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacEnv.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000013 /* NginxDefaults */ = {isa = PBXFileReference; lastKnownFileType = folder; path = NginxDefaults; sourceTree = "<group>"; };
+		200000000000000000000021 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		200000000000000000000022 /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
+		200000000000000000000023 /* NginxService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NginxService.swift; sourceTree = "<group>"; };
+		200000000000000000000024 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
+		200000000000000000000025 /* StaticCatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticCatalogService.swift; sourceTree = "<group>"; };
+		200000000000000000000026 /* PathService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathService.swift; sourceTree = "<group>"; };
+		200000000000000000000027 /* Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
+		200000000000000000000028 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000029 /* NginxViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NginxViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000030 /* DatabaseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000031 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		200000000000000000000032 /* NginxViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NginxViews.swift; sourceTree = "<group>"; };
+		200000000000000000000033 /* DatabaseViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseViews.swift; sourceTree = "<group>"; };
+		200000000000000000000034 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		200000000000000000000035 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		200000000000000000000036 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		200000000000000000000037 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		200000000000000000000038 /* Brew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brew.swift; sourceTree = "<group>"; };
+		200000000000000000000039 /* PhpService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhpService.swift; sourceTree = "<group>"; };
+		200000000000000000000040 /* PhpViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhpViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000041 /* PhpViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhpViews.swift; sourceTree = "<group>"; };
+		200000000000000000000042 /* PhpDefaults */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PhpDefaults; sourceTree = "<group>"; };
+		200000000000000000000043 /* SwooleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwooleService.swift; sourceTree = "<group>"; };
+		200000000000000000000044 /* SwooleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwooleViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000045 /* SwooleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwooleViews.swift; sourceTree = "<group>"; };
+		200000000000000000000046 /* PhpFpmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhpFpmService.swift; sourceTree = "<group>"; };
+		200000000000000000000047 /* ComposerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerService.swift; sourceTree = "<group>"; };
+		200000000000000000000048 /* ComposerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000049 /* ComposerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerViews.swift; sourceTree = "<group>"; };
+		200000000000000000000050 /* MacEnvTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacEnvTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000051 /* MacEnvTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacEnvTests.swift; sourceTree = "<group>"; };
+		200000000000000000000052 /* HostModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostModels.swift; sourceTree = "<group>"; };
+		200000000000000000000053 /* HostService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostService.swift; sourceTree = "<group>"; };
+		200000000000000000000054 /* HostViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000055 /* HostViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostViews.swift; sourceTree = "<group>"; };
+		200000000000000000000056 /* HostDefaults */ = {isa = PBXFileReference; lastKnownFileType = folder; path = HostDefaults; sourceTree = "<group>"; };
+		200000000000000000000061 /* RewriteDefaults */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RewriteDefaults; sourceTree = "<group>"; };
+		200000000000000000000057 /* GoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoService.swift; sourceTree = "<group>"; };
+		200000000000000000000058 /* GoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000059 /* GoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViews.swift; sourceTree = "<group>"; };
+		200000000000000000000060 /* GoServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoServiceTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		400000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		400000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		300000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				300000000000000000000002 /* MacEnv */,
+				300000000000000000000018 /* Tests */,
+				300000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		300000000000000000000002 /* MacEnv */ = {
+			isa = PBXGroup;
+			children = (
+				300000000000000000000011 /* App */,
+				300000000000000000000012 /* Models */,
+				300000000000000000000013 /* Services */,
+				300000000000000000000014 /* ViewModels */,
+				300000000000000000000015 /* Views */,
+				300000000000000000000016 /* Resources */,
+				200000000000000000000004 /* Assets.xcassets */,
+				200000000000000000000005 /* Info.plist */,
+			);
+			path = MacEnv;
+			sourceTree = "<group>";
+		};
+		300000000000000000000011 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000001 /* MacEnvApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		300000000000000000000012 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000021 /* Models.swift */,
+				200000000000000000000052 /* HostModels.swift */,
+				200000000000000000000003 /* Localization.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		300000000000000000000013 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000027 /* Services.swift */,
+				200000000000000000000022 /* ProcessRunner.swift */,
+				200000000000000000000023 /* NginxService.swift */,
+				200000000000000000000024 /* DatabaseService.swift */,
+				200000000000000000000025 /* StaticCatalogService.swift */,
+				200000000000000000000026 /* PathService.swift */,
+				200000000000000000000038 /* Brew.swift */,
+				200000000000000000000039 /* PhpService.swift */,
+				200000000000000000000046 /* PhpFpmService.swift */,
+				200000000000000000000043 /* SwooleService.swift */,
+				200000000000000000000047 /* ComposerService.swift */,
+				200000000000000000000057 /* GoService.swift */,
+				200000000000000000000053 /* HostService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		300000000000000000000014 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000028 /* AppViewModel.swift */,
+				200000000000000000000029 /* NginxViewModel.swift */,
+				200000000000000000000030 /* DatabaseViewModel.swift */,
+				200000000000000000000040 /* PhpViewModel.swift */,
+				200000000000000000000044 /* SwooleViewModel.swift */,
+				200000000000000000000048 /* ComposerViewModel.swift */,
+				200000000000000000000058 /* GoViewModel.swift */,
+				200000000000000000000054 /* HostViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		300000000000000000000015 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000031 /* ContentView.swift */,
+				200000000000000000000032 /* NginxViews.swift */,
+				200000000000000000000033 /* DatabaseViews.swift */,
+				200000000000000000000034 /* Components.swift */,
+				200000000000000000000035 /* SettingsView.swift */,
+				200000000000000000000041 /* PhpViews.swift */,
+				200000000000000000000045 /* SwooleViews.swift */,
+				200000000000000000000049 /* ComposerViews.swift */,
+				200000000000000000000059 /* GoViews.swift */,
+				200000000000000000000055 /* HostViews.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		300000000000000000000016 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				300000000000000000000005 /* Localizable.strings */,
+				200000000000000000000013 /* NginxDefaults */,
+				200000000000000000000042 /* PhpDefaults */,
+				200000000000000000000056 /* HostDefaults */,
+				200000000000000000000061 /* RewriteDefaults */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		300000000000000000000018 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				300000000000000000000017 /* MacEnvTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		300000000000000000000017 /* MacEnvTests */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000051 /* MacEnvTests.swift */,
+				200000000000000000000060 /* GoServiceTests.swift */,
+			);
+			path = MacEnvTests;
+			sourceTree = "<group>";
+		};
+		300000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000009 /* MacEnv.app */,
+				200000000000000000000050 /* MacEnvTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		300000000000000000000005 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				200000000000000000000007 /* en */,
+				200000000000000000000008 /* zh-Hans */,
+				200000000000000000000036 /* zh-Hant */,
+				200000000000000000000037 /* ja */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		500000000000000000000001 /* MacEnv */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 700000000000000000000002 /* Build configuration list for PBXNativeTarget "MacEnv" */;
+			buildPhases = (
+				400000000000000000000001 /* Sources */,
+				400000000000000000000003 /* Frameworks */,
+				400000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacEnv;
+			productName = MacEnv;
+			productReference = 200000000000000000000009 /* MacEnv.app */;
+			productType = "com.apple.product-type.application";
+		};
+		500000000000000000000002 /* MacEnvTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 700000000000000000000003 /* Build configuration list for PBXNativeTarget "MacEnvTests" */;
+			buildPhases = (
+				400000000000000000000004 /* Sources */,
+				400000000000000000000005 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				900000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = MacEnvTests;
+			productName = MacEnvTests;
+			productReference = 200000000000000000000050 /* MacEnvTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		600000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 700000000000000000000001 /* Build configuration list for PBXProject "MacEnv" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				"zh-Hans",
+				"zh-Hant",
+				en,
+				ja,
+			);
+			mainGroup = 300000000000000000000001;
+			productRefGroup = 300000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				500000000000000000000001 /* MacEnv */,
+				500000000000000000000002 /* MacEnvTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		400000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000004 /* Assets.xcassets in Resources */,
+				100000000000000000000005 /* Localizable.strings in Resources */,
+				100000000000000000000010 /* NginxDefaults in Resources */,
+				100000000000000000000040 /* PhpDefaults in Resources */,
+				100000000000000000000056 /* HostDefaults in Resources */,
+				100000000000000000000061 /* RewriteDefaults in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		400000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000001 /* MacEnvApp.swift in Sources */,
+				100000000000000000000003 /* Localization.swift in Sources */,
+				100000000000000000000021 /* Models.swift in Sources */,
+				100000000000000000000027 /* Services.swift in Sources */,
+				100000000000000000000022 /* ProcessRunner.swift in Sources */,
+				100000000000000000000023 /* NginxService.swift in Sources */,
+				100000000000000000000024 /* DatabaseService.swift in Sources */,
+				100000000000000000000025 /* StaticCatalogService.swift in Sources */,
+				100000000000000000000026 /* PathService.swift in Sources */,
+				100000000000000000000028 /* AppViewModel.swift in Sources */,
+				100000000000000000000029 /* NginxViewModel.swift in Sources */,
+				100000000000000000000030 /* DatabaseViewModel.swift in Sources */,
+				100000000000000000000031 /* ContentView.swift in Sources */,
+				100000000000000000000032 /* NginxViews.swift in Sources */,
+				100000000000000000000033 /* DatabaseViews.swift in Sources */,
+				100000000000000000000034 /* Components.swift in Sources */,
+				100000000000000000000035 /* SettingsView.swift in Sources */,
+				100000000000000000000036 /* Brew.swift in Sources */,
+				100000000000000000000037 /* PhpService.swift in Sources */,
+				100000000000000000000044 /* PhpFpmService.swift in Sources */,
+				100000000000000000000038 /* PhpViewModel.swift in Sources */,
+				100000000000000000000039 /* PhpViews.swift in Sources */,
+				100000000000000000000041 /* SwooleService.swift in Sources */,
+				100000000000000000000042 /* SwooleViewModel.swift in Sources */,
+				100000000000000000000043 /* SwooleViews.swift in Sources */,
+				100000000000000000000045 /* ComposerService.swift in Sources */,
+				100000000000000000000046 /* ComposerViewModel.swift in Sources */,
+				100000000000000000000047 /* ComposerViews.swift in Sources */,
+				100000000000000000000052 /* HostModels.swift in Sources */,
+				100000000000000000000053 /* HostService.swift in Sources */,
+				100000000000000000000054 /* HostViewModel.swift in Sources */,
+				100000000000000000000055 /* HostViews.swift in Sources */,
+				100000000000000000000057 /* GoService.swift in Sources */,
+				100000000000000000000058 /* GoViewModel.swift in Sources */,
+				100000000000000000000059 /* GoViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		400000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000050 /* MacEnvTests.swift in Sources */,
+				100000000000000000000060 /* GoServiceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		900000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 500000000000000000000001 /* MacEnv */;
+			targetProxy = 910000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		800000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		800000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		800000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ONLY_ACTIVE_ARCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/Products/$(CONFIGURATION)";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_DEBUG_DYLIB = YES;
+				ENABLE_TESTABILITY = YES;
+				INFOPLIST_FILE = MacEnv/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = local.macenv.app;
+				PRODUCT_NAME = MacEnv;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		800000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/Products/$(CONFIGURATION)";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_DEBUG_DYLIB = YES;
+				INFOPLIST_FILE = MacEnv/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = local.macenv.app;
+				PRODUCT_NAME = MacEnv;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		800000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/Products/$(CONFIGURATION)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = local.macenv.app.tests;
+				PRODUCT_NAME = MacEnvTests;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacEnv.app/Contents/MacOS/MacEnv";
+			};
+			name = Debug;
+		};
+		800000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/Products/$(CONFIGURATION)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.macenv.app.tests;
+				PRODUCT_NAME = MacEnvTests;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacEnv.app/Contents/MacOS/MacEnv";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		700000000000000000000001 /* Build configuration list for PBXProject "MacEnv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				800000000000000000000001 /* Debug */,
+				800000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		700000000000000000000002 /* Build configuration list for PBXNativeTarget "MacEnv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				800000000000000000000003 /* Debug */,
+				800000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		700000000000000000000003 /* Build configuration list for PBXNativeTarget "MacEnvTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				800000000000000000000005 /* Debug */,
+				800000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 600000000000000000000001 /* Project object */;
+}

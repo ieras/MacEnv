@@ -1,0 +1,313 @@
+"app.name" = "MacEnv";
+
+"sidebar.console" = "コンソール";
+"sidebar.quickStart" = "クイック起動";
+"sidebar.web" = "Web サーバー";
+"sidebar.database" = "データベース";
+"sidebar.language" = "言語環境";
+"sidebar.nginxToggleHint" = "クイック起動の Nginx を起動します。オフにすると現在の Nginx を停止します";
+"sidebar.databaseToggleHint" = "クイック起動の ";
+"sidebar.version" = " を起動します。オフにすると現在のサービスを停止します";
+"sidebar.phpToggleHint" = "選択中のバージョンの PHP-FPM を起動/停止";
+
+"tab.service" = "サービス";
+"tab.installed" = "インストール済み";
+"tab.versions" = "バージョン管理";
+"tab.config" = "設定ファイル";
+"tab.errorLog" = "エラーログ";
+"tab.accessLog" = "アクセスログ";
+"tab.slowLog" = "スロークエリログ";
+"tab.phpIni" = "php.ini";
+
+"column.version" = "バージョン";
+"column.path" = "パス";
+"column.note" = "メモ";
+"column.env" = "環境変数";
+"column.alias" = "エイリアス";
+"column.service" = "サービス";
+"column.quickStart" = "クイック起動";
+"column.operation" = "操作";
+"column.source" = "ソース";
+"column.library" = "パッケージ";
+"column.installed" = "インストール状況";
+"column.dataDir" = "データディレクトリ";
+"column.port" = "ポート";
+
+"action.start" = "起動";
+"action.stop" = "停止";
+"action.restart" = "再起動";
+"action.install" = "インストール";
+"action.uninstall" = "アンインストール";
+"action.updateBrew" = "Brew を更新";
+"action.upgradeTo" = " に更新";
+"action.add" = "追加";
+"action.edit" = "編集";
+"action.delete" = "削除";
+"action.save" = "保存";
+"action.cancel" = "キャンセル";
+"action.done" = "完了";
+"action.reset" = "リセット";
+"action.validate" = "設定を検証";
+"action.reload" = "再読み込み";
+"action.reloadConfig" = "設定を再読み込み";
+"action.saveAndReload" = "保存して再読み込み";
+"action.refreshVersions" = "バージョン一覧を更新";
+"action.refreshLog" = "ログを更新";
+"action.enablePath" = "環境変数を有効化";
+"action.removePath" = "環境変数を解除";
+"action.quickStartHint" = "クイック起動に追加";
+"action.customPathHint" = "カスタムバージョンパス：このパス配下の bin と sbin で実行ファイルを検索します";
+"action.createIni" = "php.ini を作成";
+"action.openFolder" = "フォルダを開く";
+"action.editPhpIni" = "php.ini を編集";
+"action.search" = "検索";
+"action.enable" = "有効化";
+"action.disable" = "無効化";
+"action.addFunction" = "関数を追加";
+
+"tab.disableFunctions" = "無効化関数";
+"tab.extensions" = "拡張";
+"tab.logs" = "ログ";
+
+"column.status" = "ステータス";
+
+"status.enabled" = "有効";
+"status.installedNotEnabled" = "無効";
+
+"disableFunctions.placeholder" = "関数名（例: exec）";
+"disableFunctions.hint" = "チェックした項目は保存時に php.ini の disable_functions に書き込まれます。組み込みの項目は削除できません。";
+
+"extensions.loaded" = "読み込み済み";
+"extensions.available" = "インストール可能";
+"extensions.sourceBrew" = "Homebrew tap";
+"extensions.sourceMacPorts" = "MacPorts";
+"extensions.macportsMismatch" = "MacPorts の PHP 拡張は MacPorts で入れた PHP 向けにビルドされているため、Homebrew / Static の PHP では読み込めません。サービス一覧で MacPorts の PHP を選ぶか、ソースを Homebrew に戻してください。";
+"extensions.unsupported" = "この PHP は動的拡張に対応していません";
+"extensions.unsupportedHint" = "静的ビルドの PHP は拡張をバイナリに組み込んでおり、書き込み先の拡張ディレクトリがないため動的に拡張をインストールできません。Homebrew または MacPorts で入れた PHP をお使いください。";
+"extensions.noneLoaded" = "読み込み済みの拡張を取得できませんでした（この PHP は実行できない可能性があります）。";
+"extensions.empty" = "この PHP バージョン向けの拡張が tap にありません。";
+
+"log.fpm" = "FPM ログ";
+"log.slow" = "スローログ";
+"log.start" = "起動エラー";
+"log.iniError" = "PHP エラーログ";
+
+"message.extensionInstalled" = "%@ をインストールしました";
+"message.extensionEnabled" = "%@ を有効化しました";
+"message.extensionDisabled" = "%@ を無効化しました";
+"message.extensionUninstalled" = "%@ をアンインストールしました";
+"message.noFunctionMatched" = "一致する関数名がありません";
+
+"error.phpExtensionUnsupported" = "この PHP は動的拡張に対応していません（静的ビルド）";
+"error.phpExtensionNotFound" = "brew の keg にこの拡張の .so ファイルが見つかりません";
+
+"alias.title" = "コマンドエイリアス";
+"alias.placeholder" = "コマンド名を入力";
+"alias.directory" = "エイリアスディレクトリ：";
+
+"pathEditor.title" = "カスタムバージョンパス";
+"pathEditor.hint" = "各ディレクトリの bin と sbin 配下で実行ファイルを検索します。";
+"pathEditor.add" = "ディレクトリを追加";
+"pathEditor.empty" = "ディレクトリがありません";
+
+"brew.upToDate" = "最新です";
+"brew.oldVersion" = "旧バージョン";
+"brew.oldVersionHint" = "brew upgrade nginx は現在の nginx 公式のみを更新し、この旧バージョンは指定できません";
+"brew.noVersionedFormulae" = "この Homebrew には nginx@メジャーバージョン公式がないため、旧メジャーバージョンは更新できません。メジャーバージョンを固定する場合は Static を使用してください。";
+"brew.missing" = "Homebrew が見つからない、またはバージョン一覧を取得できません。";
+"brew.install" = "Homebrew をインストール";
+"brew.noFormulaList" = "Homebrew のバージョン一覧が見つかりません。";
+"brew.notInstalled" = "未インストール";
+
+"macports.detectedNginx" = "MacPorts を検出しました。Nginx はサービス一覧に表示されます。";
+"macports.detectedPhp" = "MacPorts を検出しました。インストールした PHP はサービス一覧に表示されます。";
+"macports.detectedDatabase" = "MacPorts を検出しました。インストール済みの ";
+"macports.detectedSuffix" = " はサービス一覧に表示されます。";
+"macports.missing" = "MacPorts が見つかりません";
+"macports.install" = "MacPorts をインストール";
+
+"config.openFolder" = "設定ファイルのディレクトリを開く";
+"config.openFile" = "設定ファイルを開く";
+"config.restoreDefault" = "初期設定に戻す";
+"log.openFolder" = "ログディレクトリを開く";
+
+"alert.resetConfigTitle" = "Nginx 設定をリセットしますか？";
+"alert.resetConfigMessage" = "現在の設定は初期設定に置き換えられます。";
+"alert.uninstallNginxTitle" = "Homebrew の Nginx をアンインストールしますか？";
+"alert.uninstallNginxMessage" = "MacEnv 管理下の Nginx を停止し、brew uninstall nginx を実行します。設定とログは保持されます。";
+"alert.uninstallPhpTitle" = "Homebrew の PHP をアンインストールしますか？";
+"alert.uninstallPhpMessage" = "brew uninstall %@ を実行します。他のバージョンは Homebrew 側の扱いに従います。";
+
+"message.pathEnabled" = "Nginx 環境を有効化しました";
+"message.pathDisabled" = "Nginx 環境を解除しました";
+"message.pathEnabledFor" = "%@ 環境を有効化しました";
+"message.pathDisabledFor" = "%@ 環境を解除しました";
+"message.nginxStarted" = "Nginx を起動しました：";
+"message.nginxStopped" = "Nginx を停止しました";
+"message.configReloaded" = "Nginx 設定を再読み込みしました";
+"message.configSaved" = "設定を保存しました";
+"message.configSavedReloaded" = "設定を保存し、Nginx をリロードしました";
+"message.installed" = "をインストールしました：";
+"message.uninstalled" = "をアンインストールしました：";
+"message.stopFirst" = "先に Nginx を停止してください";
+"message.aliasExists" = "エイリアスが既に存在します";
+"message.started" = "起動しました";
+"message.stopped" = "停止しました";
+"message.databaseAlreadyRunning" = "他のバージョンが起動中です。停止してから を起動してください";
+"message.environmentStarted" = "選択した環境を起動しました";
+"message.environmentStopped" = "選択した環境を停止しました";
+"message.quickStartEmpty" = "クイック起動の環境がありません。サービス一覧で「クイック起動」をオンにしてください。";
+"message.versionRemoved" = "バージョンが削除されました：";
+"message.loadingVersions" = "Static バージョンを読み込み中…";
+"message.noStaticVersions" = "Static バージョンがありません";
+"message.noNginxInstalled" = "インストール済みの Nginx がありません。バージョン管理でインストールするか、ローカルディレクトリを追加してください。";
+"message.noDatabaseInstalled" = "インストール済みの";
+"message.installOrAddPath" = "がありません。バージョン管理でインストールするか、ローカルディレクトリを追加してください。";
+"message.selectDatabaseVersion" = "先に をインストールまたは選択してください";
+"message.version" = " バージョン。";
+"message.phpIniMissing" = "この PHP にはまだ php.ini がありません。「php.ini を作成」で生成できます。";
+"message.phpIniCreated" = "php.ini を作成しました";
+"message.noPhpInstalled" = "インストール済みの PHP がありません。バージョン管理でインストールするか、ローカルディレクトリを追加してください。";
+"message.noSwooleInstalled" = "インストール済みの Swoole CLI がありません。バージョン管理でインストールするか、ローカルディレクトリを追加してください。";
+"message.noComposerInstalled" = "インストール済みの Composer がありません。バージョン管理でインストールするか、ローカルディレクトリを追加してください。";
+
+"error.stopTimeout" = "停止がタイムアウトしました";
+"error.nginxStartFailed" = "Nginx の起動に失敗しました";
+"error.nginxNotRunning" = "Nginx は起動していません";
+"error.nginxOwnerMismatch" = "Nginx プロセスの検証に失敗したため、停止シグナルを送信しませんでした";
+"error.nginxDefaultsMissing" = "Nginx のデフォルト設定リソースがありません";
+"error.databaseStartFailed" = "起動に失敗しました";
+"error.databaseDataDirIncomplete" = "%@ のデータディレクトリの初期化が不完全です。%@ を削除して再試行してください";
+"error.mariadbInstallerMissing" = "MariaDB のデータディレクトリ初期化コマンドが見つかりません";
+"error.brewMissing" = "Homebrew が見つかりません";
+"error.brewFormulaMissing" = "Homebrew が nginx のバージョン情報を返しませんでした";
+"error.catalogRequestFailed" = "Static バージョンサービスのリクエストに失敗しました";
+"error.downloadFailed" = "Static のダウンロードに失敗しました";
+"error.binaryMissing" = "Static パッケージに実行可能な がありません";
+"error.aliasNameInvalid" = "エイリアスにはコマンド名のみ使用できます";
+"error.phpIniNotFound" = "php.ini のパスを特定できません";
+"error.phpDefaultsMissing" = "PHP のデフォルト設定リソースがありません";
+"error.phpFpmMissing" = "この PHP バージョンには php-fpm 実行ファイルがありません";
+"error.phpFpmStartFailed" = "PHP-FPM の起動に失敗しました";
+
+"settings.appearance" = "外観";
+"settings.language" = "言語";
+"settings.catalogService" = "MacEnv 静的カタログ API";
+"settings.catalogServiceHint" = "空欄の場合の既定値:";
+"module.hosts" = "サイト";
+"module.nginx" = "Nginx";
+"module.mysql" = "MySQL";
+"module.mariadb" = "MariaDB";
+"module.php" = "PHP";
+"module.go" = "Go";
+"settings.proxy" = "プロキシを有効にする";
+"settings.openDataDir" = "MacEnv データディレクトリを開く";
+"settings.general" = "一般";
+"settings.developer" = "開発者";
+"settings.module" = "モジュール";
+"settings.launchAtLogin" = "ログイン時に起動";
+"settings.hideOnClose" = "ウィンドウを閉じたらメニューバーに隠す";
+"settings.autoStartService" = "起動時にクイック起動のサービスを立ち上げる";
+"settings.brewSource" = "Brew ミラー";
+"settings.proxyHost" = "プロキシ";
+"settings.proxyPort" = "ポート";
+"settings.codeFontSize" = "コードの文字サイズ";
+"brewSrc.official" = "公式ソース";
+"brewSrc.tencent" = "Tencent Cloud";
+"brewSrc.tsinghua" = "清華大学";
+"brewSrc.aliyun" = "Alibaba Cloud";
+"brewSrc.ustc" = "中国科学技術大学";
+
+"theme.automatic" = "自動";
+"theme.light" = "ライト";
+"theme.dark" = "ダーク";
+
+"menu.startQuickStart" = "クイック起動環境を起動";
+"menu.stopQuickStart" = "クイック起動環境を停止";
+"menu.open" = "MacEnv を開く";
+"menu.settings" = "設定";
+"menu.quit" = "MacEnv を終了";
+
+"tab.hosts" = "サイト";
+"tab.hostLogs" = "サイトログ";
+"tab.hostsFile" = "システム hosts";
+"tab.vhostTemplate" = "サイトテンプレート";
+
+"alert.deleteHostTitle" = "サイトを削除しますか？";
+"alert.deleteHostMessage" = "%@ の nginx 設定・リライト規則・証明書を削除します。サイトのファイル自体は残ります。";
+
+"host.title" = "サイト";
+"host.new" = "新規サイト";
+"host.edit" = "サイトを編集";
+"host.empty" = "サイトがまだありません。左上の + から作成してください。";
+"host.columnName" = "ドメイン";
+"host.visit" = "サイトを開く";
+"host.park" = "サブディレクトリを展開";
+"host.pin" = "先頭に固定";
+"host.unpin" = "固定を解除";
+"host.nameHint" = "サイトの主ドメイン（例：myapp.test）";
+"host.aliasHint" = "1 行に 1 つ。1 つのサイトに複数のドメインを割り当てられます。";
+"host.markHint" = "自由記入。自分にしか見えません";
+"host.rootHint" = "サイトのコードがあるディレクトリ。無ければ自動作成します";
+"host.phpStatic" = "静的";
+"host.ssl" = "HTTPS を有効化";
+"host.autoSSL" = "証明書を自動発行";
+"host.rewrite" = "リライト規則";
+"host.rewriteHint" = "空欄ならディレクトリ構成からフレームワークを判定し（WordPress / Laravel / Yii / ThinkPHP）、ルートをエントリディレクトリへ自動で切り替えます。";
+"host.autoFill" = "自動判定";
+"host.proxy" = "リバースプロキシ";
+"host.proxyPath" = "パス接頭辞";
+"host.proxyEmpty" = "リバースプロキシ規則はありません。パス接頭辞は ^~ 前方一致で上流へ転送されます。";
+"host.editConfig" = "設定を編集";
+"host.copyURL" = "サイトURLをコピー";
+"host.copyPath" = "サイトディレクトリをコピー";
+"host.rewriteTemplate" = "テンプレートを適用";
+
+"hosts.synced" = "/etc/hosts 同期済み";
+"hosts.unsynced" = "/etc/hosts 未同期";
+"hosts.auto" = "自動書き込み";
+"hosts.write" = "今すぐ書き込む";
+"hosts.hint" = "サイトの別名は /etc/hosts の #X-HOSTS-BEGIN# ブロックに書き込まれ、ブロック外は一切変更しません。localhost / 127.0.0.1 などは OS が解決できるため除外され、ローカル専用サイトでは認証ダイアログが出ません。生成ファイル：%@";
+"hosts.trustHint" = "/etc/hosts の書き込みには管理者権限が必要で、システムの認証ダイアログを経由します。自己署名ルート CA：%@";
+"hosts.reveal" = "Finder で表示";
+"hosts.trust" = "ルート証明書を再インストール";
+
+"template.reveal" = "テンプレートフォルダを開く";
+"template.copy" = "組み込みテンプレートをコピー";
+"template.hint" = "%@ に nginx.vhost / nginxSSL.vhost を置くと、組み込みテンプレートを上書きします。プレースホルダはそのままで構いません。";
+"template.custom" = "カスタム";
+"template.builtin" = "組み込み";
+"template.placeholderHint" = "使用できるプレースホルダ：#Port_Nginx# #Port_Nginx_SSL# #Server_Alias# #Server_Root# #Server_Name# #Rewrite_Path# #Log_Path# #Server_Cert# #Server_CertKey#。#Server_Name# はサイト id（ドメインではありません）に展開され、rewrite とログのファイル名に使われます。";
+
+"message.templateCopied" = "テンプレートをユーザーフォルダにコピーしました";
+"message.hostSaved" = "サイトを保存しました：";
+"message.hostDeleted" = "サイトを削除しました：";
+"message.hostsWritten" = "/etc/hosts を更新しました";
+"message.hostsUnchanged" = "/etc/hosts に変更はありません";
+"message.hostsFailed" = "/etc/hosts の書き込みに失敗：";
+"message.parkNothing" = "展開できるサブディレクトリがありません";
+"message.parkDone" = "作成したサイト数：";
+"message.rootTrusted" = "ルート証明書をシステムキーチェーンに再インストールしました";
+
+"error.hostDefaultsMissing" = "サイトの既定テンプレートが見つかりません";
+"error.privilegedFailed" = "特権操作に失敗しました";
+"message.working" = "処理中…";
+"action.close" = "閉じる";
+"source.custom" = "カスタム";
+"source.system" = "システム";
+"column.default" = "デフォルト";
+"message.noGoInstalled" = "Go はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"message.noGvmVersions" = "GVM がバージョンを返しませんでした。右上の更新を試してください。";
+"message.gvmInstalled" = "GVM をインストールしました";
+"message.gvmDefaultSet" = "デフォルトバージョンを %@ に切り替えました";
+"message.gvmCancelled" = "キャンセルしました";
+"gvm.checking" = "GVM を確認中…";
+"gvm.intro" = "GVM（Go Version Manager）はサードパーティ製の Go バージョン管理ツールです。インストールするとここで複数バージョンを管理できます。";
+"gvm.install" = "GVM をインストール";
+"gvm.preparing" = "準備中…";
+"gvm.setDefault" = "デフォルトに設定";
+"error.gvmMissing" = "GVM がインストールされていません";
+"error.gvmFailed" = "GVM コマンドが失敗しました";
+"macports.detectedGo" = "MacPorts を検出しました。インストールした Go はインストール済みリストに表示されます。";
+"alert.uninstallGoTitle" = "Homebrew の Go をアンインストールしますか？";
+"alert.uninstallGoMessage" = "brew uninstall %@ を実行します。GOROOT のツールチェーンが削除され、他のバージョンは Homebrew が処理します。";

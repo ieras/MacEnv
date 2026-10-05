@@ -1,0 +1,313 @@
+"app.name" = "MacEnv";
+
+"sidebar.console" = "控制台";
+"sidebar.quickStart" = "快捷启动";
+"sidebar.web" = "Web 服务";
+"sidebar.database" = "数据库";
+"sidebar.language" = "语言环境";
+"sidebar.nginxToggleHint" = "启动快捷启动中的 Nginx 版本；关闭时停止当前 Nginx";
+"sidebar.databaseToggleHint" = "启动快捷启动中的 ";
+"sidebar.version" = " 版本；关闭时停止当前服务";
+"sidebar.phpToggleHint" = "启动/停止选中版本的 PHP-FPM";
+
+"tab.service" = "服务";
+"tab.installed" = "已安装";
+"tab.versions" = "版本管理";
+"tab.config" = "配置文件";
+"tab.errorLog" = "错误日志";
+"tab.accessLog" = "访问日志";
+"tab.slowLog" = "慢查询日志";
+"tab.phpIni" = "php.ini";
+
+"column.version" = "版本";
+"column.path" = "路径";
+"column.note" = "备注";
+"column.env" = "环境变量";
+"column.alias" = "别名";
+"column.service" = "服务";
+"column.quickStart" = "快捷启动";
+"column.operation" = "操作";
+"column.source" = "来源";
+"column.library" = "库";
+"column.installed" = "是否安装";
+"column.dataDir" = "数据目录";
+"column.port" = "端口";
+
+"action.start" = "启动";
+"action.stop" = "停止";
+"action.restart" = "重启";
+"action.install" = "安装";
+"action.uninstall" = "卸载";
+"action.updateBrew" = "更新 Brew";
+"action.upgradeTo" = "更新到 ";
+"action.add" = "添加";
+"action.edit" = "编辑";
+"action.delete" = "删除";
+"action.save" = "保存";
+"action.cancel" = "取消";
+"action.done" = "完成";
+"action.reset" = "重置";
+"action.validate" = "校验配置";
+"action.reload" = "重新读取";
+"action.reloadConfig" = "重载配置";
+"action.saveAndReload" = "保存并重载";
+"action.refreshVersions" = "刷新版本列表";
+"action.refreshLog" = "刷新日志";
+"action.enablePath" = "启用环境变量";
+"action.removePath" = "移除环境变量";
+"action.quickStartHint" = "加入快捷启动";
+"action.customPathHint" = "自定义版本路径：会在此路径的 bin 和 sbin 目录查找可执行文件";
+"action.createIni" = "创建 php.ini";
+"action.openFolder" = "打开目录";
+"action.editPhpIni" = "编辑 php.ini";
+"action.search" = "搜索";
+"action.enable" = "启用";
+"action.disable" = "禁用";
+"action.addFunction" = "添加函数";
+
+"tab.disableFunctions" = "禁用函数";
+"tab.extensions" = "扩展";
+"tab.logs" = "日志";
+
+"column.status" = "状态";
+
+"status.enabled" = "已启用";
+"status.installedNotEnabled" = "未启用";
+
+"disableFunctions.placeholder" = "函数名，例如 exec";
+"disableFunctions.hint" = "勾选后点保存，会写入 php.ini 的 disable_functions。内置函数不可删除。";
+
+"extensions.loaded" = "已加载";
+"extensions.available" = "可安装";
+"extensions.sourceBrew" = "Homebrew tap";
+"extensions.sourceMacPorts" = "MacPorts";
+"extensions.macportsMismatch" = "MacPorts 的 PHP 扩展是为 MacPorts 装的 PHP 编译的，装到 Homebrew / Static 的 PHP 上会加载失败。请先在服务列表里选中 MacPorts 的 PHP，或把来源切回 Homebrew。";
+"extensions.unsupported" = "该 PHP 不支持动态扩展";
+"extensions.unsupportedHint" = "静态编译的 PHP 把扩展编进了二进制，没有可写入的扩展目录，因此不能动态安装扩展。请改用 Homebrew 或 MacPorts 安装的 PHP。";
+"extensions.noneLoaded" = "没有读到已加载的扩展（该 PHP 可能跑不起来）。";
+"extensions.empty" = "tap 里没有这个 PHP 版本的扩展。";
+
+"log.fpm" = "FPM 日志";
+"log.slow" = "慢日志";
+"log.start" = "启动错误";
+"log.iniError" = "PHP 错误日志";
+
+"message.extensionInstalled" = "%@ 已安装";
+"message.extensionEnabled" = "%@ 已启用";
+"message.extensionDisabled" = "%@ 已禁用";
+"message.extensionUninstalled" = "%@ 已卸载";
+"message.noFunctionMatched" = "没有匹配的函数名";
+
+"error.phpExtensionUnsupported" = "该 PHP 不支持动态扩展（静态编译）";
+"error.phpExtensionNotFound" = "没在 brew 的 keg 里找到这个扩展的 .so 文件";
+
+"alias.title" = "命令别名";
+"alias.placeholder" = "输入命令别名";
+"alias.directory" = "别名目录：";
+
+"pathEditor.title" = "自定义版本路径";
+"pathEditor.hint" = "会在每个目录的 bin 和 sbin 下查找可执行文件。";
+"pathEditor.add" = "添加目录";
+"pathEditor.empty" = "尚未添加目录";
+
+"brew.upToDate" = "已是最新";
+"brew.oldVersion" = "旧版本";
+"brew.oldVersionHint" = "brew upgrade nginx 只能升级当前 nginx 公式，不能指定这个旧版本";
+"brew.noVersionedFormulae" = "当前 Homebrew 没有 nginx@大版本公式，不能针对旧大版本升级；需要固定大版本时请使用 Static。";
+"brew.missing" = "未检测到 Homebrew，或无法读取版本列表。";
+"brew.install" = "安装 Homebrew";
+"brew.noFormulaList" = "未检测到 Homebrew 版本列表。";
+"brew.notInstalled" = "未安装";
+
+"macports.detectedNginx" = "已检测到 MacPorts。本机 Nginx 会显示在服务列表。";
+"macports.detectedPhp" = "已检测到 MacPorts，安装的 PHP 会显示在服务列表。";
+"macports.detectedDatabase" = "已检测到 MacPorts，安装的 ";
+"macports.detectedSuffix" = " 会显示在服务列表。";
+"macports.missing" = "未检测到 MacPorts";
+"macports.install" = "安装 MacPorts";
+
+"config.openFolder" = "打开配置文件目录";
+"config.openFile" = "打开配置文件";
+"config.restoreDefault" = "恢复默认配置";
+"log.openFolder" = "打开日志目录";
+
+"alert.resetConfigTitle" = "重置 Nginx 配置？";
+"alert.resetConfigMessage" = "当前配置将替换为初始配置。";
+"alert.uninstallNginxTitle" = "卸载 Homebrew Nginx？";
+"alert.uninstallNginxMessage" = "将停止 MacEnv 管理的 Nginx 并执行 brew uninstall nginx，配置和日志保留。";
+"alert.uninstallPhpTitle" = "卸载 Homebrew PHP？";
+"alert.uninstallPhpMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
+
+"message.pathEnabled" = "已启用 Nginx 环境";
+"message.pathDisabled" = "已移除 Nginx 环境";
+"message.pathEnabledFor" = "已启用 %@ 环境";
+"message.pathDisabledFor" = "已移除 %@ 环境";
+"message.nginxStarted" = "Nginx 已启动 ";
+"message.nginxStopped" = "Nginx 已停止";
+"message.configReloaded" = "Nginx 配置已重载";
+"message.configSaved" = "配置已保存";
+"message.configSavedReloaded" = "配置已保存，Nginx 已重载";
+"message.installed" = "已安装 ";
+"message.uninstalled" = "已卸载 ";
+"message.stopFirst" = "请先停止 Nginx";
+"message.aliasExists" = "别名已存在";
+"message.started" = "已启动";
+"message.stopped" = "已停止";
+"message.databaseAlreadyRunning" = "已有其他版本运行，请先停止后再启动 ";
+"message.environmentStarted" = "所选环境已启动";
+"message.environmentStopped" = "所选环境已停止";
+"message.quickStartEmpty" = "暂无快捷启动环境，请在服务列表中打开“快捷启动”。";
+"message.versionRemoved" = "版本已移除：";
+"message.loadingVersions" = "正在读取 Static 版本…";
+"message.noStaticVersions" = "暂无 Static 版本";
+"message.noNginxInstalled" = "暂无已安装 Nginx，请在版本管理中安装或添加本地目录。";
+"message.noDatabaseInstalled" = "暂无已安装 ";
+"message.installOrAddPath" = "，请在版本管理中安装或添加本地目录。";
+"message.selectDatabaseVersion" = "请先安装或选择一个 ";
+"message.version" = " 版本。";
+"message.phpIniMissing" = "该 PHP 尚未创建 php.ini，可点击“创建 php.ini”生成一份。";
+"message.phpIniCreated" = "php.ini 已创建";
+"message.noPhpInstalled" = "暂无已安装 PHP，请在版本管理中安装或添加本地目录。";
+"message.noSwooleInstalled" = "暂无已安装 Swoole CLI，请在版本管理中安装或添加本地目录。";
+"message.noComposerInstalled" = "暂无已安装 Composer，请在版本管理中安装或添加本地目录。";
+
+"error.stopTimeout" = "停止超时";
+"error.nginxStartFailed" = "Nginx 启动失败";
+"error.nginxNotRunning" = "Nginx 未运行";
+"error.nginxOwnerMismatch" = "Nginx 进程归属校验失败，未发送停止信号";
+"error.nginxDefaultsMissing" = "缺少 Nginx 默认配置资源";
+"error.databaseStartFailed" = "启动失败";
+"error.databaseDataDirIncomplete" = "%@ 数据目录初始化不完整，请清理 %@ 后重试";
+"error.mariadbInstallerMissing" = "未找到 MariaDB 数据目录初始化命令";
+"error.brewMissing" = "未检测到 Homebrew";
+"error.brewFormulaMissing" = "Homebrew 未返回 nginx 版本信息";
+"error.catalogRequestFailed" = "Static 版本服务请求失败";
+"error.downloadFailed" = "Static 下载失败";
+"error.binaryMissing" = "Static 包中没有可执行的 ";
+"error.aliasNameInvalid" = "别名只能包含命令名";
+"error.phpIniNotFound" = "无法确定 php.ini 路径";
+"error.phpDefaultsMissing" = "缺少 PHP 默认配置资源";
+"error.phpFpmMissing" = "该 PHP 版本没有 php-fpm 可执行文件";
+"error.phpFpmStartFailed" = "PHP-FPM 启动失败";
+
+"settings.appearance" = "外观";
+"settings.language" = "语言";
+"settings.catalogService" = "MacEnv 静态环境接口";
+"settings.catalogServiceHint" = "留空时默认值:";
+"module.hosts" = "站点";
+"module.nginx" = "Nginx";
+"module.mysql" = "MySQL";
+"module.mariadb" = "MariaDB";
+"module.php" = "PHP";
+"module.go" = "Go";
+"settings.proxy" = "启用代理";
+"settings.openDataDir" = "打开 MacEnv 数据目录";
+"settings.general" = "通用";
+"settings.developer" = "开发者";
+"settings.module" = "模块";
+"settings.launchAtLogin" = "开机启动";
+"settings.hideOnClose" = "关闭窗口后隐藏到菜单栏";
+"settings.autoStartService" = "启动时自动拉起快捷服务";
+"settings.brewSource" = "Brew 下载源";
+"settings.proxyHost" = "代理地址";
+"settings.proxyPort" = "端口";
+"settings.codeFontSize" = "代码字号";
+"brewSrc.official" = "官方源";
+"brewSrc.tencent" = "腾讯云";
+"brewSrc.tsinghua" = "清华大学";
+"brewSrc.aliyun" = "阿里云";
+"brewSrc.ustc" = "中国科学技术大学";
+
+"theme.automatic" = "自动";
+"theme.light" = "亮色";
+"theme.dark" = "暗色";
+
+"menu.startQuickStart" = "启动快捷启动环境";
+"menu.stopQuickStart" = "停止快捷启动环境";
+"menu.open" = "打开 MacEnv";
+"menu.settings" = "设置";
+"menu.quit" = "退出 MacEnv";
+
+"tab.hosts" = "站点";
+"tab.hostLogs" = "站点日志";
+"tab.hostsFile" = "系统 hosts";
+"tab.vhostTemplate" = "站点模板";
+
+"alert.deleteHostTitle" = "删除站点？";
+"alert.deleteHostMessage" = "将删除 %@ 的 nginx 配置、伪静态规则和证书，站点文件本身保留。";
+
+"host.title" = "站点";
+"host.new" = "新建站点";
+"host.edit" = "编辑站点";
+"host.empty" = "还没有站点，点左上角的 + 新建一个。";
+"host.columnName" = "域名";
+"host.visit" = "访问站点";
+"host.park" = "展开子目录成站";
+"host.pin" = "置顶";
+"host.unpin" = "取消置顶";
+"host.nameHint" = "站点主域名，例如 myapp.test";
+"host.aliasHint" = "一行一个。同一个站点可以绑多个域名。";
+"host.markHint" = "随便写点什么，只有你自己看";
+"host.rootHint" = "站点代码所在目录，不存在会自动创建";
+"host.phpStatic" = "静态";
+"host.ssl" = "启用 HTTPS";
+"host.autoSSL" = "自动签发证书";
+"host.rewrite" = "伪静态规则";
+"host.rewriteHint" = "留空则按目录结构自动识别（WordPress / Laravel / Yii / ThinkPHP），并自动把根目录切到入口目录。";
+"host.autoFill" = "自动识别";
+"host.proxy" = "反向代理";
+"host.proxyPath" = "路径前缀";
+"host.proxyEmpty" = "没有反向代理规则。路径前缀会按 ^~ 前缀匹配转到上游地址。";
+"host.editConfig" = "编辑配置";
+"host.copyURL" = "复制站点网址";
+"host.copyPath" = "复制站点目录";
+"host.rewriteTemplate" = "套用模板";
+
+"hosts.synced" = "/etc/hosts 已同步";
+"hosts.unsynced" = "/etc/hosts 未同步";
+"hosts.auto" = "自动写入";
+"hosts.write" = "立即写入";
+"hosts.hint" = "站点别名会写进 /etc/hosts 的 #X-HOSTS-BEGIN# 标记块，块外的内容不动。localhost / 127.0.0.1 这类名字系统自己就能解析，会被跳过，所以纯本地站点不会弹授权框。生成的文件：%@";
+"hosts.trustHint" = "写入 /etc/hosts 需要管理员权限，走系统授权框。自签根证书：%@";
+"hosts.reveal" = "在访达中显示";
+"hosts.trust" = "重新安装根证书";
+
+"template.reveal" = "打开模板目录";
+"template.copy" = "复制内置模板";
+"template.hint" = "把 nginx.vhost / nginxSSL.vhost 放进 %@，就会覆盖内置模板。占位符保持原样即可。";
+"template.custom" = "自定义";
+"template.builtin" = "内置";
+"template.placeholderHint" = "可用占位符：#Port_Nginx# #Port_Nginx_SSL# #Server_Alias# #Server_Root# #Server_Name# #Rewrite_Path# #Log_Path# #Server_Cert# #Server_CertKey#。其中 #Server_Name# 会换成站点 id（不是域名），用来给 rewrite 和日志文件命名。";
+
+"message.templateCopied" = "模板已复制到用户目录";
+"message.hostSaved" = "站点已保存：";
+"message.hostDeleted" = "站点已删除：";
+"message.hostsWritten" = "已更新 /etc/hosts";
+"message.hostsUnchanged" = "/etc/hosts 无变化";
+"message.hostsFailed" = "写 /etc/hosts 失败：";
+"message.parkNothing" = "没有可展开的子目录";
+"message.parkDone" = "已展开站点数：";
+"message.rootTrusted" = "根证书已重新安装到系统钥匙串";
+
+"error.hostDefaultsMissing" = "缺少站点默认模板资源";
+"error.privilegedFailed" = "提权操作失败";
+"message.working" = "处理中…";
+"action.close" = "关闭";
+"source.custom" = "自定义";
+"source.system" = "系统";
+"column.default" = "默认";
+"message.noGoInstalled" = "暂无已安装 Go，请在版本管理中安装或添加本地目录。";
+"message.noGvmVersions" = "GVM 没给出任何版本，点右上角刷新试试。";
+"message.gvmInstalled" = "GVM 已安装";
+"message.gvmDefaultSet" = "默认版本已切换到 %@";
+"message.gvmCancelled" = "已取消";
+"gvm.checking" = "正在检测 GVM…";
+"gvm.intro" = "GVM（Go Version Manager）是第三方的 Go 版本管理器，装好后可以在这里安装和切换多个 Go 版本。";
+"gvm.install" = "安装 GVM";
+"gvm.preparing" = "正在准备…";
+"gvm.setDefault" = "设为默认";
+"error.gvmMissing" = "GVM 未安装，请先安装 GVM";
+"error.gvmFailed" = "GVM 命令执行失败";
+"macports.detectedGo" = "已检测到 MacPorts，安装的 Go 会显示在已安装列表。";
+"alert.uninstallGoTitle" = "卸载 Homebrew Go？";
+"alert.uninstallGoMessage" = "将执行 brew uninstall %@，GOROOT 里的工具链会被删除，其他版本由 Homebrew 自行处理。";

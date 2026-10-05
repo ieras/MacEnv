@@ -1,0 +1,73 @@
+name: 发布
+
+# 推一个 v* 的 tag 就自动构建 + 发布；手动触发只编译不发布，用来验证这份 workflow 本身。
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 工具链
+        run: |
+          sw_vers
+          xcodebuild -version
+
+      # 每个架构各构建一次，出两个包。runner 是 arm64，x86_64 靠交叉编译 —— 只 build 不 test，
+      # 所以不需要单独开 Intel 机器。
+      # -Xfrontend -disable-sandbox 不能去掉：Swift 宏插件在受限环境里起不来，
+      # 会报 "external macro implementation type 'SwiftUIMacros.StateMacro' could not be found"。
+      # ARCHS 定死单个架构、ONLY_ACTIVE_ARCH 关掉，否则 Release 默认又编回通用二进制。
+      - name: 构建并打包
+        run: |
+          set -euo pipefail
+          for arch in arm64 x86_64; do
+            echo "=== 构建 $arch ==="
+            xcodebuild -project MacEnv.xcodeproj -scheme MacEnv -configuration Release \
+              -derivedDataPath "build/DerivedData-$arch" \
+              ARCHS="$arch" ONLY_ACTIVE_ARCH=NO \
+              OTHER_SWIFT_FLAGS='-Xfrontend -disable-sandbox' \
+              CODE_SIGN_IDENTITY=- build
+
+            # 同 scripts/build-macos-app.sh 的校验：产物路径、资源完整性、不含测试 bundle、架构正确。
+            app=build/Products/Release/MacEnv.app
+            test -d "$app" || { echo "::error::$arch 产物不存在：$app"; exit 1; }
+            test ! -e "$app/Contents/PlugIns" || { echo "::error::$arch 产物里混进了测试 bundle"; exit 1; }
+            for item in Contents/Resources/Assets.car Contents/Resources/AppIcon.icns \
+                        Contents/Resources/NginxDefaults Contents/Resources/PhpDefaults \
+                        Contents/Resources/HostDefaults Contents/Resources/RewriteDefaults \
+                        Contents/Resources/en.lproj Contents/Resources/zh-Hans.lproj \
+                        Contents/Resources/zh-Hant.lproj Contents/Resources/ja.lproj; do
+              test -e "$app/$item" || { echo "::error::$arch 资源缺失：$item"; exit 1; }
+            done
+            info=$(lipo -info "$app/Contents/MacOS/MacEnv")
+            echo "$info"
+            case "$info" in
+              *"is architecture: $arch") ;;
+              *) echo "::error::$arch 包里的可执行文件架构不对：$info"; exit 1 ;;
+            esac
+
+            # ditto 而不是 zip：保留 .app 里的符号链接、扩展属性和签名目录。
+            cd build/Products/Release
+            ditto -c -k --sequesterRsrc --keepParent MacEnv.app "MacEnv-$arch.zip"
+            shasum -a 256 "MacEnv-$arch.zip" | tee "MacEnv-$arch.zip.sha256"
+            cd "$GITHUB_WORKSPACE"
+          done
+
+      - name: 发布
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            build/Products/Release/MacEnv-arm64.zip
+            build/Products/Release/MacEnv-arm64.zip.sha256
+            build/Products/Release/MacEnv-x86_64.zip
+            build/Products/Release/MacEnv-x86_64.zip.sha256
+          generate_release_notes: true

@@ -1,0 +1,313 @@
+"app.name" = "MacEnv";
+
+"sidebar.console" = "Console";
+"sidebar.quickStart" = "Quick start";
+"sidebar.web" = "Web server";
+"sidebar.database" = "Database";
+"sidebar.language" = "Languages";
+"sidebar.nginxToggleHint" = "Starts the Nginx version in quick start; turning it off stops the current Nginx";
+"sidebar.databaseToggleHint" = "Starts the ";
+"sidebar.version" = " version in quick start; turning it off stops the current service";
+"sidebar.phpToggleHint" = "Start/stop PHP-FPM for the selected version";
+
+"tab.service" = "Service";
+"tab.installed" = "Installed";
+"tab.versions" = "Versions";
+"tab.config" = "Config file";
+"tab.errorLog" = "Error log";
+"tab.accessLog" = "Access log";
+"tab.slowLog" = "Slow query log";
+"tab.phpIni" = "php.ini";
+
+"column.version" = "Version";
+"column.path" = "Path";
+"column.note" = "Note";
+"column.env" = "PATH";
+"column.alias" = "Alias";
+"column.service" = "Service";
+"column.quickStart" = "Quick start";
+"column.operation" = "Actions";
+"column.source" = "Source";
+"column.library" = "Formula";
+"column.installed" = "Installed";
+"column.dataDir" = "Data dir";
+"column.port" = "Port";
+
+"action.start" = "Start";
+"action.stop" = "Stop";
+"action.restart" = "Restart";
+"action.install" = "Install";
+"action.uninstall" = "Uninstall";
+"action.updateBrew" = "Update Brew";
+"action.upgradeTo" = "Upgrade to ";
+"action.add" = "Add";
+"action.edit" = "Edit";
+"action.delete" = "Delete";
+"action.save" = "Save";
+"action.cancel" = "Cancel";
+"action.done" = "Done";
+"action.reset" = "Reset";
+"action.validate" = "Validate config";
+"action.reload" = "Reload from disk";
+"action.reloadConfig" = "Reload config";
+"action.saveAndReload" = "Save and reload";
+"action.refreshVersions" = "Refresh version list";
+"action.refreshLog" = "Refresh log";
+"action.enablePath" = "Enable PATH entry";
+"action.removePath" = "Remove PATH entry";
+"action.quickStartHint" = "Add to quick start";
+"action.customPathHint" = "Custom version path: executables are looked up in the bin and sbin of this path";
+"action.createIni" = "Create php.ini";
+"action.openFolder" = "Open folder";
+"action.editPhpIni" = "Edit php.ini";
+"action.search" = "Search";
+"action.enable" = "Enable";
+"action.disable" = "Disable";
+"action.addFunction" = "Add function";
+
+"tab.disableFunctions" = "Disabled functions";
+"tab.extensions" = "Extensions";
+"tab.logs" = "Logs";
+
+"column.status" = "Status";
+
+"status.enabled" = "Enabled";
+"status.installedNotEnabled" = "Not enabled";
+
+"disableFunctions.placeholder" = "Function name, e.g. exec";
+"disableFunctions.hint" = "Checked entries are written to disable_functions in php.ini when you save. Built-in entries cannot be removed.";
+
+"extensions.loaded" = "Loaded";
+"extensions.available" = "Available";
+"extensions.sourceBrew" = "Homebrew tap";
+"extensions.sourceMacPorts" = "MacPorts";
+"extensions.macportsMismatch" = "MacPorts PHP extensions are built for the PHP that MacPorts installed and will fail to load in a Homebrew / Static PHP. Select the MacPorts PHP in the service list, or switch the source back to Homebrew.";
+"extensions.unsupported" = "This PHP does not support dynamic extensions";
+"extensions.unsupportedHint" = "A statically built PHP compiles extensions into the binary and has no extension directory to write to, so extensions cannot be installed dynamically. Use a Homebrew or MacPorts PHP instead.";
+"extensions.noneLoaded" = "No loaded extensions reported (this PHP may not run).";
+"extensions.empty" = "The tap has no extensions for this PHP version.";
+
+"log.fpm" = "FPM log";
+"log.slow" = "Slow log";
+"log.start" = "Startup errors";
+"log.iniError" = "PHP error log";
+
+"message.extensionInstalled" = "%@ installed";
+"message.extensionEnabled" = "%@ enabled";
+"message.extensionDisabled" = "%@ disabled";
+"message.extensionUninstalled" = "%@ uninstalled";
+"message.noFunctionMatched" = "No matching function name";
+
+"error.phpExtensionUnsupported" = "This PHP does not support dynamic extensions (statically built)";
+"error.phpExtensionNotFound" = "No .so file found in the brew keg for this extension";
+
+"alias.title" = "Command alias";
+"alias.placeholder" = "Enter a command name";
+"alias.directory" = "Alias directory: ";
+
+"pathEditor.title" = "Custom version paths";
+"pathEditor.hint" = "Executables are looked up in the bin and sbin of each directory.";
+"pathEditor.add" = "Add directory";
+"pathEditor.empty" = "No directory added";
+
+"brew.upToDate" = "Up to date";
+"brew.oldVersion" = "Older version";
+"brew.oldVersionHint" = "brew upgrade nginx only upgrades the current nginx formula and cannot target this older version";
+"brew.noVersionedFormulae" = "This Homebrew has no nginx@major formula, so an older major version cannot be upgraded; use Static to pin a major version.";
+"brew.missing" = "Homebrew not detected, or the version list could not be read.";
+"brew.install" = "Install Homebrew";
+"brew.noFormulaList" = "No Homebrew version list detected.";
+"brew.notInstalled" = "Not installed";
+
+"macports.detectedNginx" = "MacPorts detected. Local Nginx builds appear in the service list.";
+"macports.detectedPhp" = "MacPorts detected. PHP installed with it appears in the service list.";
+"macports.detectedDatabase" = "MacPorts detected. Installed ";
+"macports.detectedSuffix" = " builds appear in the service list.";
+"macports.missing" = "MacPorts not detected";
+"macports.install" = "Install MacPorts";
+
+"config.openFolder" = "Open config directory";
+"config.openFile" = "Open config file";
+"config.restoreDefault" = "Restore default config";
+"log.openFolder" = "Open log directory";
+
+"alert.resetConfigTitle" = "Reset Nginx config?";
+"alert.resetConfigMessage" = "The current config is replaced with the initial one.";
+"alert.uninstallNginxTitle" = "Uninstall the Homebrew Nginx?";
+"alert.uninstallNginxMessage" = "Stops the Nginx managed by MacEnv and runs brew uninstall nginx. Config and logs are kept.";
+"alert.uninstallPhpTitle" = "Uninstall the Homebrew PHP?";
+"alert.uninstallPhpMessage" = "Runs brew uninstall %@. Other versions are handled by Homebrew.";
+
+"message.pathEnabled" = "Nginx PATH entry enabled";
+"message.pathDisabled" = "Nginx PATH entry removed";
+"message.pathEnabledFor" = "%@ PATH entry enabled";
+"message.pathDisabledFor" = "%@ PATH entry removed";
+"message.nginxStarted" = "Nginx  started";
+"message.nginxStopped" = "Nginx stopped";
+"message.configReloaded" = "Nginx config reloaded";
+"message.configSaved" = "Config saved";
+"message.configSavedReloaded" = "Config saved, Nginx reloaded";
+"message.installed" = "Installed ";
+"message.uninstalled" = "Uninstalled ";
+"message.stopFirst" = "Stop Nginx first";
+"message.aliasExists" = "Alias already exists";
+"message.started" = "started";
+"message.stopped" = "stopped";
+"message.databaseAlreadyRunning" = "Another version is running, stop it before starting ";
+"message.environmentStarted" = "Selected environment started";
+"message.environmentStopped" = "Selected environment stopped";
+"message.quickStartEmpty" = "No quick start environment yet. Turn on \"Quick start\" in the service list.";
+"message.versionRemoved" = "Version removed: ";
+"message.loadingVersions" = "Loading Static versions…";
+"message.noStaticVersions" = "No Static version available";
+"message.noNginxInstalled" = "No Nginx installed. Install one in Versions or add a local directory.";
+"message.noDatabaseInstalled" = "No ";
+"message.installOrAddPath" = " installed. Install one in Versions or add a local directory.";
+"message.selectDatabaseVersion" = "Install or select a ";
+"message.version" = " version.";
+"message.phpIniMissing" = "This PHP has no php.ini yet. Use 'Create php.ini' to generate one.";
+"message.phpIniCreated" = "php.ini created";
+"message.noPhpInstalled" = "No PHP installed. Install one in Versions or add a local directory.";
+"message.noSwooleInstalled" = "No Swoole CLI installed. Install one in Versions or add a local directory.";
+"message.noComposerInstalled" = "No Composer installed. Install one in Versions or add a local directory.";
+
+"error.stopTimeout" = "Timed out while stopping";
+"error.nginxStartFailed" = "Nginx failed to start";
+"error.nginxNotRunning" = "Nginx is not running";
+"error.nginxOwnerMismatch" = "Nginx process ownership check failed, no stop signal sent";
+"error.nginxDefaultsMissing" = "Missing Nginx default config resource";
+"error.databaseStartFailed" = "Failed to start";
+"error.databaseDataDirIncomplete" = "%@ data directory is incomplete, remove %@ and retry";
+"error.mariadbInstallerMissing" = "MariaDB data directory initialiser not found";
+"error.brewMissing" = "Homebrew not detected";
+"error.brewFormulaMissing" = "Homebrew returned no nginx version info";
+"error.catalogRequestFailed" = "Static version service request failed";
+"error.downloadFailed" = "Static download failed";
+"error.binaryMissing" = "Static archive contains no executable ";
+"error.aliasNameInvalid" = "Alias must be a plain command name";
+"error.phpIniNotFound" = "Could not determine the php.ini path";
+"error.phpDefaultsMissing" = "Missing PHP default config resource";
+"error.phpFpmMissing" = "This PHP version has no php-fpm executable";
+"error.phpFpmStartFailed" = "PHP-FPM failed to start";
+
+"settings.appearance" = "Appearance";
+"settings.language" = "Language";
+"settings.catalogService" = "MacEnv static catalog endpoint";
+"settings.catalogServiceHint" = "Default when empty:";
+"module.hosts" = "Sites";
+"module.nginx" = "Nginx";
+"module.mysql" = "MySQL";
+"module.mariadb" = "MariaDB";
+"module.php" = "PHP";
+"module.go" = "Go";
+"settings.proxy" = "Enable proxy";
+"settings.openDataDir" = "Open MacEnv data directory";
+"settings.general" = "General";
+"settings.developer" = "Developer";
+"settings.module" = "Modules";
+"settings.launchAtLogin" = "Launch at login";
+"settings.hideOnClose" = "Hide to menu bar on close";
+"settings.autoStartService" = "Start quick-start services on launch";
+"settings.brewSource" = "Brew mirror";
+"settings.proxyHost" = "Proxy host";
+"settings.proxyPort" = "Port";
+"settings.codeFontSize" = "Code font size";
+"brewSrc.official" = "Official";
+"brewSrc.tencent" = "Tencent Cloud";
+"brewSrc.tsinghua" = "Tsinghua";
+"brewSrc.aliyun" = "Aliyun";
+"brewSrc.ustc" = "USTC";
+
+"theme.automatic" = "Automatic";
+"theme.light" = "Light";
+"theme.dark" = "Dark";
+
+"menu.startQuickStart" = "Start quick start environment";
+"menu.stopQuickStart" = "Stop quick start environment";
+"menu.open" = "Open MacEnv";
+"menu.settings" = "Settings";
+"menu.quit" = "Quit MacEnv";
+
+"tab.hosts" = "Sites";
+"tab.hostLogs" = "Site logs";
+"tab.hostsFile" = "System hosts";
+"tab.vhostTemplate" = "Site templates";
+
+"alert.deleteHostTitle" = "Delete site?";
+"alert.deleteHostMessage" = "This removes the nginx config, rewrite rules and certificate for %@. The site files themselves are kept.";
+
+"host.title" = "Sites";
+"host.new" = "New site";
+"host.edit" = "Edit site";
+"host.empty" = "No sites yet. Use the + button at the top left.";
+"host.columnName" = "Domain";
+"host.visit" = "Open site";
+"host.park" = "Park subdirectories";
+"host.pin" = "Pin to top";
+"host.unpin" = "Unpin";
+"host.nameHint" = "Primary domain, for example myapp.test";
+"host.aliasHint" = "One per line. A site can answer on several domains.";
+"host.markHint" = "Anything you like — only you see this";
+"host.rootHint" = "Directory holding the site code; created if missing";
+"host.phpStatic" = "Static";
+"host.ssl" = "Enable HTTPS";
+"host.autoSSL" = "Issue certificate automatically";
+"host.rewrite" = "Rewrite rules";
+"host.rewriteHint" = "Leave empty to detect the framework from the directory layout (WordPress / Laravel / Yii / ThinkPHP) and move the root to the entry directory.";
+"host.autoFill" = "Detect";
+"host.proxy" = "Reverse proxy";
+"host.proxyPath" = "Path prefix";
+"host.proxyEmpty" = "No reverse proxy rules. A path prefix is forwarded to the upstream with ^~ prefix matching.";
+"host.editConfig" = "Edit Config";
+"host.copyURL" = "Copy site URL";
+"host.copyPath" = "Copy site folder";
+"host.rewriteTemplate" = "Apply template";
+
+"hosts.synced" = "/etc/hosts in sync";
+"hosts.unsynced" = "/etc/hosts out of sync";
+"hosts.auto" = "Write automatically";
+"hosts.write" = "Write now";
+"hosts.hint" = "Site aliases go into the #X-HOSTS-BEGIN# block in /etc/hosts; everything outside the block is untouched. Names like localhost and 127.0.0.1 resolve on their own, so they are skipped — a purely local site never triggers an authorisation prompt. Generated file: %@";
+"hosts.trustHint" = "Writing /etc/hosts needs administrator rights and goes through the system prompt. Self-signed root CA: %@";
+"hosts.reveal" = "Reveal in Finder";
+"hosts.trust" = "Reinstall root CA";
+
+"template.reveal" = "Open template folder";
+"template.copy" = "Copy built-in templates";
+"template.hint" = "Put nginx.vhost / nginxSSL.vhost into %@ to override the built-in templates. Keep the placeholders as they are.";
+"template.custom" = "Custom";
+"template.builtin" = "Built-in";
+"template.placeholderHint" = "Placeholders: #Port_Nginx# #Port_Nginx_SSL# #Server_Alias# #Server_Root# #Server_Name# #Rewrite_Path# #Log_Path# #Server_Cert# #Server_CertKey#. #Server_Name# expands to the site id (not the domain) and names the rewrite and log files.";
+
+"message.templateCopied" = "Templates copied to your folder";
+"message.hostSaved" = "Site saved: ";
+"message.hostDeleted" = "Site deleted: ";
+"message.hostsWritten" = "/etc/hosts updated";
+"message.hostsUnchanged" = "/etc/hosts unchanged";
+"message.hostsFailed" = "Writing /etc/hosts failed: ";
+"message.parkNothing" = "No subdirectories to park";
+"message.parkDone" = "Sites created: ";
+"message.rootTrusted" = "Root CA reinstalled into the system keychain";
+
+"error.hostDefaultsMissing" = "Missing bundled site templates";
+"error.privilegedFailed" = "Privileged operation failed";
+"message.working" = "Working…";
+"action.close" = "Close";
+"source.custom" = "Custom";
+"source.system" = "System";
+"column.default" = "Default";
+"message.noGoInstalled" = "No Go installed yet — install one from the version manager or add a local directory.";
+"message.noGvmVersions" = "GVM returned no versions. Try the refresh button.";
+"message.gvmInstalled" = "GVM installed";
+"message.gvmDefaultSet" = "Default version switched to %@";
+"message.gvmCancelled" = "Cancelled";
+"gvm.checking" = "Checking GVM…";
+"gvm.intro" = "GVM (Go Version Manager) is a third-party Go version manager. Install it to manage multiple Go versions here.";
+"gvm.install" = "Install GVM";
+"gvm.preparing" = "Preparing…";
+"gvm.setDefault" = "Set default";
+"error.gvmMissing" = "GVM is not installed";
+"error.gvmFailed" = "GVM command failed";
+"macports.detectedGo" = "MacPorts detected. Go installed with it shows up in the installed list.";
+"alert.uninstallGoTitle" = "Uninstall Homebrew Go?";
+"alert.uninstallGoMessage" = "This runs brew uninstall %@. The toolchain inside its GOROOT is removed; other versions are handled by Homebrew.";

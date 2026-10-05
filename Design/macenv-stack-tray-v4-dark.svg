@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 24 92 80" width="92" height="80" role="img" aria-label="MacEnv tray dark appearance">
+  <!-- 深色菜单栏变体：白横条 + 深槽 + 系统绿指示灯。槽 16x9、点 r4.2（托盘缩放比约 0.225）。 -->
+  <rect x="25" y="31" width="78" height="13" rx="6.5" fill="#F1F5F8"/>
+  <rect x="25" y="57.5" width="78" height="13" rx="6.5" fill="#F1F5F8"/>
+  <rect x="25" y="84" width="78" height="13" rx="6.5" fill="#F1F5F8"/>
+  <rect x="34" y="33" width="16" height="9" rx="4.5" fill="#101933"/>
+  <rect x="34" y="59.5" width="16" height="9" rx="4.5" fill="#101933"/>
+  <rect x="34" y="86" width="16" height="9" rx="4.5" fill="#101933"/>
+  <circle cx="56.5" cy="37.5" r="4.2" fill="#32D74B"/>
+  <circle cx="56.5" cy="64" r="4.2" fill="#32D74B"/>
+  <circle cx="56.5" cy="90.5" r="4.2" fill="#32D74B"/>
+</svg>
