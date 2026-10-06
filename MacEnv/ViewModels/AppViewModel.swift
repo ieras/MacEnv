@@ -9,6 +9,7 @@ let moduleGroups: [(String, [String])] = [
     ("sidebar.console", ["hosts"]),
     ("sidebar.web", ["nginx"]),
     ("sidebar.database", ["mysql", "mariadb"]),
+    ("sidebar.cache", ["redis"]),
     ("sidebar.language", ["php", "go"]),
 ]
 
@@ -143,6 +144,7 @@ final class AppViewModel: ObservableObject {
     let serviceEntries: [any ServiceManageable]
     let nginxVM: NginxViewModel
     let databaseVM: DatabaseViewModel
+    let redisVM: RedisViewModel
     let phpVM: PhpViewModel
     let swooleVM: SwooleViewModel
     let composerVM: ComposerViewModel
@@ -153,16 +155,18 @@ final class AppViewModel: ObservableObject {
     init() {
         nginxVM = NginxViewModel(state: state, services: services)
         databaseVM = DatabaseViewModel(state: state, services: services)
+        redisVM = RedisViewModel(state: state, services: services)
         phpVM = PhpViewModel(state: state, services: services)
         swooleVM = SwooleViewModel(state: state, services: services)
         composerVM = ComposerViewModel(state: state, services: services)
         goVM = GoViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
-        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM]
+        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM]
         services.nginx.onExit = { [weak self] in self?.nginxVM.syncRunning() }
         services.phpFpm.onExit = { [weak self] in self?.phpVM.objectWillChange.send() }
         services.mysql.onExit = { [weak self] in self?.databaseVM.objectWillChange.send() }
         services.mariadb.onExit = { [weak self] in self?.databaseVM.objectWillChange.send() }
+        services.redis.onExit = { [weak self] in self?.redisVM.objectWillChange.send() }
         // state 是独立的 ObservableObject，转发后观察本类的视图才会随它重绘。
         state.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
     }
@@ -184,8 +188,11 @@ final class AppViewModel: ObservableObject {
         state.quickStartTargets.removeAll { $0 == key }
         guard enabled, let target = launchTargets.first(where: { $0.key == key }) else { return }
         // 数据库同端口一次只能跑一个，快捷启动也只认一个；PHP-FPM 每版本独立 master，允许勾多个。
+        // Redis 同理 —— 默认都是 6379，勾两个版本必然撞端口。
         if let kind = DatabaseKind(rawValue: target.kind) {
             state.quickStartTargets.removeAll { (databaseVM.versions[kind] ?? []).map(\.id).contains($0) }
+        } else if target.kind == "redis" {
+            state.quickStartTargets.removeAll { redisVM.versions.map(\.id).contains($0) }
         }
         state.quickStartTargets.append(key)
     }
@@ -239,7 +246,8 @@ final class AppViewModel: ObservableObject {
         async let nginx: Void = nginxVM.refresh()
         async let mysql: Void = databaseVM.refresh(.mysql)
         async let mariadb: Void = databaseVM.refresh(.mariadb)
+        async let redis: Void = redisVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, nginx, mysql, mariadb, hosts)
+        _ = await (swoole, composer, go, nginx, mysql, mariadb, redis, hosts)
     }
 }

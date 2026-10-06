@@ -4,6 +4,7 @@
 "sidebar.quickStart" = "クイック起動";
 "sidebar.web" = "Web サーバー";
 "sidebar.database" = "データベース";
+"sidebar.cache" = "キャッシュとキュー";
 "sidebar.language" = "言語環境";
 "sidebar.nginxToggleHint" = "クイック起動の Nginx を起動します。オフにすると現在の Nginx を停止します";
 "sidebar.databaseToggleHint" = "クイック起動の ";
@@ -198,6 +199,7 @@
 "module.nginx" = "Nginx";
 "module.mysql" = "MySQL";
 "module.mariadb" = "MariaDB";
+"module.redis" = "Redis";
 "module.php" = "PHP";
 "module.go" = "Go";
 "settings.proxy" = "プロキシを有効にする";

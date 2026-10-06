@@ -4,6 +4,7 @@
 "sidebar.quickStart" = "Quick start";
 "sidebar.web" = "Web server";
 "sidebar.database" = "Database";
+"sidebar.cache" = "Cache & Queue";
 "sidebar.language" = "Languages";
 "sidebar.nginxToggleHint" = "Starts the Nginx version in quick start; turning it off stops the current Nginx";
 "sidebar.databaseToggleHint" = "Starts the ";
@@ -198,6 +199,7 @@
 "module.nginx" = "Nginx";
 "module.mysql" = "MySQL";
 "module.mariadb" = "MariaDB";
+"module.redis" = "Redis";
 "module.php" = "PHP";
 "module.go" = "Go";
 "settings.proxy" = "Enable proxy";

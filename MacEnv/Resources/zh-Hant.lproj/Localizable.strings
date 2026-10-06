@@ -4,6 +4,7 @@
 "sidebar.quickStart" = "快速啟動";
 "sidebar.web" = "Web 服務";
 "sidebar.database" = "資料庫";
+"sidebar.cache" = "快取與佇列";
 "sidebar.language" = "語言環境";
 "sidebar.nginxToggleHint" = "啟動快速啟動中的 Nginx 版本；關閉時停止目前的 Nginx";
 "sidebar.databaseToggleHint" = "啟動快速啟動中的 ";
@@ -198,6 +199,7 @@
 "module.nginx" = "Nginx";
 "module.mysql" = "MySQL";
 "module.mariadb" = "MariaDB";
+"module.redis" = "Redis";
 "module.php" = "PHP";
 "module.go" = "Go";
 "settings.proxy" = "啟用代理";

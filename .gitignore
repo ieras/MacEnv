@@ -8,5 +8,8 @@ xcuserdata/
 reference/
 # 工具自身的工作目录
 .workbuddy-ai
-MacEnv技术方案.md
+# 文档只在本地留着，暂不随仓库公开
+docs/
 AGENTS.md
+docs
+Design

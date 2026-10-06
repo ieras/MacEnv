@@ -27,6 +27,19 @@ struct DatabaseIcon: View {
     }
 }
 
+struct RedisIcon: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Image("RedisIcon")
+            .renderingMode(.template)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .foregroundStyle(colorScheme == .dark ? .white : .blue)
+    }
+}
+
 struct PhpIcon: View {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -269,6 +282,7 @@ struct ServiceIcon: View {
         switch kind {
         case "nginx": NginxIcon()
         case "php": PhpIcon()
+        case "redis": RedisIcon()
         default: DatabaseIcon(kind: DatabaseKind(rawValue: kind) ?? .mysql)
         }
     }
@@ -367,6 +381,7 @@ struct ModuleIcon: View {
         case "nginx": NginxIcon()
         case "php": PhpIcon()
         case "go": GoIcon()
+        case "redis": RedisIcon()
         default: DatabaseIcon(kind: DatabaseKind(rawValue: id) ?? .mysql)
         }
     }

@@ -4,6 +4,7 @@ struct ContentView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var nginxVM: NginxViewModel
     @ObservedObject var databaseVM: DatabaseViewModel
+    @ObservedObject var redisVM: RedisViewModel
     @ObservedObject var phpVM: PhpViewModel
     @ObservedObject var hostVM: HostViewModel
     @ObservedObject var goVM: GoViewModel
@@ -60,6 +61,9 @@ struct ContentView: View {
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "hosts" {
                 HostManagementView(app: app, vm: hostVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "redis" {
+                RedisManagementView(app: app, vm: redisVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if let kind = DatabaseKind(rawValue: page) {
                 DatabaseManagementView(app: app, vm: databaseVM, kind: kind)
@@ -207,6 +211,19 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || phpVM.versions.isEmpty)
             .help(L("sidebar.phpToggleHint"))
+        // Redis 同数据库：默认 6379，一次只跑一个版本。
+        case "redis":
+            Toggle("", isOn: Binding(get: { app.launchTargets.contains { $0.kind == "redis" && app.targetRunning($0.key) } }, set: { _ in
+                let keys = app.launchTargets.filter { $0.kind == "redis" }.map(\.key)
+                if keys.contains(where: { app.targetRunning($0) }) { app.launch(keys, stop: true) }
+                else {
+                    let version = redisVM.versions.first { app.state.quickStartTargets.contains($0.id) } ?? redisVM.versions.first
+                    if let version { app.launch([version.id]) }
+                }
+            }))
+            .labelsHidden().toggleStyle(ServiceSwitch())
+            .disabled(busy || redisVM.versions.isEmpty)
+            .help(L("sidebar.databaseToggleHint") + "Redis" + L("sidebar.version"))
         default:
             if let kind = DatabaseKind(rawValue: id) {
                 Toggle("", isOn: Binding(get: { databaseVM.running(kind) }, set: { _ in

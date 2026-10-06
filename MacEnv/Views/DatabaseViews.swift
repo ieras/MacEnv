@@ -4,7 +4,7 @@ struct DatabaseManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: DatabaseViewModel
     let kind: DatabaseKind
-    @State private var tab = 0
+    @State private var tab = 1
     @State private var source = "Homebrew"
     @State private var customPathEditor = false
     @State private var refreshing = false
@@ -73,7 +73,7 @@ struct DatabaseManagementView: View {
                       empty: L("message.noDatabaseInstalled") + kind.title + L("message.installOrAddPath")) { version in
                 Button(version.version) { vm.selected[kind] = version.id }.buttonStyle(.borderless)
                 Button { NSWorkspace.shared.open(version.directory) } label: {
-                    Text(version.directory.lastPathComponent).lineLimit(1).truncationMode(.middle)
+                    Text(tilde(version.directory.path)).lineLimit(1).truncationMode(.middle)
                 }
                 .buttonStyle(.borderless).help(tilde(version.directory.path))
                 Button { NSWorkspace.shared.open(vm.dataURL(kind, version)) } label: {
@@ -108,8 +108,10 @@ struct DatabaseManagementView: View {
     }
 
     private var versionManager: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts"], source: $source,
+        // MariaDB 没有 Static：one-env 的静态包接口对它返回空数组。
+        let sources = kind == .mysql ? ["Static", "Homebrew", "MacPorts"] : ["Homebrew", "MacPorts"]
+        return VStack(alignment: .leading, spacing: 0) {
+            VersionManagerHeader(sources: sources, source: $source,
                                  linkURL: URL(string: kind == .mysql ? "https://dev.mysql.com/downloads/" : "https://mariadb.org/download/")!,
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true

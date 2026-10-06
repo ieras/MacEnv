@@ -63,6 +63,7 @@ protocol ServiceVersion: Identifiable {
 
 extension NginxVersion: ServiceVersion {}
 extension DatabaseVersion: ServiceVersion {}
+extension RedisVersion: ServiceVersion {}
 extension PhpVersion: ServiceVersion {}
 extension SwooleVersion: ServiceVersion {}
 extension GoVersion: ServiceVersion {}
@@ -119,6 +120,17 @@ struct DatabaseVersion: Identifiable, Hashable {
     let formula: String?
 
     var id: String { "\(kind.rawValue):\(executable.path)" }
+    var majorMinor: String { version.split(separator: ".").prefix(2).joined(separator: ".") }
+}
+
+struct RedisVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    let formula: String?
+
+    var id: String { executable.path }
     var majorMinor: String { version.split(separator: ".").prefix(2).joined(separator: ".") }
 }
 

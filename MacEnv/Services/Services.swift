@@ -8,6 +8,7 @@ final class Services {
     let paths: PathService
     let mysql: DatabaseService
     let mariadb: DatabaseService
+    let redis: RedisService
     let php: PhpService
     let phpFpm: PhpFpmService
     let swoole: SwooleService
@@ -22,7 +23,6 @@ final class Services {
         catalogs = [
             "nginx": StaticCatalogService(root: root, app: "nginx", binaryNames: ["nginx"]),
             "mysql": StaticCatalogService(root: root, app: "mysql", binaryNames: ["mysqld"]),
-            "mariadb": StaticCatalogService(root: root, app: "mariadb", binaryNames: ["mariadbd"]),
             "php": StaticCatalogService(root: root, app: "php", binaryNames: ["php"]),
             "swoole-cli": StaticCatalogService(root: root, app: "swoole-cli", binaryNames: ["swoole-cli"]),
             "composer": StaticCatalogService(root: root, app: "composer", binaryNames: ["composer"]),
@@ -33,6 +33,7 @@ final class Services {
         paths = PathService(root: root)
         mysql = DatabaseService(kind: .mysql, root: root)
         mariadb = DatabaseService(kind: .mariadb, root: root)
+        redis = RedisService(root: root)
         php = PhpService(root: root)
         phpFpm = PhpFpmService(root: root)
         swoole = SwooleService(root: root)
