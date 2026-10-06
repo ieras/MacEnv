@@ -80,7 +80,7 @@
 
 "extensions.loaded" = "読み込み済み";
 "extensions.available" = "インストール可能";
-"extensions.sourceBrew" = "Homebrew tap";
+"extensions.sourceBrew" = "Homebrew";
 "extensions.sourceMacPorts" = "MacPorts";
 "extensions.macportsMismatch" = "MacPorts の PHP 拡張は MacPorts で入れた PHP 向けにビルドされているため、Homebrew / Static の PHP では読み込めません。サービス一覧で MacPorts の PHP を選ぶか、ソースを Homebrew に戻してください。";
 "extensions.unsupported" = "この PHP は動的拡張に対応していません";

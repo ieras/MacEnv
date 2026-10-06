@@ -35,7 +35,7 @@ struct GoManagementView: View {
         .alert(L("alert.uninstallGvmTitle"), isPresented: $confirmUninstallGvm) {
             Button(L("action.cancel"), role: .cancel) {}
             Button(L("action.uninstall"), role: .destructive) { vm.uninstallGvm() }
-        } message: { Text(String(format: L("alert.uninstallGvmMessage"), vm.gvmRootPath, vm.gvmInstalledCount)) }
+        } message: { Text(String(format: L("alert.uninstallGvmMessage"), tilde(vm.gvmRootPath), vm.gvmInstalledCount)) }
     }
 
     @ViewBuilder
@@ -135,7 +135,7 @@ struct GoManagementView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 Text("GVM").font(.title3)
-                Text(vm.gvmRootPath).font(.caption).foregroundStyle(.secondary)
+                Text(tilde(vm.gvmRootPath)).font(.caption).foregroundStyle(.secondary)
                     .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
                 Spacer()
                 if vm.gvmBusy {

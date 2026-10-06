@@ -80,7 +80,7 @@
 
 "extensions.loaded" = "已加载";
 "extensions.available" = "可安装";
-"extensions.sourceBrew" = "Homebrew tap";
+"extensions.sourceBrew" = "Homebrew";
 "extensions.sourceMacPorts" = "MacPorts";
 "extensions.macportsMismatch" = "MacPorts 的 PHP 扩展是为 MacPorts 装的 PHP 编译的，装到 Homebrew / Static 的 PHP 上会加载失败。请先在服务列表里选中 MacPorts 的 PHP，或把来源切回 Homebrew。";
 "extensions.unsupported" = "该 PHP 不支持动态扩展";

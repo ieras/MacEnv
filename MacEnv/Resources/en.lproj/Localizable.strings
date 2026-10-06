@@ -80,7 +80,7 @@
 
 "extensions.loaded" = "Loaded";
 "extensions.available" = "Available";
-"extensions.sourceBrew" = "Homebrew tap";
+"extensions.sourceBrew" = "Homebrew";
 "extensions.sourceMacPorts" = "MacPorts";
 "extensions.macportsMismatch" = "MacPorts PHP extensions are built for the PHP that MacPorts installed and will fail to load in a Homebrew / Static PHP. Select the MacPorts PHP in the service list, or switch the source back to Homebrew.";
 "extensions.unsupported" = "This PHP does not support dynamic extensions";
