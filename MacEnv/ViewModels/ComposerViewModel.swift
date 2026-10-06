@@ -57,26 +57,24 @@ final class ComposerViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.run {
-            try await self.services.composer.install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "Composer \(version.version)")) { report, attach in
+            try await self.services.composer.install(version, report: report, onStart: attach)
             self.staticVersions = try await self.services.catalog("composer").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "Composer \(version.version) " + L("message.installed")
         }
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "Composer \(version.version)")) { _, _ in
             try self.services.composer.uninstall(version)
             self.staticVersions = try await self.services.catalog("composer").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "Composer \(version.version) " + L("message.uninstalled")
         }
     }
 
     func brewAction(_ action: String, formula: String) {
-        state.run {
-            _ = try await Brew.run(action, formula: formula)
+        state.runStreaming(taskTitle(action, formula)) { report, attach in
+            try await Brew.run(action, formula: formula, report: report, onStart: attach)
             await self.refresh()
         }
     }

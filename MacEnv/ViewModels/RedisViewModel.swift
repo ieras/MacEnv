@@ -92,9 +92,9 @@ final class RedisViewModel: ObservableObject {
     }
 
     func brewAction(_ action: String, _ formula: String) {
-        state.run {
+        state.runStreaming(taskTitle(action, formula)) { report, attach in
             if action == "uninstall" { try await self.services.redis.stop() }
-            _ = try await Brew.run(action, formula: formula)
+            try await Brew.run(action, formula: formula, report: report, onStart: attach)
             await self.refresh()
         }
     }

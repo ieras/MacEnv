@@ -59,8 +59,8 @@ final class GoViewModel: ObservableObject {
     }
 
     func brewAction(_ action: String, formula: String) {
-        state.run {
-            _ = try await Brew.run(action, formula: formula)
+        state.runStreaming(taskTitle(action, formula)) { report, attach in
+            try await Brew.run(action, formula: formula, report: report, onStart: attach)
             await self.refresh()
         }
     }
@@ -88,21 +88,19 @@ final class GoViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.run {
-            try await self.services.catalog("golang").install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "Go \(version.version)")) { report, attach in
+            try await self.services.catalog("golang").install(version, report: report, onStart: attach)
             try await self.services.go.clearQuarantine(version)
             self.staticVersions = try await self.services.catalog("golang").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "Go \(version.version) " + L("message.installed")
         }
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "Go \(version.version)")) { _, _ in
             try self.services.catalog("golang").uninstall(version)
             self.staticVersions = try await self.services.catalog("golang").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "Go \(version.version) " + L("message.uninstalled")
         }
     }
 

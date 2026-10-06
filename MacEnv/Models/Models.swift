@@ -318,6 +318,12 @@ func firstCapture(_ pattern: String, in text: String) -> String? {
     return String(text[range])
 }
 
+// 长任务浮层的标题，例如「安装 nginx」。brew 的四个动作名在七个模块的版本管理页里都要
+// 翻成动词，所以 action 走 L("action.<动作>")，别把 install / uninstall 直接怼到界面上。
+func taskTitle(_ action: String, _ formula: String) -> String {
+    String(format: L("message.taskTitle"), L("action." + action), formula)
+}
+
 struct LaunchTarget: Hashable, Identifiable {
     let key: String
     let kind: String

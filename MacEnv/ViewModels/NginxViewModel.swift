@@ -130,32 +130,29 @@ final class NginxViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.run {
-            try await self.services.catalog("nginx").install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "Nginx \(version.version)")) { report, attach in
+            try await self.services.catalog("nginx").install(version, report: report, onStart: attach)
             self.staticVersions = try await self.services.catalog("nginx").fetch(customEndpoint: self.state.catalogURL)
             self.versions = try await self.services.nginx.installedVersions(customDirectories: self.customDirectories)
-            self.state.message = L("message.installed") + version.version
         }
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        guard !state.busy else { return }
         if let installed = versions.first(where: { $0.version == version.version }), services.nginx.running(installed) {
             state.message = L("message.stopFirst")
             return
         }
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "Nginx \(version.version)")) { _, _ in
             try self.services.catalog("nginx").uninstall(version)
             self.staticVersions = try await self.services.catalog("nginx").fetch(customEndpoint: self.state.catalogURL)
             self.versions = try await self.services.nginx.installedVersions(customDirectories: self.customDirectories)
-            self.state.message = L("message.uninstalled") + version.version
         }
     }
 
     func brewAction(_ action: String) {
-        state.run {
+        state.runStreaming(taskTitle(action, "nginx")) { report, attach in
             if action == "uninstall" { try await self.services.nginx.stopAll() }
-            self.state.message = try await Brew.run(action, formula: "nginx")
+            try await Brew.run(action, formula: "nginx", report: report, onStart: attach)
             await self.refresh()
         }
     }

@@ -55,20 +55,18 @@ final class SwooleViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.run {
-            try await self.services.swoole.install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "Swoole CLI \(version.version)")) { report, attach in
+            try await self.services.swoole.install(version, report: report, onStart: attach)
             self.staticVersions = try await self.services.catalog("swoole-cli").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "Swoole CLI \(version.version) " + L("message.installed")
         }
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "Swoole CLI \(version.version)")) { _, _ in
             try self.services.catalog("swoole-cli").uninstall(version)
             self.staticVersions = try await self.services.catalog("swoole-cli").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "Swoole CLI \(version.version) " + L("message.uninstalled")
         }
     }
 }

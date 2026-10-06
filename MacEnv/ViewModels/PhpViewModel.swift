@@ -130,26 +130,24 @@ final class PhpViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.run {
-            try await self.services.php.install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "PHP \(version.version)")) { report, attach in
+            try await self.services.php.install(version, report: report, onStart: attach)
             self.staticVersions = try await self.services.catalog("php").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "PHP \(version.version) " + L("message.installed")
         }
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "PHP \(version.version)")) { _, _ in
             try self.services.catalog("php").uninstall(version)
             self.staticVersions = try await self.services.catalog("php").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
-            self.state.message = "PHP \(version.version) " + L("message.uninstalled")
         }
     }
 
     func brewAction(_ action: String, formula: String) {
-        state.run {
-            _ = try await Brew.run(action, formula: formula)
+        state.runStreaming(taskTitle(action, formula)) { report, attach in
+            try await Brew.run(action, formula: formula, report: report, onStart: attach)
             await self.refresh()
         }
     }
@@ -230,18 +228,17 @@ final class PhpViewModel: ObservableObject {
 
     func installExtension(_ item: PhpExtension) {
         guard let version = selectedVersion else { return }
-        state.run {
+        state.runStreaming(String(format: L("message.installingFor"), "\(item.name)@\(version.majorMinor)")) { report, attach in
             // MacPorts 的 .so 由 port 直接放进扩展目录，不用拷；brew 的要自己从 keg 里捞。
             let soname: String
             if self.extensionSource == "macports" {
                 try await self.services.php.macportsInstall(item.name, for: version)
                 soname = item.soname
             } else {
-                soname = try await self.services.php.installExtension(item.name, for: version)
+                soname = try await self.services.php.installExtension(item.name, for: version, report: report, onStart: attach)
             }
             try await self.services.php.setExtension(item.name, soname: soname, enabled: true, for: version)
             self.loadExtensions(version)
-            self.state.message = String(format: L("message.extensionInstalled"), item.name)
         }
     }
 
@@ -265,15 +262,14 @@ final class PhpViewModel: ObservableObject {
 
     func removeExtension(_ item: PhpExtension) {
         guard let version = selectedVersion else { return }
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "\(item.name)@\(version.majorMinor)")) { report, attach in
             try await self.services.php.setExtension(item.name, soname: item.soname, enabled: false, for: version)
             if self.extensionSource == "macports" {
                 try await self.services.php.macportsRemove(item.name, for: version)
             } else {
-                try await self.services.php.removeExtension(item.name, soname: item.soname, for: version)
+                try await self.services.php.removeExtension(item.name, soname: item.soname, for: version, report: report, onStart: attach)
             }
             self.loadExtensions(version)
-            self.state.message = String(format: L("message.extensionUninstalled"), item.name)
         }
     }
 

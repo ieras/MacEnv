@@ -80,20 +80,20 @@ final class PhpService {
 
     // 接口给的是 -fpm- 的地址，把这一段换成 -cli- 就是 CLI 包（FlyEnv 同款做法）。
     // 归档名跟 StaticCatalogService 保持一致，列表里的「已下载」标记才对得上。
-    func install(_ version: StaticVersion) async throws {
+    func install(_ version: StaticVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
         let cli = URL(string: version.url.absoluteString.replacingOccurrences(of: "-fpm-", with: "-cli-")) ?? version.url
         let cliArchive = archives.appendingPathComponent("static-php-\(version.version).tar.gz")
         let fpmArchive = archives.appendingPathComponent("static-php-\(version.version)-fpm.tar.gz")
         try FileManager.default.createDirectory(at: archives, withIntermediateDirectories: true)
-        try await download(cli, to: cliArchive)
-        try await download(version.url, to: fpmArchive)
+        try await download(cli, to: cliArchive, report: report, onStart: onStart)
+        try await download(version.url, to: fpmArchive, report: report, onStart: onStart)
 
         let target = versionsDirectory.appendingPathComponent("php-\(version.version)")
         try? FileManager.default.removeItem(at: target)
         try FileManager.default.createDirectory(at: target.appendingPathComponent("bin"), withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: target.appendingPathComponent("sbin"), withIntermediateDirectories: true)
-        try await extract(cliArchive, into: target.appendingPathComponent("bin"))
-        try await extract(fpmArchive, into: target.appendingPathComponent("sbin"))
+        try await extract(cliArchive, into: target.appendingPathComponent("bin"), report: report)
+        try await extract(fpmArchive, into: target.appendingPathComponent("sbin"), report: report)
     }
 
     // 问 PHP 自己要 ini 在哪。static-php-cli 编译进去的是 /usr/local/etc/php（目录要管理员权限才能建），
@@ -262,11 +262,11 @@ final class PhpService {
     // 1. brew install shivammathur/extensions/<name>@8.4
     // 2. brew 把 .so 留在 Cellar 的 keg 里，PHP 的扩展目录看不到它，得拷一份
     // 返回真实的 soname，调用方拿去写 php.ini。
-    func installExtension(_ name: String, for version: PhpVersion) async throws -> String {
+    func installExtension(_ name: String, for version: PhpVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws -> String {
         guard let directory = await extensionDirectory(version) else {
             throw CommandError(message: L("error.phpExtensionUnsupported"))
         }
-        _ = try await Brew.run("install", formula: "shivammathur/extensions/\(name)@\(version.majorMinor)")
+        try await Brew.run("install", formula: "shivammathur/extensions/\(name)@\(version.majorMinor)", report: report, onStart: onStart)
         // keg 里的 .so 不一定在顶层（xdebug 塞在 no-debug-non-zts-xxx/ 下面），递归找。
         let keg = URL(fileURLWithPath: "\(Self.cellar)/\(name)@\(version.majorMinor)", isDirectory: true)
         var source: URL?
@@ -286,11 +286,12 @@ final class PhpService {
 
     // 卸载：先删扩展目录里的 .so，再让 brew 收走公式。顺序是有意的 ——
     // 就算 brew 那步失败，PHP 也已经看不到这个扩展了，不会留下「ini 里还写着、文件却没了」的坏状态。
-    func removeExtension(_ name: String, soname: String, for version: PhpVersion) async throws {
+    func removeExtension(_ name: String, soname: String, for version: PhpVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
         if let directory = await extensionDirectory(version) {
             try? FileManager.default.removeItem(atPath: directory + "/" + soname)
         }
-        _ = try? await Brew.run("uninstall", formula: "shivammathur/extensions/\(name)@\(version.majorMinor)")
+        // 公式可能本来就没装过（用户手工拷的 .so），brew 会报错，这里不当失败处理。
+        try? await Brew.run("uninstall", formula: "shivammathur/extensions/\(name)@\(version.majorMinor)", report: report, onStart: onStart)
     }
 
     // 把扩展写进 / 摘出 php.ini。装完不写 ini 等于没装，FlyEnv 到这一步是让用户复制粘贴的。
@@ -310,18 +311,14 @@ final class PhpService {
         try text.write(toFile: path, atomically: true, encoding: .utf8)
     }
 
-    private func download(_ source: URL, to archive: URL) async throws {
+    private func download(_ source: URL, to archive: URL, report: @escaping (String) -> Void, onStart: ((Process) -> Void)? = nil) async throws {
+        // 归档是我们的下载缓存，已经有了就别再拉一遍（PHP 的包一个上百 MB）。
         if FileManager.default.fileExists(atPath: archive.path) { return }
-        let (temporary, response) = try await URLSession.shared.download(from: source)
-        if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
-            throw CommandError(message: L("error.downloadFailed") + "（HTTP \(status)）")
-        }
-        try? FileManager.default.removeItem(at: archive)
-        try FileManager.default.moveItem(at: temporary, to: archive)
+        try await Command.download(source, to: archive, report: report, onStart: onStart)
     }
 
-    private func extract(_ archive: URL, into directory: URL) async throws {
-        let output = try await Command.run("/usr/bin/tar", ["-xzf", archive.path, "-C", directory.path])
-        guard output.status == 0 else { throw CommandError(message: output.text) }
+    private func extract(_ archive: URL, into directory: URL, report: @escaping (String) -> Void) async throws {
+        let status = try await Command.stream("/usr/bin/tar", ["-xzf", archive.path, "-C", directory.path], onOutput: report)
+        guard status == 0 else { throw CommandError(message: L("error.unpackFailed") + "（\(status)）") }
     }
 }

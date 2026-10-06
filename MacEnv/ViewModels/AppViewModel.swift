@@ -17,10 +17,12 @@ let moduleGroups: [(String, [String])] = [
 
 func moduleName(_ id: String) -> String { L("module." + id) }
 
+struct TaskProgress {
 // 全局共享状态：忙碌、提示、外观、语言、快捷启动。
 @MainActor
 final class AppState: ObservableObject {
     @Published var busy = false
+    @Published var task: TaskProgress?
     // 提示可能跟上一条一模一样（同一个开关连点两次），光靠 message 的值没法让视图知道「又来了一条」，
     // 所以每次赋值都换一个 token，浮层靠 token 变化重新计时。
     @Published var message = "" {
@@ -119,6 +121,51 @@ extension AppState {
             do { try await work() }
             catch { message = error.localizedDescription }
         }
+    }
+
+    // 长任务（装 / 卸 / 下载 / 解包）：**不走全局 busy** —— 装一个 PHP 要几分钟，点亮 busy
+    // 会让侧栏所有服务开关全灰，那是误导（起停服务和装软件没关系）。单独开一条任务日志，
+    // 右下角浮层实时刷。
+    //
+    // report 追加日志；attach 把子进程交上来，取消按钮才能真杀掉它。
+    func runStreaming(_ title: String,
+                      _ work: @escaping (_ report: @escaping (String) -> Void, _ attach: @escaping (Process) -> Void) async throws -> Void) {
+        guard task == nil else { return }
+        task = TaskProgress(title: title)
+        Task {
+            do { try await work({ self.appendTaskLog($0) }, { self.task?.process = $0 }) }
+            catch { self.appendTaskLog("\n" + error.localizedDescription + "\n") }
+            self.task?.running = false
+            self.task?.process = nil
+        }
+    }
+
+    func cancelTask() {
+        task?.process?.terminate()
+        task?.process = nil
+        appendTaskLog("\n" + L("message.taskCancelled") + "\n")
+        task?.running = false
+    }
+
+    func dismissTask() { task = nil }
+
+    // brew / curl 的进度条用 \r 原地刷新同一行，直接拼进日志会糊成一长条，
+    // 所以 \r 处理成「丢掉当前行重写」，\n 才是真的换行。只留最后 20000 字。
+    private func appendTaskLog(_ text: String) {
+        guard var progress = task else { return }
+        var lines = progress.log.components(separatedBy: "\n")
+        var line = lines.removeLast()
+        for character in text {
+            switch character {
+            case "\n": lines.append(line); line = ""
+            case "\r": line = ""
+            default: line.append(character)
+            }
+        }
+        lines.append(line)
+        progress.log = lines.joined(separator: "\n")
+        if progress.log.count > 20000 { progress.log = String(progress.log.suffix(20000)) }
+        task = progress
     }
 }
 

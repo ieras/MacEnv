@@ -73,18 +73,13 @@ final class StaticCatalogService {
         return updateFlags(versions)
     }
 
-    func install(_ version: StaticVersion) async throws {
+    func install(_ version: StaticVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
         let fm = FileManager.default
         try fm.createDirectory(at: archives, withIntermediateDirectories: true)
         try fm.createDirectory(at: versionsDirectory, withIntermediateDirectories: true)
         let archive = archiveURL(version)
         if !fm.fileExists(atPath: archive.path) {
-            let (temporary, response) = try await URLSession.shared.download(from: version.url)
-            if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
-                throw CommandError(message: L("error.downloadFailed") + "（HTTP \(status)）")
-            }
-            try? fm.removeItem(at: archive)
-            try fm.moveItem(at: temporary, to: archive)
+            try await Command.download(version.url, to: archive, report: report, onStart: onStart)
         }
         // 落点跟解包模式一致（<app>-<ver>/bin/<name>），所以 uninstall / updateFlags 一行都不用改。
         if rawBinary {
@@ -100,10 +95,10 @@ final class StaticCatalogService {
         }
         let staging = versionsDirectory.appendingPathComponent(".staging-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
-        let output = try await Command.run("/usr/bin/tar", [version.url.pathExtension == "gz" ? "-xzf" : "-xJf", archive.path, "-C", staging.path])
-        guard output.status == 0 else {
+        let status = try await Command.stream("/usr/bin/tar", [version.url.pathExtension == "gz" ? "-xzf" : "-xJf", archive.path, "-C", staging.path], onOutput: report)
+        guard status == 0 else {
             try? fm.removeItem(at: staging)
-            throw CommandError(message: output.text)
+            throw CommandError(message: L("error.unpackFailed") + "（\(status)）")
         }
         // 必须排除目录：Go 官方包的顶层目录就叫 go，跟 bin/go 同名，
         // 而 isExecutableFile 对目录也返回 true（有搜索权限就算），不排掉会先把 staging/go 认成二进制，

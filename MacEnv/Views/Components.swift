@@ -431,6 +431,51 @@ struct ToastCard: View {
     }
 }
 
+// 长任务浮层：右下角，跟 toast 同一套 overlay 机制但更大。
+// 跑完**不自动消失** —— 装失败的那几行报错就在末尾，自动关掉等于让用户没法看。
+struct TaskLogOverlay: View {
+    let task: TaskProgress
+    let cancel: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                if task.running { ProgressView().controlSize(.small) }
+                Text(task.title).font(.callout.weight(.semibold)).lineLimit(1)
+                Spacer()
+                if task.running {
+                    Button(L("action.cancel"), action: cancel)
+                } else {
+                    Button(action: dismiss) { Image(systemName: "xmark") }
+                        .accessibilityLabel(L("action.close"))
+                }
+            }
+            .buttonStyle(.borderless)
+            .padding(.horizontal, 14)
+            .frame(height: 40)
+            Divider()
+            ScrollViewReader { proxy in
+                ScrollView(.vertical) {
+                    Text(task.log.isEmpty ? L("message.taskStarting") : task.log)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        // 滚动锚点：新内容不断追加，靠它把视口顶到底。
+                        .id("task-log-tail")
+                }
+                .scrollIndicators(.visible)
+                .onChange(of: task.log) { _ in proxy.scrollTo("task-log-tail", anchor: .bottom) }
+            }
+            .frame(height: AppTheme.taskLogHeight)
+        }
+        .frame(width: AppTheme.taskLogWidth)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: AppTheme.radiusOverlay))
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.radiusOverlay).stroke(AppTheme.stroke))
+    }
+}
+
 struct ServiceActionButtons: View {
     let running: Bool
     let name: String
@@ -481,6 +526,11 @@ enum AppTheme {
     static let radiusCard: CGFloat = 6
     static let radiusRow: CGFloat = 10
     static let radiusOverlay: CGFloat = 10
+
+    // 长任务日志浮层。宽度按 toast 的两倍不到给 —— 装包日志一行能有一百多个字符，
+    // 再窄就得靠横向滚动才能看全。
+    static let taskLogWidth: CGFloat = 520
+    static let taskLogHeight: CGFloat = 200
 
     // 弹窗尺寸规范：宽度一律 560；高度三档 —— 常规 360，多字段表单 560，
     // 超长表单 680（站点编辑展开 SSL 后最多 12 个字段 + 两个多行编辑器，560 装不下）。

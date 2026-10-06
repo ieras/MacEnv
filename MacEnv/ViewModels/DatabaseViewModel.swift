@@ -120,27 +120,25 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion, _ kind: DatabaseKind) {
-        state.run {
-            try await self.services.catalog(kind.rawValue).install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "\(kind.title) \(version.version)")) { report, attach in
+            try await self.services.catalog(kind.rawValue).install(version, report: report, onStart: attach)
             await self.loadStatic(kind)
             await self.refresh(kind)
-            self.state.message = "\(kind.title) \(version.version) " + L("message.installed")
         }
     }
 
     func uninstallStatic(_ version: StaticVersion, _ kind: DatabaseKind) {
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "\(kind.title) \(version.version)")) { _, _ in
             try self.services.catalog(kind.rawValue).uninstall(version)
             await self.loadStatic(kind)
             await self.refresh(kind)
-            self.state.message = "\(kind.title) \(version.version) " + L("message.uninstalled")
         }
     }
 
     func brewAction(_ action: String, _ kind: DatabaseKind, _ formula: String) {
-        state.run {
+        state.runStreaming(taskTitle(action, formula)) { report, attach in
             if action == "uninstall" { try await self.services.database(kind).stop() }
-            _ = try await Brew.run(action, formula: formula)
+            try await Brew.run(action, formula: formula, report: report, onStart: attach)
             await self.refresh(kind)
         }
     }

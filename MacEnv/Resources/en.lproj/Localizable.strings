@@ -346,3 +346,12 @@
 "macports.detectedGo" = "MacPorts detected. Go installed with it shows up in the installed list.";
 "alert.uninstallGoTitle" = "Uninstall Homebrew Go?";
 "alert.uninstallGoMessage" = "This runs brew uninstall %@. The toolchain inside its GOROOT is removed; other versions are handled by Homebrew.";
+"action.update" = "Update";
+"action.upgrade" = "Upgrade";
+"message.taskTitle" = "%@ %@";
+"message.installingFor" = "Installing %@";
+"message.uninstallingFor" = "Uninstalling %@";
+"message.taskStarting" = "Preparing…";
+"message.taskCancelled" = "Cancelled";
+"error.brewFailed" = "Homebrew command failed";
+"error.unpackFailed" = "Failed to unpack the archive";

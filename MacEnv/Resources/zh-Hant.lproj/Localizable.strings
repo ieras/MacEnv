@@ -346,3 +346,12 @@
 "macports.detectedGo" = "已偵測到 MacPorts，安裝的 Go 會顯示在已安裝清單。";
 "alert.uninstallGoTitle" = "卸載 Homebrew Go？";
 "alert.uninstallGoMessage" = "將執行 brew uninstall %@，GOROOT 內的開發工具鏈會被刪除，其他版本交由 Homebrew 處理。";
+"action.update" = "更新";
+"action.upgrade" = "升級";
+"message.taskTitle" = "%@ %@";
+"message.installingFor" = "正在安裝 %@";
+"message.uninstallingFor" = "正在解除安裝 %@";
+"message.taskStarting" = "正在準備…";
+"message.taskCancelled" = "已取消";
+"error.brewFailed" = "Homebrew 命令執行失敗";
+"error.unpackFailed" = "解壓縮失敗";

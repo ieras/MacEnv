@@ -41,19 +41,13 @@ final class ComposerService {
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
 
-    func install(_ version: StaticVersion) async throws {
-        let fm = FileManager.default
+    func install(_ version: StaticVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
         // 放 bin/ 里，跟 PHP / Swoole 的结构对齐，PathService 往 PATH 里塞的就是 <版本目录>/bin。
         let bin = versionsDirectory.appendingPathComponent("composer-\(version.version)").appendingPathComponent("bin")
-        try fm.createDirectory(at: bin, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
         let composer = bin.appendingPathComponent("composer")
-        let (temporary, response) = try await URLSession.shared.download(from: version.url)
-        if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
-            throw CommandError(message: L("error.downloadFailed") + "（HTTP \(status)）")
-        }
-        try? fm.removeItem(at: composer)
-        try fm.moveItem(at: temporary, to: composer)
-        try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: composer.path)
+        try await Command.download(version.url, to: composer, report: report, onStart: onStart)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: composer.path)
     }
 
     func uninstall(_ version: StaticVersion) throws {

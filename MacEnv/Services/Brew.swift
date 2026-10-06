@@ -37,14 +37,20 @@ enum Brew {
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    static func run(_ operation: String, formula: String) async throws -> String {
+    // 安装 / 卸载动辄几分钟（下瓶子、编译、装依赖），输出一律实时喂给任务日志 ——
+    // 只在结束时把 output.text 一次性抛出来，界面全程是一动不动的转圈，出错了也看不到是哪一步。
+    static func run(_ operation: String, formula: String,
+                    report: @escaping (String) -> Void = { _ in },
+                    onStart: ((Process) -> Void)? = nil) async throws {
         guard let executable else { throw CommandError(message: L("error.brewMissing")) }
         // 安装 / 升级要限定 core，否则裸名一样会撞上未信任的 tap。
         // 卸载绝不能限定：brew 拿到带 tap 的名字会按 tap 过滤已安装的 keg
         // （cli/named_args.rb 的 resolve_kegs），本机这些 keg 来自第三方 tap，限定后反而找不到。
         let name = operation == "install" || operation == "upgrade" ? core(formula) : formula
-        let output = try await Command.run(executable, operation == "update" ? ["update"] : [operation, name], environment: Command.brewEnvironment)
-        guard output.status == 0 else { throw CommandError(message: output.text) }
-        return output.text
+        let arguments = operation == "update" ? ["update"] : [operation, name]
+        let status = try await Command.stream(executable, arguments, environment: Command.brewEnvironment,
+                                              onStart: onStart, onOutput: report)
+        // 失败原因已经在日志里了（brew 把每一步都打出来了），这里只补一句结论。
+        guard status == 0 else { throw CommandError(message: L("error.brewFailed") + "（\(status)）") }
     }
 }

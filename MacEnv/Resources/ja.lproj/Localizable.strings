@@ -346,3 +346,12 @@
 "macports.detectedGo" = "MacPorts を検出しました。インストールした Go はインストール済みリストに表示されます。";
 "alert.uninstallGoTitle" = "Homebrew の Go をアンインストールしますか？";
 "alert.uninstallGoMessage" = "brew uninstall %@ を実行します。GOROOT のツールチェーンが削除され、他のバージョンは Homebrew が処理します。";
+"action.update" = "更新";
+"action.upgrade" = "アップグレード";
+"message.taskTitle" = "%@ %@";
+"message.installingFor" = "%@ をインストール中";
+"message.uninstallingFor" = "%@ をアンインストール中";
+"message.taskStarting" = "準備中…";
+"message.taskCancelled" = "キャンセルしました";
+"error.brewFailed" = "Homebrew コマンドが失敗しました";
+"error.unpackFailed" = "展開に失敗しました";

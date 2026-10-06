@@ -54,22 +54,23 @@ final class SwooleService {
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
 
-    func install(_ version: StaticVersion) async throws {
+    func install(_ version: StaticVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
         let archive = archives.appendingPathComponent("static-swoole-cli-\(version.version).tar.\(version.url.pathExtension)")
         try FileManager.default.createDirectory(at: archives, withIntermediateDirectories: true)
-        try await fetch(version.url, to: archive)
+        try await Command.download(version.url, to: archive, report: report, onStart: onStart)
 
         let target = versionsDirectory.appendingPathComponent("swoole-cli-\(version.version)")
         try? FileManager.default.removeItem(at: target)
         let bin = target.appendingPathComponent("bin")
         try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
-        let output = try await Command.run("/usr/bin/tar", ["-xJf", archive.path, "-C", bin.path])
-        guard output.status == 0 else { throw CommandError(message: output.text) }
+        let status = try await Command.stream("/usr/bin/tar", ["-xJf", archive.path, "-C", bin.path], onOutput: report)
+        guard status == 0 else { throw CommandError(message: L("error.unpackFailed") + "（\(status)）") }
         let executable = bin.appendingPathComponent("swoole-cli")
         guard FileManager.default.isExecutableFile(atPath: executable.path) else {
             throw CommandError(message: L("error.binaryMissing") + "swoole-cli")
         }
-        try await prepareRuntime(executable, download: true)
+        // 装完还要补 composer.phar 和 cacert.pem（两个网络下载），日志里得看得见。
+        try await prepareRuntime(executable, download: true, report: report)
     }
 
     // 一次调用拿两个版本号：PHP_VERSION 是内置的 PHP，swoole_version() 是 swoole 自己。
@@ -86,7 +87,7 @@ final class SwooleService {
     }
 
     // 把版本目录补成一个能用的运行时。幂等：文件已存在就跳过，用户改过的配置不会被扫描抹掉。
-    private func prepareRuntime(_ executable: URL, download: Bool) async throws {
+    private func prepareRuntime(_ executable: URL, download: Bool, report: @escaping (String) -> Void = { _ in }) async throws {
         let fm = FileManager.default
         let bin = executable.deletingLastPathComponent()
         let base = bin.deletingLastPathComponent()
@@ -102,9 +103,9 @@ final class SwooleService {
 
         if download {
             let composer = bin.appendingPathComponent("composer")
-            try await fetch(composerURL, to: composer)
+            try await Command.download(composerURL, to: composer, report: report)
             try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: composer.path)
-            try await fetch(cacertURL, to: base.appendingPathComponent("cacert.pem"))
+            try await Command.download(cacertURL, to: base.appendingPathComponent("cacert.pem"), report: report)
         }
 
         // 模板在 PhpDefaults/swoole-cli/ 下，落地时改名成 swoole-cli 真正会读的 php.ini / php-fpm.conf。
@@ -118,15 +119,5 @@ final class SwooleService {
                 .replacingOccurrences(of: "__MACENV_CACERT__", with: base.appendingPathComponent("cacert.pem").path)
             try content.write(to: target, atomically: true, encoding: .utf8)
         }
-    }
-
-    private func fetch(_ source: URL, to file: URL) async throws {
-        if FileManager.default.fileExists(atPath: file.path) { return }
-        let (temporary, response) = try await URLSession.shared.download(from: source)
-        if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
-            throw CommandError(message: L("error.downloadFailed") + "（HTTP \(status)）")
-        }
-        try? FileManager.default.removeItem(at: file)
-        try FileManager.default.moveItem(at: temporary, to: file)
     }
 }

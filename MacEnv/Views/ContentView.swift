@@ -106,16 +106,23 @@ struct ContentView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        // 操作提示：右下角浮层，3 秒自己消失（长文案给 6 秒），点一下也能手动关。
+        // 右下角浮层：长任务日志（跑完不自动消失）在上，短提示 toast 在下，两个都出现时摞着不打架。
         .overlay(alignment: .bottomTrailing) {
-            if toastVisible {
-                ToastCard(text: app.state.message) { dismissToast() }
-                    .padding(20)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            VStack(alignment: .trailing, spacing: 12) {
+                if let task = app.state.task {
+                    TaskLogOverlay(task: task, cancel: { app.state.cancelTask() }, dismiss: { app.state.dismissTask() })
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+                if toastVisible {
+                    ToastCard(text: app.state.message) { dismissToast() }
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
             }
+            .padding(20)
         }
         .animation(.easeOut(duration: 0.18), value: busy)
         .animation(.easeOut(duration: 0.18), value: toastVisible)
+        .animation(.easeOut(duration: 0.18), value: app.state.task != nil)
         .onChange(of: app.state.messageToken) { _ in presentToast() }
         // 刷新完才有版本可起，所以自动拉服务必须排在 refreshAll 后面。
         .task {

@@ -64,26 +64,24 @@ final class MkCertViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.run {
-            try await self.services.catalog("mkcert").install(version)
+        state.runStreaming(String(format: L("message.installingFor"), "mkcert \(version.version)")) { report, attach in
+            try await self.services.catalog("mkcert").install(version, report: report, onStart: attach)
             await self.loadStatic()
             await self.refresh()
-            self.state.message = "mkcert \(version.version) " + L("message.installed")
         }
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        state.run {
+        state.runStreaming(String(format: L("message.uninstallingFor"), "mkcert \(version.version)")) { _, _ in
             try self.services.catalog("mkcert").uninstall(version)
             await self.loadStatic()
             await self.refresh()
-            self.state.message = "mkcert \(version.version) " + L("message.uninstalled")
         }
     }
 
     func brewAction(_ action: String, _ formula: String) {
-        state.run {
-            _ = try await Brew.run(action, formula: formula)
+        state.runStreaming(taskTitle(action, formula)) { report, attach in
+            try await Brew.run(action, formula: formula, report: report, onStart: attach)
             await self.refresh()
         }
     }

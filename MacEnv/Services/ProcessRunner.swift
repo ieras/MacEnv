@@ -48,6 +48,66 @@ enum Command {
         }
     }
 
+    // 统一下载入口。用 curl 而不是 URLSession：URLSession 的下载中途拿不到任何进度，
+    // 界面只能干转圈；curl 的 --progress-bar 每几十毫秒吐一次，正好喂给任务日志。
+    // 顺带白捡一个正确性：Command.stream 会注入 Command.proxyEnvironment，curl 认那几个变量，
+    // 而 URLSession 走的是系统代理设置 —— 用户在 MacEnv 里填的代理对下载才真正生效。
+    static func download(_ url: URL, to file: URL, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? FileManager.default.removeItem(at: file)
+        // -f：HTTP 4xx/5xx 直接当失败，别把错误页当包解压。 -L：跟着重定向走。
+        let status = try await stream("/usr/bin/curl", ["-fL", "--progress-bar", "-o", file.path, url.absoluteString],
+                                      onStart: onStart, onOutput: report)
+        guard status == 0 else { throw CommandError(message: L("error.downloadFailed") + "（\(status)）") }
+    }
+
+    // 提权 + 长任务。privileged() 是同步阻塞的：跑完才返回，中间的输出一个字都拿不到。
+    // 所以只能「脚本落盘 → 提权后台起 → 轮询日志文件」，这是唯一能拿到进度的办法。
+    //
+    // ⚠️ `&` 只把命令丢后台，命令自己的 `>` 重定向必须显式写 —— 不写的话输出全进
+    //    osascript 的返回值里被吞掉，日志文件永远是空的。
+    // ⚠️ osascript 非交互，脚本里任何 read / sudo 密码提示都会挂死。
+    // ⚠️ 后台那半边进程我们拿不到 exit status，所以让脚本自己在最后一行 echo 退出码。
+    static func privilegedStream(_ command: String, report: @escaping (String) -> Void) async throws {
+        let name = "macenv-task-" + UUID().uuidString
+        let script = FileManager.default.temporaryDirectory.appendingPathComponent(name + ".sh")
+        let log = FileManager.default.temporaryDirectory.appendingPathComponent(name + ".log")
+        try ("#!/bin/bash\n" + command + "\necho \"__MACENV_EXIT=$?\"\n").write(to: script, atomically: true, encoding: .utf8)
+        try Data().write(to: log)
+        try await privileged("nohup /bin/bash \(singleQuoted(script.path)) > \(singleQuoted(log.path)) 2>&1 & echo started")
+
+        var offset: UInt64 = 0
+        var tail = ""
+        // 兜底上限：命令真挂死了，界面不能跟着转一辈子。
+        let deadline = Date().addingTimeInterval(3600)
+        while Date() < deadline {
+            try await Task.sleep(nanoseconds: 400_000_000)
+            let text = readNew(log, from: &offset)
+            if !text.isEmpty {
+                report(text)
+                tail = String((tail + text).suffix(64))
+            }
+            // 标记可能被切在两次读取之间，所以在「上一次的尾巴 + 这一次」上找。
+            if let value = firstCapture(#"__MACENV_EXIT=(\d+)"#, in: tail) {
+                guard value == "0" else { throw CommandError(message: L("error.toolCommandFailed") + "（\(value)）") }
+                return
+            }
+        }
+        throw CommandError(message: L("error.toolTimeout"))
+    }
+
+    // 只读「上次之后新增」的那一段。日志文件一路在长，每次整读一遍是 O(n²)。
+    private static func readNew(_ url: URL, from offset: inout UInt64) -> String {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return "" }
+        defer { try? handle.close() }
+        let size = (try? handle.seekToEnd()) ?? 0
+        guard size > offset else { return "" }
+        try? handle.seek(toOffset: offset)
+        let data = (try? handle.readToEnd()) ?? Data()
+        offset = size
+        return String(decoding: data, as: UTF8.self)
+    }
+
     // gvm install 这种要跑几分钟、还得把过程给用户看的命令，不能用上面那个一次性版本：
     // 它只在进程退出后才把输出交出来，中间界面一直是空白的。
     // onStart 把 Process 交出去，调用方才能中途取消。
