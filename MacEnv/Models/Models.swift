@@ -33,6 +33,11 @@ func expandTilde(_ path: String) -> String {
 let macEnvDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
     .appendingPathComponent("MacEnv", isDirectory: true)
 
+// 登录钥匙串。security add-trusted-cert 不带 -k 只会写信任设置、证书不落进任何钥匙串，
+// 所以装根 CA 时必须显式指到用户钥匙串上 —— 指到它就走**用户信任域**，不需要管理员授权。
+let loginKeychainPath = FileManager.default.homeDirectoryForCurrentUser
+    .appendingPathComponent("Library/Keychains/login.keychain-db").path
+
 // 双引号字符串里要转义的只有反斜杠和双引号。osascript 的 do shell script、别名脚本、
 // nginx 配置里的带空格路径都要用，写法一模一样，所以只留这一条。
 func doubleQuoted(_ value: String) -> String {

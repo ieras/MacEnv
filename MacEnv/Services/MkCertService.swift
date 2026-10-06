@@ -6,8 +6,10 @@ import Foundation
 // （FlyEnv 的 getConfigFiles / getLogFiles 都返回 []），所以这里没有任何进程托管，
 // 也不进 serviceEntries / 快捷启动。
 //
-// 它只干两件事：
-//   · mkcert -install   把自带的根 CA 装进系统钥匙串（幂等，重复跑只是提示 already installed）
+// 它只干三件事：
+//   · 把自带的根 CA 装进钥匙串 —— mkcert 自己的 -install 内部是 `sudo security add-trusted-cert`，
+//     sudo 要靠终端读密码，我们没有终端，所以只借它生成 CA、装钥匙串那一步自己做（见 installCA）
+//   · 卸掉根 CA（见 uninstallCA）—— mkcert 的 -uninstall 同样走 sudo，一样用不了
 //   · mkcert -CAROOT    打印根 CA 的存放目录
 // 站点证书的签发在 HostService.issue(_:withMkcert:)，因为那一步要连 vhost 一起重写。
 @MainActor
@@ -85,10 +87,67 @@ final class MkCertService {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    // 装根 CA。mkcert 自己会弹系统授权框，所以**不要**包 privileged()，否则会弹两次。
-    // 幂等：重复跑只是打印 already installed。
+    // 根 CA 证书文件。mkcert -CAROOT 给的是目录，证书固定叫 rootCA.pem。
+    private func rootPEM(_ version: MkCertVersion) async -> String {
+        URL(fileURLWithPath: await caroot(version)).appendingPathComponent("rootCA.pem").path
+    }
+
+    // 根 CA 文件在不在。没信任也可能是装了一半（比如被人手动 remove-trusted-cert 过），
+    // 卸载按钮靠它决定显不显示 —— 光看 caTrusted 的话这种残留就清不掉了。
+    func caExists(_ version: MkCertVersion) async -> Bool {
+        let pem = await rootPEM(version)
+        return FileManager.default.fileExists(atPath: pem)
+    }
+
+    // 根 CA 是否已被系统信任。mkcert 自己也是这么判的（`caCert.Verify`），
+    // 对应到命令行就是 security verify-cert —— 没信任时退 1 并打印 CSSMERR_TP_NOT_TRUSTED。
+    func caTrusted(_ version: MkCertVersion) async -> Bool {
+        let pem = await rootPEM(version)
+        guard FileManager.default.fileExists(atPath: pem) else { return false }
+        return (try? await Command.run("/usr/bin/security", ["verify-cert", "-c", pem]))?.status == 0
+    }
+
+    // 装根 CA。走**用户信任域**，不提权 —— 试过的三条路里只有这条通：
+    //   · 原样跑 `mkcert -install`：它内部是 `sudo security add-trusted-cert`，sudo 要 TTY 读密码，
+    //     而我们是普通 GUI 进程，没有终端，直接报「a terminal is required to read the password」
+    //   · 把 `mkcert -install` 整个包进 privileged()：mkcert 的 CAROOT 取 `$CAROOT` →
+    //     `$HOME/Library/Application Support`，root 的 HOME 是 /var/root，CA 会落到那儿；
+    //     而且 root 建出来的 rootCA-key.pem 是 0400 root，之后用户自己签证书读不了
+    //   · 包 privileged() 用 -d 装 admin 域：osascript 拉起的 root 拿不到 Authorization Services
+    //     的交互授权，报「SecTrustSettingsSetTrustSettings: The authorization was denied
+    //     since no user interaction was possible」
+    // 用户域的信任对 SSL 全局生效，不需要密码、也不弹授权框。Firefox 走自己的 NSS 库，覆盖不到
+    //（mkcert 本来也处理不了，它只装 system / user 两个 macOS 信任库）。
     func installCA(_ version: MkCertVersion) async throws {
-        let output = try await Command.run(version.executable.path, ["-install"])
+        let pem = await rootPEM(version)
+        // mkcert 生成 CA 在前、装钥匙串在后，所以没 TTY 时它会「失败但留下 CA」—— 只认文件。
+        if !FileManager.default.fileExists(atPath: pem) {
+            _ = try? await Command.run(version.executable.path, ["-install"])
+        }
+        let output = try await Command.run("/usr/bin/security",
+                                           ["add-trusted-cert", "-r", "trustRoot", "-k", loginKeychainPath, pem])
         guard output.status == 0 else { throw CommandError(message: output.text) }
+    }
+
+    // 卸根 CA：撤信任设置 + 把证书从登录钥匙串删掉 + 删 CA 文件，不留垃圾。
+    // 跟 installCA 对称，同样不提权。删了 CA 文件之后已签发的站点证书就失效了，
+    // 界面那边要先确认一次（HostService.issue 会拿这份 CA 重新签）。
+    func uninstallCA(_ version: MkCertVersion) async throws {
+        let pem = await rootPEM(version)
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: pem) else { return }
+        // 没装过时这两条会退非零（找不到信任设置 / 钥匙串里没这条），不影响结果，忽略即可。
+        _ = try? await Command.run("/usr/bin/security", ["remove-trusted-cert", pem])
+        if let fingerprint = try? await Command.run("/usr/bin/openssl", ["x509", "-in", pem, "-noout", "-fingerprint", "-sha1"]),
+           let sha1 = firstCapture(#"Fingerprint=([0-9A-Fa-f:]+)"#, in: fingerprint.text) {
+            _ = try? await Command.run("/usr/bin/security",
+                                       ["delete-certificate", "-Z", sha1.replacingOccurrences(of: ":", with: "").lowercased(),
+                                        loginKeychainPath])
+        }
+        // CAROOT 里就 rootCA.pem / rootCA-key.pem 两个文件，一起删；目录空了才删得掉。
+        let directory = URL(fileURLWithPath: pem).deletingLastPathComponent()
+        try? fm.removeItem(at: directory.appendingPathComponent("rootCA-key.pem"))
+        try? fm.removeItem(at: URL(fileURLWithPath: pem))
+        try? fm.removeItem(at: directory)
     }
 }

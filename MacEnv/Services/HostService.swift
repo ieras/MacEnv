@@ -286,10 +286,14 @@ final class HostService {
             fingerprint: firstCapture(#"Fingerprint=([0-9A-Fa-f:]+)"#, in: output.text) ?? "")
     }
 
-    // 把根 CA 加进系统钥匙串。要一次管理员授权；CA 已经生成过就不会再走到这里。
+    // 把根 CA 加进钥匙串。走用户信任域、不提权 —— 跟 MkCertService.installCA 同一条路，
+    // 那边注释里记了为什么 -d 装 admin 域在 osascript 拉起的 root 里过不去。
+    // CA 已经生成过就不会再走到这里。
     func trustRootCertificate() async throws {
         guard FileManager.default.fileExists(atPath: rootCertificate.path) else { return }
-        try await privileged("security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain '\(rootCertificate.path)'")
+        let output = try await Command.run("/usr/bin/security",
+                                           ["add-trusted-cert", "-r", "trustRoot", "-k", loginKeychainPath, rootCertificate.path])
+        guard output.status == 0 else { throw CommandError(message: output.text) }
     }
 
     // MARK: - 子进程

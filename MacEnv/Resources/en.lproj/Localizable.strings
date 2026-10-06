@@ -137,6 +137,8 @@
 "alert.resetConfigMessage" = "The current config is replaced with the initial one.";
 "alert.uninstallNginxTitle" = "Uninstall the Homebrew Nginx?";
 "alert.uninstallNginxMessage" = "Stops the Nginx managed by MacEnv and runs brew uninstall nginx. Config and logs are kept.";
+"alert.uninstallCATitle" = "Uninstall the CA certificate?";
+"alert.uninstallCAMessage" = "Revokes system trust, removes the certificate from the login keychain, and deletes the local CA files. Certificates already issued to your sites will stop being trusted and must be re-issued.";
 "alert.uninstallPhpTitle" = "Uninstall the Homebrew PHP?";
 "alert.uninstallPhpMessage" = "Runs brew uninstall %@. Other versions are handled by Homebrew.";
 
@@ -282,6 +284,9 @@
 "mkcert.installCA" = "Install CA";
 "mkcert.caroot" = "CA Root";
 "mkcert.caInstalled" = "CA installed";
+"mkcert.caTrusted" = "CA trusted";
+"mkcert.uninstallCA" = "Uninstall CA";
+"mkcert.caUninstalled" = "CA uninstalled";
 "mkcert.noVersion" = "Install MkCert from the Versions tab first.";
 "mkcert.generate" = "Issue";
 "mkcert.signed" = "Signed";

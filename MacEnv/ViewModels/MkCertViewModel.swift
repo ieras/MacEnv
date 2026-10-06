@@ -13,6 +13,9 @@ final class MkCertViewModel: ObservableObject {
     @Published var formulae: [BrewFormulaItem] = []
     @Published var selected = ""
     @Published var caroot = ""
+    // 根 CA 装没装、有没有被信任。装完 / 卸完都要重新查一次，不然界面看不出到底成没成。
+    @Published var caExists = false
+    @Published var caTrusted = false
     @Published var customDirectories = UserDefaults.standard.stringArray(forKey: "macenv.mkcert.directories") ?? [] {
         didSet { UserDefaults.standard.set(customDirectories, forKey: "macenv.mkcert.directories") }
     }
@@ -79,10 +82,12 @@ final class MkCertViewModel: ObservableObject {
         }
     }
 
-    // 根 CA 目录。没装 mkcert 就没有这一项。
+    // 根 CA 目录 + 状态。没装 mkcert 就没有这几项。
     func loadCaroot() async {
-        guard let version = selectedVersion else { caroot = ""; return }
+        guard let version = selectedVersion else { caroot = ""; caExists = false; caTrusted = false; return }
         caroot = await services.mkcert.caroot(version)
+        caExists = await services.mkcert.caExists(version)
+        caTrusted = await services.mkcert.caTrusted(version)
     }
 
     func installCA() {
@@ -91,6 +96,16 @@ final class MkCertViewModel: ObservableObject {
             try await self.services.mkcert.installCA(version)
             await self.loadCaroot()
             self.state.message = L("mkcert.caInstalled")
+        }
+    }
+
+    // 卸载会连 CA 文件一起删掉，之后得重新安装才能签证书 —— 界面上先确认一次。
+    func uninstallCA() {
+        guard let version = selectedVersion else { state.message = L("mkcert.noVersion"); return }
+        state.run {
+            try await self.services.mkcert.uninstallCA(version)
+            await self.loadCaroot()
+            self.state.message = L("mkcert.caUninstalled")
         }
     }
 

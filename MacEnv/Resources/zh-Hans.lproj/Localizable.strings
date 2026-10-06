@@ -137,6 +137,8 @@
 "alert.resetConfigMessage" = "当前配置将替换为初始配置。";
 "alert.uninstallNginxTitle" = "卸载 Homebrew Nginx？";
 "alert.uninstallNginxMessage" = "将停止 MacEnv 管理的 Nginx 并执行 brew uninstall nginx，配置和日志保留。";
+"alert.uninstallCATitle" = "卸载 CA 证书？";
+"alert.uninstallCAMessage" = "将撤销系统信任、从登录钥匙串里删掉这张证书，并删除本地 CA 文件。已签发的站点证书会失效，需要重新签发。";
 "alert.uninstallPhpTitle" = "卸载 Homebrew PHP？";
 "alert.uninstallPhpMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
 
@@ -282,6 +284,9 @@
 "mkcert.installCA" = "安装 CA 证书";
 "mkcert.caroot" = "CA 根目录";
 "mkcert.caInstalled" = "CA 证书已安装";
+"mkcert.caTrusted" = "CA 已信任";
+"mkcert.uninstallCA" = "卸载 CA 证书";
+"mkcert.caUninstalled" = "CA 证书已卸载";
 "mkcert.noVersion" = "请先在「版本管理」里安装 MkCert。";
 "mkcert.generate" = "签发";
 "mkcert.signed" = "已签发";

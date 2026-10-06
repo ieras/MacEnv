@@ -12,6 +12,7 @@ struct CertificatePanelView: View {
     @State private var source = "Static"
     @State private var refreshing = false
     @State private var customPathEditor = false
+    @State private var confirmUninstallCA = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -25,6 +26,10 @@ struct CertificatePanelView: View {
         .sheet(isPresented: $customPathEditor) {
             CustomPathEditor(title: "MkCert", paths: Binding(get: { vm.customDirectories }, set: { vm.setCustomDirectories($0) }))
         }
+        .alert(L("alert.uninstallCATitle"), isPresented: $confirmUninstallCA) {
+            Button(L("action.cancel"), role: .cancel) {}
+            Button(L("action.uninstall"), role: .destructive) { vm.uninstallCA() }
+        } message: { Text(L("alert.uninstallCAMessage")) }
         .task {
             await vm.refresh()
             await vm.loadStatic()
@@ -74,7 +79,17 @@ struct CertificatePanelView: View {
                     }
                     HStack(spacing: 10) {
                         Button(L("mkcert.installCA")) { vm.installCA() }.disabled(app.state.busy)
+                        // 有 CA 才给卸载入口，没装过时不摆一个点了没事发生的按钮。
+                        if vm.caExists {
+                            Button(L("mkcert.uninstallCA"), role: .destructive) { confirmUninstallCA = true }
+                                .disabled(app.state.busy)
+                        }
                         Button(L("mkcert.recheck")) { Task { await vm.refresh() } }.disabled(app.state.busy)
+                        // 装完亮出来，不然用户看不出这一步到底成没成。
+                        if vm.caTrusted {
+                            Label(L("mkcert.caTrusted"), systemImage: "checkmark.seal.fill")
+                                .font(.callout).foregroundStyle(AppTheme.green)
+                        }
                     }
                     Spacer()
                 }

@@ -137,6 +137,8 @@
 "alert.resetConfigMessage" = "現在の設定は初期設定に置き換えられます。";
 "alert.uninstallNginxTitle" = "Homebrew の Nginx をアンインストールしますか？";
 "alert.uninstallNginxMessage" = "MacEnv 管理下の Nginx を停止し、brew uninstall nginx を実行します。設定とログは保持されます。";
+"alert.uninstallCATitle" = "CA 証明書をアンインストールしますか？";
+"alert.uninstallCAMessage" = "システムの信頼設定を解除し、ログインキーチェーンから証明書を削除、ローカルの CA ファイルも削除します。発行済みのサイト証明書は無効になるため、再発行が必要です。";
 "alert.uninstallPhpTitle" = "Homebrew の PHP をアンインストールしますか？";
 "alert.uninstallPhpMessage" = "brew uninstall %@ を実行します。他のバージョンは Homebrew 側の扱いに従います。";
 
@@ -282,6 +284,9 @@
 "mkcert.installCA" = "CA 証明書をインストール";
 "mkcert.caroot" = "CA ルート";
 "mkcert.caInstalled" = "CA 証明書をインストールしました";
+"mkcert.caTrusted" = "CA を信頼済み";
+"mkcert.uninstallCA" = "CA 証明書をアンインストール";
+"mkcert.caUninstalled" = "CA 証明書をアンインストールしました";
 "mkcert.noVersion" = "先に「バージョン管理」で MkCert をインストールしてください。";
 "mkcert.generate" = "発行";
 "mkcert.signed" = "発行済み";
