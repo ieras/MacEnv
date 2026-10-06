@@ -58,6 +58,38 @@ final class PathService {
         return .none
     }
 
+    // 删掉 env/ 里指向 directory 内部的软链，再重写 PATH 块。
+    // 卸载 GVM 这类「把一整个目录删掉」的操作要先走这一步，否则 PATH 里会留下一条
+    // 指向已删除目录的路径（软链本身也悬空了）。
+    func removeLinks(pointingInside directory: URL) throws {
+        let fm = FileManager.default
+        let prefix = directory.resolvingSymlinksInPath().path + "/"
+        let links = (try? fm.contentsOfDirectory(at: envDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+        for link in links where link.resolvingSymlinksInPath().path.hasPrefix(prefix) {
+            try? fm.removeItem(at: link)
+        }
+        try rewriteShellPath()
+    }
+
+    // 从用户给的配置文件里删掉所有含 needle 的行（忽略大小写），返回真正改动过的文件数。
+    // 写回一律非原子：atomically: true 是「写临时文件再 rename」，rc 是软链时（链到 dotfiles
+    // 仓库很常见）会被整个替换成普通文件，用户的软链就没了。
+    func removeLines(containing needle: String, from files: [URL]) throws -> Int {
+        var changed = 0
+        for file in files where FileManager.default.fileExists(atPath: file.path) {
+            guard let original = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            // omittingEmptySubsequences: false —— 空行也是用户格式的一部分，别顺手并掉。
+            let next = original.split(separator: "\n", omittingEmptySubsequences: false)
+                .filter { !String($0).localizedCaseInsensitiveContains(needle) }
+                .joined(separator: "\n")
+            guard next != original else { continue }
+            try backup(original, name: file.lastPathComponent)
+            try next.write(toFile: file.path, atomically: false, encoding: .utf8)
+            changed += 1
+        }
+        return changed
+    }
+
     func toggle(kind: String, directory: URL) throws {
         let fm = FileManager.default
         try fm.createDirectory(at: envDirectory, withIntermediateDirectories: true)

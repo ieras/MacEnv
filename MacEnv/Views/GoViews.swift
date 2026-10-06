@@ -12,6 +12,7 @@ struct GoManagementView: View {
     @State private var confirmUninstall = false
     // 卸载必须记住点的是哪一行，不能在 alert 里写死公式名 —— PHP 页面就栽过这个跟头。
     @State private var uninstallFormula: String?
+    @State private var confirmUninstallGvm = false
 
     var body: some View {
         ModulePage {
@@ -31,6 +32,10 @@ struct GoManagementView: View {
                 uninstallFormula = nil
             }
         } message: { Text(String(format: L("alert.uninstallGoMessage"), uninstallFormula ?? "")) }
+        .alert(L("alert.uninstallGvmTitle"), isPresented: $confirmUninstallGvm) {
+            Button(L("action.cancel"), role: .cancel) {}
+            Button(L("action.uninstall"), role: .destructive) { vm.uninstallGvm() }
+        } message: { Text(String(format: L("alert.uninstallGvmMessage"), vm.gvmRootPath, vm.gvmInstalledCount)) }
     }
 
     @ViewBuilder
@@ -137,6 +142,10 @@ struct GoManagementView: View {
                     ProgressView().controlSize(.small)
                     Button(L("action.cancel")) { vm.cancelGvm() }
                 } else if vm.gvmInstalled == true {
+                    // 卸载 GVM 本体。跟「卸载 CA 证书」同一排同一个图标，不用重新找。
+                    Button { confirmUninstallGvm = true } label: { Image(systemName: "trash") }
+                        .help(L("gvm.uninstall"))
+                        .disabled(app.state.busy || vm.gvmBusy)
                     Button { Task { await vm.loadGvmVersions() } } label: { Image(systemName: "arrow.clockwise") }
                         .help(L("action.refreshVersions"))
                         .disabled(vm.gvmLoading)

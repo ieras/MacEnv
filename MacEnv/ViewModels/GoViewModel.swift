@@ -33,6 +33,8 @@ final class GoViewModel: ObservableObject {
     var selectedVersion: GoVersion? { versions.first { $0.id == selectedID } ?? versions.first }
 
     var gvmRootPath: String { services.go.gvmRoot.path }
+    // 卸载确认框要报个数：GVM 装了几个 Go 版本，删了就没了。
+    var gvmInstalledCount: Int { gvmVersions.filter(\.installed).count }
 
     func refresh() async {
         do {
@@ -132,6 +134,21 @@ final class GoViewModel: ObservableObject {
             self.state.message = L("message.gvmInstalled")
             await self.loadGvmVersions()
             await self.refresh()
+        }
+    }
+
+    // 卸载 GVM 本体。顺序不能反：先摘软链（否则 PATH 里留一条指向已删目录的路径），
+    // 再删目录，最后清 shell 配置里的 gvm 行 —— 那行 source 指向一个不存在的文件，留着只会报错。
+    func uninstallGvm() {
+        state.run {
+            try self.services.paths.removeLinks(pointingInside: self.services.go.gvmRoot)
+            try self.services.go.uninstallGvm()
+            try self.services.paths.removeLines(containing: "gvm", from: self.services.go.profileFiles)
+            self.gvmInstalled = self.services.go.gvmInstalled
+            self.gvmVersions = []
+            self.gvmSearch = ""
+            await self.refresh()
+            self.state.message = L("message.gvmUninstalled")
         }
     }
 

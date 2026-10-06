@@ -60,7 +60,6 @@
 "action.customPathHint" = "カスタムバージョンパス：このパス配下の bin と sbin で実行ファイルを検索します";
 "action.createIni" = "php.ini を作成";
 "action.openFolder" = "フォルダを開く";
-"action.copyPath" = "パスをコピー";
 "action.editPhpIni" = "php.ini を編集";
 "action.search" = "検索";
 "action.enable" = "有効化";
@@ -276,10 +275,8 @@
 
 // 站点证书（MkCert）
 "mkcert.certificates" = "証明書";
-"mkcert.installed" = "インストール済み";
 "mkcert.notInstalled" = "MkCert がインストールされていません";
 "mkcert.installHint" = "「バージョン管理」からインストールしてください（Static / Homebrew / MacPorts のいずれでも可）。";
-"mkcert.toVersions" = "バージョン管理へ";
 "mkcert.recheck" = "再確認";
 "mkcert.installCA" = "CA 証明書をインストール";
 "mkcert.caroot" = "CA ルート";
@@ -341,6 +338,11 @@
 "gvm.setDefault" = "デフォルトに設定";
 "error.gvmMissing" = "GVM がインストールされていません";
 "error.gvmFailed" = "GVM コマンドが失敗しました";
+"error.gvmRootUnsafe" = "GVM のルートディレクトリが異常なため、アンインストールを中止しました";
+"gvm.uninstall" = "GVM をアンインストール";
+"alert.uninstallGvmTitle" = "GVM をアンインストールしますか？";
+"alert.uninstallGvmMessage" = "%@ と、シェル設定内の GVM 関連の行をすべて削除します。GVM でインストールした %d 個の Go バージョンも一緒に削除され、復元できません。";
+"message.gvmUninstalled" = "GVM をアンインストールしました";
 "macports.detectedGo" = "MacPorts を検出しました。インストールした Go はインストール済みリストに表示されます。";
 "alert.uninstallGoTitle" = "Homebrew の Go をアンインストールしますか？";
 "alert.uninstallGoMessage" = "brew uninstall %@ を実行します。GOROOT のツールチェーンが削除され、他のバージョンは Homebrew が処理します。";

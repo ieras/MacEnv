@@ -60,7 +60,6 @@
 "action.customPathHint" = "Custom version path: executables are looked up in the bin and sbin of this path";
 "action.createIni" = "Create php.ini";
 "action.openFolder" = "Open folder";
-"action.copyPath" = "Copy path";
 "action.editPhpIni" = "Edit php.ini";
 "action.search" = "Search";
 "action.enable" = "Enable";
@@ -276,10 +275,8 @@
 
 // 站点证书（MkCert）
 "mkcert.certificates" = "Certificates";
-"mkcert.installed" = "installed";
 "mkcert.notInstalled" = "MkCert is not installed";
 "mkcert.installHint" = "Install one from the Versions tab — Static, Homebrew, or MacPorts.";
-"mkcert.toVersions" = "Go to Versions";
 "mkcert.recheck" = "Recheck";
 "mkcert.installCA" = "Install CA";
 "mkcert.caroot" = "CA Root";
@@ -341,6 +338,11 @@
 "gvm.setDefault" = "Set default";
 "error.gvmMissing" = "GVM is not installed";
 "error.gvmFailed" = "GVM command failed";
+"error.gvmRootUnsafe" = "GVM root directory looks wrong, uninstall cancelled";
+"gvm.uninstall" = "Uninstall GVM";
+"alert.uninstallGvmTitle" = "Uninstall GVM?";
+"alert.uninstallGvmMessage" = "This deletes %@ and every GVM-related line in your shell config. The %d Go versions installed through GVM go with it and cannot be recovered.";
+"message.gvmUninstalled" = "GVM uninstalled";
 "macports.detectedGo" = "MacPorts detected. Go installed with it shows up in the installed list.";
 "alert.uninstallGoTitle" = "Uninstall Homebrew Go?";
 "alert.uninstallGoMessage" = "This runs brew uninstall %@. The toolchain inside its GOROOT is removed; other versions are handled by Homebrew.";

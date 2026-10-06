@@ -60,7 +60,6 @@
 "action.customPathHint" = "自訂版本路徑：會在此路徑的 bin 與 sbin 目錄中搜尋執行檔";
 "action.createIni" = "建立 php.ini";
 "action.openFolder" = "開啟目錄";
-"action.copyPath" = "複製路徑";
 "action.editPhpIni" = "編輯 php.ini";
 "action.search" = "搜尋";
 "action.enable" = "啟用";
@@ -276,10 +275,8 @@
 
 // 站点证书（MkCert）
 "mkcert.certificates" = "憑證";
-"mkcert.installed" = "已安裝";
 "mkcert.notInstalled" = "MkCert 未安裝";
 "mkcert.installHint" = "到「版本管理」裡裝一個，Static / Homebrew / MacPorts 都行。";
-"mkcert.toVersions" = "前往版本管理";
 "mkcert.recheck" = "重新檢查";
 "mkcert.installCA" = "安裝 CA 憑證";
 "mkcert.caroot" = "CA 根目錄";
@@ -341,6 +338,11 @@
 "gvm.setDefault" = "設為預設";
 "error.gvmMissing" = "GVM 未安裝，請先安裝 GVM";
 "error.gvmFailed" = "GVM 命令執行失敗";
+"error.gvmRootUnsafe" = "GVM 根目錄異常，已取消解除安裝";
+"gvm.uninstall" = "解除安裝 GVM";
+"alert.uninstallGvmTitle" = "解除安裝 GVM？";
+"alert.uninstallGvmMessage" = "將刪除 %@ 以及 shell 設定檔裡所有 GVM 相關行，透過 GVM 安裝的 %d 個 Go 版本會一併刪除，無法還原。";
+"message.gvmUninstalled" = "GVM 已解除安裝";
 "macports.detectedGo" = "已偵測到 MacPorts，安裝的 Go 會顯示在已安裝清單。";
 "alert.uninstallGoTitle" = "卸載 Homebrew Go？";
 "alert.uninstallGoMessage" = "將執行 brew uninstall %@，GOROOT 內的開發工具鏈會被刪除，其他版本交由 Homebrew 處理。";

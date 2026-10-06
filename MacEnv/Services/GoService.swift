@@ -181,6 +181,26 @@ final class GoService {
 
     private var process: Process?
 
+    // GVM installer 往这些文件里挑**已存在的**追加 source 行（它的 update_profile），没有标记注释，
+    // 所以卸载时只能挨个扫一遍、按内容删行。fish 的配置不可能是 bash 语法那行，不用管。
+    var profileFiles: [URL] {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return [".zshrc", ".zprofile", ".bashrc", ".bash_profile", ".profile"].map { home.appendingPathComponent($0) }
+    }
+
+    // 卸载 GVM 本体：整个 GVM_ROOT 连锅端 —— gos（装的 Go 版本）、pkgsets（GOPATH 工作区）、
+    // archive（下载缓存）、environments 全在它底下，一起删才算干净。
+    //
+    // 官方的 `gvm implode` 用不了：它 read -p 要确认，GUI 进程没 TTY；而且它只删 GVM_ROOT，
+    // 不管 shell 配置里那行 source，比这更不干净。
+    func uninstallGvm() throws {
+        guard gvmInstalled else { throw CommandError(message: L("error.gvmMissing")) }
+        // 「装没装」的判据只有 scripts/gvm 存在，理论上 GVM_ROOT 指到家目录也能满足 —— 那个绝不能删。
+        let home = FileManager.default.homeDirectoryForCurrentUser.resolvingSymlinksInPath().path
+        guard gvmRoot.resolvingSymlinksInPath().path != home else { throw CommandError(message: L("error.gvmRootUnsafe")) }
+        try FileManager.default.removeItem(at: gvmRoot)
+    }
+
     func installGvm(onOutput: @escaping (String) -> Void) async throws {
         // 这时候还没有 gvm 的初始化脚本可 source，所以单独跑官方 installer。
         try await run("bash < <(curl -sSL \(Self.gvmInstaller))", onOutput: onOutput)
