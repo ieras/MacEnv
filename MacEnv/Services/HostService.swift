@@ -286,6 +286,13 @@ final class HostService {
             fingerprint: firstCapture(#"Fingerprint=([0-9A-Fa-f:]+)"#, in: output.text) ?? "")
     }
 
+    // 自签根 CA 有没有被系统信任。判法同 MkCertService.caTrusted ——
+    // 只查信任设置，不做「文件在不在」之外的假设。界面拿它决定「重新安装根证书」还显不显示。
+    func rootCATrusted() async -> Bool {
+        guard FileManager.default.fileExists(atPath: rootCertificate.path) else { return false }
+        return (try? await Command.run("/usr/bin/security", ["verify-cert", "-c", rootCertificate.path]))?.status == 0
+    }
+
     // 把根 CA 加进钥匙串。走用户信任域、不提权 —— 跟 MkCertService.installCA 同一条路，
     // 那边注释里记了为什么 -d 装 admin 域在 osascript 拉起的 root 里过不去。
     // CA 已经生成过就不会再走到这里。

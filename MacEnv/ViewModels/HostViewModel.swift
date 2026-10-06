@@ -12,6 +12,10 @@ final class HostViewModel: ObservableObject {
     @Published var logText = ""
     @Published var logKind = "access"
     @Published var hostsSynced = false
+    // 自签根 CA：文件在不在、有没有被系统信任。两个分开记 ——
+    // 文件都没有时「重新安装根证书」点了也没用，那种情况按钮干脆不出现。
+    @Published var rootCAExists = false
+    @Published var rootCATrusted = false
     @Published var autoWriteHosts = UserDefaults.standard.object(forKey: "macenv.hosts.autoWrite") as? Bool ?? true {
         didSet { UserDefaults.standard.set(autoWriteHosts, forKey: "macenv.hosts.autoWrite") }
     }
@@ -43,6 +47,8 @@ final class HostViewModel: ObservableObject {
             hosts = service.load()
             if !hosts.contains(where: { $0.id == selectedID }) { selectedID = hosts.first?.id }
             hostsSynced = synced()
+            rootCAExists = FileManager.default.fileExists(atPath: service.rootCertificate.path)
+            rootCATrusted = await service.rootCATrusted()
         } catch {
             state.message = error.localizedDescription
         }
@@ -114,7 +120,9 @@ final class HostViewModel: ObservableObject {
             try self.service.save(self.hosts)
             self.services.nginx.reloadIfRunning()
             self.state.message = L("message.hostDeleted") + host.name
-            if let note = await self.writeHosts() { self.state.message += " · " + note }
+            // 强制同步一次：站点都没了，hosts 里那条 127.0.0.1 必然是死记录（访问会落到 nginx
+            // 默认站点），留着就是垃圾。块内容没变时 syncHosts 直接返回 false，不会白弹授权框。
+            if let note = await self.writeHosts(forced: true) { self.state.message += " · " + note }
         }
     }
 
@@ -180,14 +188,17 @@ final class HostViewModel: ObservableObject {
     func trustRootCertificate() {
         state.run {
             try await self.service.trustRootCertificate()
+            self.rootCAExists = FileManager.default.fileExists(atPath: self.service.rootCertificate.path)
+            self.rootCATrusted = await self.service.rootCATrusted()
             self.state.message = L("message.rootTrusted")
         }
     }
 
     // 写系统 hosts，返回给界面拼在提示后面的那段。用户取消授权不算失败 ——
     // 站点本身已经建好了，hosts 那一步单独说清楚就行。
-    private func writeHosts() async -> String? {
-        guard autoWriteHosts else { return nil }
+    // forced：删除站点时用，绕开「自动写入」开关（见 delete）。
+    private func writeHosts(forced: Bool = false) async -> String? {
+        guard forced || autoWriteHosts else { return nil }
         do {
             let changed = try await service.syncHosts(hosts)
             hostsSynced = synced()

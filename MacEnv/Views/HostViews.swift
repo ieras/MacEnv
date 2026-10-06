@@ -167,7 +167,16 @@ struct HostManagementView: View {
                 Text(String(format: L("hosts.trustHint"), tilde(vm.rootCertificate.path))).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack(spacing: 12) {
                     Button(L("hosts.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([vm.hostsFile]) }
-                    Button(L("hosts.trust")) { vm.trustRootCertificate() }.disabled(app.state.busy)
+                    // 已经信任了就把按钮收掉：再点一次还是弹一次系统授权框，纯折腾用户。
+                    // 根 CA 都还没生成（没签过证书）时也不显示 —— 那时点下去什么都不会发生。
+                    if vm.rootCAExists {
+                        if vm.rootCATrusted {
+                            Label(L("mkcert.caTrusted"), systemImage: "checkmark.seal.fill")
+                                .foregroundStyle(AppTheme.green)
+                        } else {
+                            Button(L("hosts.trust")) { vm.trustRootCertificate() }.disabled(app.state.busy)
+                        }
+                    }
                 }
                 .buttonStyle(.borderless).font(.callout)
             }
