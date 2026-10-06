@@ -17,7 +17,7 @@ struct CertificatePanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 二级 tab 固定宽度，不撑满整行 —— 跟一级 tab 一样宽就分不出哪层是哪层了。
-            SegmentedTabs(titles: [L("tab.service"), L("tab.versions"), L("mkcert.certificates")], selection: $tab)
+            SegmentedTabs(titles: [L("tab.installed"), L("tab.versions"), L("mkcert.certificates")], selection: $tab)
                 .frame(width: 330)
                 .padding(.horizontal, 20).padding(.vertical, 12)
             Divider()
@@ -43,17 +43,20 @@ struct CertificatePanelView: View {
         switch tab {
         case 1: versionManager
         case 2: certificateList
-        default: servicePanel
+        default: installedPanel
         }
     }
 
-    // MARK: - 服务
+    // MARK: - 已安装
 
-    private var servicePanel: some View {
+    // 跟 Composer / Swoole CLI 的「已安装」页同一套：顶栏是标题 + 图标 + 自定义目录 + 刷新，
+    // 下面一张 DataTable。根 CA 的装 / 卸 / 检测不在这里，都在「证书」页顶栏。
+    private var installedPanel: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Text("MkCert").font(.title3)
                 SSLIcon().frame(width: 22, height: 22)
+                // 多版本时给个下拉 —— 「证书」页签发用的就是这里选中的那个。
                 if vm.versions.count > 1 {
                     Picker("", selection: $vm.selected) {
                         ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
@@ -69,60 +72,29 @@ struct CertificatePanelView: View {
             }
             .panelHeader()
             Divider()
-            if let version = vm.selectedVersion {
-                VStack(alignment: .leading, spacing: 16) {
-                    Label("MkCert \(version.version) \(L("mkcert.installed"))", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(AppTheme.green)
-                    pathRow(L("column.path"), version.executable.path, open: version.executable.deletingLastPathComponent())
-                    if !vm.caroot.isEmpty {
-                        pathRow(L("mkcert.caroot"), vm.caroot, open: URL(fileURLWithPath: vm.caroot))
-                    }
-                    HStack(spacing: 10) {
-                        Button(L("mkcert.installCA")) { vm.installCA() }.disabled(app.state.busy)
-                        // 有 CA 才给卸载入口，没装过时不摆一个点了没事发生的按钮。
-                        if vm.caExists {
-                            Button(L("mkcert.uninstallCA"), role: .destructive) { confirmUninstallCA = true }
-                                .disabled(app.state.busy)
-                        }
-                        Button(L("mkcert.recheck")) { Task { await vm.refresh() } }.disabled(app.state.busy)
-                        // 装完亮出来，不然用户看不出这一步到底成没成。
-                        if vm.caTrusted {
-                            Label(L("mkcert.caTrusted"), systemImage: "checkmark.seal.fill")
-                                .font(.callout).foregroundStyle(AppTheme.green)
-                        }
-                    }
-                    Spacer()
-                }
-                .padding(20)
-            } else {
-                VStack(alignment: .leading, spacing: 16) {
-                    Label(L("mkcert.notInstalled"), systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                    Text(L("mkcert.installHint")).font(.caption).foregroundStyle(.secondary)
-                    HStack(spacing: 10) {
-                        Button(L("mkcert.toVersions")) { tab = 1 }.disabled(app.state.busy)
-                        Button(L("mkcert.recheck")) { Task { await vm.refresh() } }.disabled(app.state.busy)
-                    }
-                    Spacer()
-                }
-                .padding(20)
-            }
+            installedTable
+            Spacer()
         }
     }
 
-    // 一行「标签 + 路径 + 复制 / 打开目录」，服务页里二进制路径和根 CA 目录共用。
-    // 显示走 tilde（家目录缩成 ~），复制出去的是原始绝对路径 —— 终端和 Finder 不认 ~。
-    private func pathRow(_ label: String, _ path: String, open: URL) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.callout.weight(.semibold))
-            HStack(spacing: 8) {
-                Text(tilde(path)).font(.system(.callout, design: .monospaced))
-                    .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
-                Button { copyText(path) } label: { Image(systemName: "doc.on.doc") }
-                    .help(L("action.copyPath"))
-                Button { NSWorkspace.shared.open(open) } label: { Image(systemName: "folder") }
-                    .help(L("action.openFolder"))
+    // 列跟 Composer 对齐，中间插一列「来源」（Homebrew / Static / MacPorts）。
+    private var installedColumns: [TableColumn] {
+        [TableColumn(title: L("column.version"), minWidth: 60),
+         TableColumn(title: L("column.path"), minWidth: 140, weight: 1),
+         TableColumn(title: L("column.source"), minWidth: 70),
+         TableColumn(title: L("column.env"), minWidth: 56)]
+    }
+
+    private var installedTable: some View {
+        DataTable(columns: installedColumns, rows: vm.versions, empty: L("mkcert.installHint")) { version in
+            Text(version.version)
+            Button { NSWorkspace.shared.open(version.directory) } label: {
+                Text(tilde(version.directory.path)).lineLimit(1).truncationMode(.middle)
             }
+            .buttonStyle(.borderless).help(tilde(version.directory.path))
+            Text(version.source).foregroundStyle(.secondary)
+            EnvironmentVariableButton(membership: vm.pathMembership[version.id, default: .none]) { vm.togglePath(version) }
+                .disabled(app.state.busy)
         }
     }
 
@@ -169,8 +141,17 @@ struct CertificatePanelView: View {
                     Text("MkCert \(version.version)").foregroundStyle(.secondary)
                     if !vm.caroot.isEmpty {
                         Text("·").foregroundStyle(.secondary)
-                        Text(tilde(vm.caroot)).foregroundStyle(.secondary)
-                            .lineLimit(1).truncationMode(.middle).help(tilde(vm.caroot))
+                        Button { NSWorkspace.shared.open(URL(fileURLWithPath: vm.caroot)) } label: {
+                            Text(tilde(vm.caroot)).foregroundStyle(.secondary)
+                                .lineLimit(1).truncationMode(.middle)
+                        }
+                        .buttonStyle(.borderless)
+                        .help(L("mkcert.caroot") + " " + tilde(vm.caroot))
+                    }
+                    // 装完亮出来，不然用户看不出这一步到底成没成。
+                    if vm.caTrusted {
+                        Label(L("mkcert.caTrusted"), systemImage: "checkmark.seal.fill")
+                            .font(.callout).foregroundStyle(AppTheme.green)
                     }
                 } else {
                     Text(L("mkcert.notInstalled")).foregroundStyle(.orange)
@@ -178,6 +159,22 @@ struct CertificatePanelView: View {
                 Spacer()
                 Button { Task { await hostVM.loadCertificates() } } label: { Image(systemName: "arrow.clockwise") }
                     .help(L("action.reload"))
+                // 根 CA 的装 / 卸 / 检测。放这一排是为了跟证书列表挨着 ——
+                // 换过 CA 之后这些站点的证书就得重签，两件事本来就分不开。
+                if vm.selectedVersion != nil {
+                    // 重复装是幂等的（钥匙串按证书去重，实测装三次仍只有一条），但 GUI 里
+                    // 每次都会弹一次系统授权框 —— 已经信任了就别让用户白点、白弹。
+                    if !vm.caTrusted {
+                        Button { vm.installCA() } label: { Image(systemName: "arrow.down.circle") }
+                            .help(L("mkcert.installCA")).disabled(app.state.busy)
+                    }
+                    if vm.caExists {
+                        Button { confirmUninstallCA = true } label: { Image(systemName: "trash") }
+                            .help(L("mkcert.uninstallCA")).disabled(app.state.busy)
+                    }
+                    Button { Task { await vm.loadCaroot() } } label: { Image(systemName: "checkmark.shield") }
+                        .help(L("mkcert.recheck")).disabled(app.state.busy)
+                }
             }
             .panelHeader()
             Divider()

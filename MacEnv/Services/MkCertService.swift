@@ -116,7 +116,10 @@ final class MkCertService {
     //   · 包 privileged() 用 -d 装 admin 域：osascript 拉起的 root 拿不到 Authorization Services
     //     的交互授权，报「SecTrustSettingsSetTrustSettings: The authorization was denied
     //     since no user interaction was possible」
-    // 用户域的信任对 SSL 全局生效，不需要密码、也不弹授权框。Firefox 走自己的 NSS 库，覆盖不到
+    // 重复装是幂等的：钥匙串按证书本身（签发者 + 序列号）去重，实测连装三次仍只有一条条目，
+    // 所以不用「先卸再装」那套。界面那边会在已信任时把安装按钮收掉，纯粹是为了不白弹授权框。
+    //
+    // 用户域的信任对 SSL 全局生效。Firefox 走自己的 NSS 库，覆盖不到
     //（mkcert 本来也处理不了，它只装 system / user 两个 macOS 信任库）。
     func installCA(_ version: MkCertVersion) async throws {
         let pem = await rootPEM(version)
