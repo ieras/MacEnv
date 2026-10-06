@@ -64,6 +64,7 @@ protocol ServiceVersion: Identifiable {
 extension NginxVersion: ServiceVersion {}
 extension DatabaseVersion: ServiceVersion {}
 extension RedisVersion: ServiceVersion {}
+extension MkCertVersion: ServiceVersion {}
 extension PhpVersion: ServiceVersion {}
 extension SwooleVersion: ServiceVersion {}
 extension GoVersion: ServiceVersion {}
@@ -132,6 +133,18 @@ struct RedisVersion: Identifiable, Hashable {
 
     var id: String { executable.path }
     var majorMinor: String { version.split(separator: ".").prefix(2).joined(separator: ".") }
+}
+
+// mkcert 是一次性 CLI，没有常驻进程，所以这里没有 pid / 端口 / 配置那套东西，
+// 只有「哪个二进制、什么版本、从哪来」。
+struct MkCertVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    let formula: String?
+
+    var id: String { executable.path }
 }
 
 struct BrewFormulaItem: Identifiable, Hashable {

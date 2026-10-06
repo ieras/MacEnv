@@ -28,6 +28,9 @@
 		100000000000000000000071 /* RedisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000071 /* RedisService.swift */; };
 		100000000000000000000072 /* RedisViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000072 /* RedisViewModel.swift */; };
 		100000000000000000000073 /* RedisViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000073 /* RedisViews.swift */; };
+		100000000000000000000074 /* MkCertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000074 /* MkCertService.swift */; };
+		100000000000000000000075 /* MkCertViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000075 /* MkCertViewModel.swift */; };
+		100000000000000000000076 /* CertViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000076 /* CertViews.swift */; };
 		100000000000000000000034 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000034 /* Components.swift */; };
 		100000000000000000000035 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000035 /* SettingsView.swift */; };
 		100000000000000000000036 /* Brew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000038 /* Brew.swift */; };
@@ -90,6 +93,9 @@
 		200000000000000000000071 /* RedisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedisService.swift; sourceTree = "<group>"; };
 		200000000000000000000072 /* RedisViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedisViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000073 /* RedisViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedisViews.swift; sourceTree = "<group>"; };
+		200000000000000000000074 /* MkCertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MkCertService.swift; sourceTree = "<group>"; };
+		200000000000000000000075 /* MkCertViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MkCertViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000076 /* CertViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertViews.swift; sourceTree = "<group>"; };
 		200000000000000000000034 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		200000000000000000000035 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		200000000000000000000036 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -188,6 +194,7 @@
 				200000000000000000000023 /* NginxService.swift */,
 				200000000000000000000024 /* DatabaseService.swift */,
 				200000000000000000000071 /* RedisService.swift */,
+				200000000000000000000074 /* MkCertService.swift */,
 				200000000000000000000025 /* StaticCatalogService.swift */,
 				200000000000000000000026 /* PathService.swift */,
 				200000000000000000000038 /* Brew.swift */,
@@ -208,6 +215,7 @@
 				200000000000000000000029 /* NginxViewModel.swift */,
 				200000000000000000000030 /* DatabaseViewModel.swift */,
 				200000000000000000000072 /* RedisViewModel.swift */,
+				200000000000000000000075 /* MkCertViewModel.swift */,
 				200000000000000000000040 /* PhpViewModel.swift */,
 				200000000000000000000044 /* SwooleViewModel.swift */,
 				200000000000000000000048 /* ComposerViewModel.swift */,
@@ -224,6 +232,7 @@
 				200000000000000000000032 /* NginxViews.swift */,
 				200000000000000000000033 /* DatabaseViews.swift */,
 				200000000000000000000073 /* RedisViews.swift */,
+				200000000000000000000076 /* CertViews.swift */,
 				200000000000000000000034 /* Components.swift */,
 				200000000000000000000035 /* SettingsView.swift */,
 				200000000000000000000041 /* PhpViews.swift */,
@@ -389,6 +398,9 @@
 				100000000000000000000071 /* RedisService.swift in Sources */,
 				100000000000000000000072 /* RedisViewModel.swift in Sources */,
 				100000000000000000000073 /* RedisViews.swift in Sources */,
+				100000000000000000000074 /* MkCertService.swift in Sources */,
+				100000000000000000000075 /* MkCertViewModel.swift in Sources */,
+				100000000000000000000076 /* CertViews.swift in Sources */,
 				100000000000000000000034 /* Components.swift in Sources */,
 				100000000000000000000035 /* SettingsView.swift in Sources */,
 				100000000000000000000036 /* Brew.swift in Sources */,

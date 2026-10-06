@@ -45,3 +45,9 @@ struct Host: Codable, Hashable, Identifiable {
     // 否则它们会共用同一个 vhost 文件互相覆盖。
     func copy() -> Host { var item = self; item.id = hostID(); return item }
 }
+
+// 已签发证书的到期时间和指纹，openssl x509 读出来的。没签发过就没有这一项。
+struct CertificateInfo: Hashable {
+    let expiry: String
+    let fingerprint: String
+}

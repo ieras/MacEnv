@@ -60,6 +60,7 @@
 "action.customPathHint" = "自訂版本路徑：會在此路徑的 bin 與 sbin 目錄中搜尋執行檔";
 "action.createIni" = "建立 php.ini";
 "action.openFolder" = "開啟目錄";
+"action.copyPath" = "複製路徑";
 "action.editPhpIni" = "編輯 php.ini";
 "action.search" = "搜尋";
 "action.enable" = "啟用";
@@ -231,6 +232,7 @@
 "menu.quit" = "結束 MacEnv";
 
 "tab.hosts" = "站點";
+"tab.siteCert" = "站點憑證";
 "tab.hostLogs" = "站點日誌";
 "tab.hostsFile" = "系統 hosts";
 "tab.vhostTemplate" = "站點範本";
@@ -254,6 +256,11 @@
 "host.phpStatic" = "靜態";
 "host.ssl" = "啟用 HTTPS";
 "host.autoSSL" = "自動簽發憑證";
+"host.sslHint" = "啟用後站點會同時監聽 HTTPS 埠。";
+"host.autoSSLHint" = "儲存站點時自動簽發憑證。裝了 MkCert 走 MkCert，否則用內建 openssl 自簽。";
+"host.sslCertPath" = "憑證檔案";
+"host.sslKeyPath" = "私鑰檔案";
+"host.sslPort" = "HTTPS 埠";
 "host.rewrite" = "偽靜態規則";
 "host.rewriteHint" = "留空則依目錄結構自動辨識（WordPress / Laravel / Yii / ThinkPHP），並自動把根目錄切到入口目錄。";
 "host.autoFill" = "自動辨識";
@@ -264,6 +271,25 @@
 "host.copyURL" = "複製站點網址";
 "host.copyPath" = "複製站點目錄";
 "host.rewriteTemplate" = "套用範本";
+
+// 站点证书（MkCert）
+"mkcert.certificates" = "憑證";
+"mkcert.installed" = "已安裝";
+"mkcert.notInstalled" = "MkCert 未安裝";
+"mkcert.installHint" = "到「版本管理」裡裝一個，Static / Homebrew / MacPorts 都行。";
+"mkcert.toVersions" = "前往版本管理";
+"mkcert.recheck" = "重新檢查";
+"mkcert.installCA" = "安裝 CA 憑證";
+"mkcert.caroot" = "CA 根目錄";
+"mkcert.caInstalled" = "CA 憑證已安裝";
+"mkcert.noVersion" = "請先在「版本管理」裡安裝 MkCert。";
+"mkcert.generate" = "簽發";
+"mkcert.signed" = "已簽發";
+"mkcert.unsigned" = "未簽發";
+"mkcert.expiry" = "到期：";
+"mkcert.fingerprint" = "指紋：";
+"mkcert.signedDone" = "已簽發憑證：";
+"mkcert.empty" = "還沒有站點。憑證按站點簽發，先去「站點」建立一個。";
 
 "hosts.synced" = "/etc/hosts 已同步";
 "hosts.unsynced" = "/etc/hosts 未同步";

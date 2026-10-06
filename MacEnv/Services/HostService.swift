@@ -214,6 +214,28 @@ final class HostService {
 
     // MARK: - 自签证书
 
+    // 站点证书的落地路径。内置 openssl 自签和 mkcert 都写这两条，所以只能有一处定义 ——
+    // 否则将来改目录会漏掉一边，出现「vhost 指向的文件根本不存在」。
+    func certificatePaths(_ host: Host) -> (cert: String, key: String) {
+        let base = caDirectory.appendingPathComponent(host.id).appendingPathComponent("CA-\(host.id)")
+        return (base.path + ".crt", base.path + ".key")
+    }
+
+    // 用 mkcert 签。比手写那 6 条 openssl 短得多，代价是要求用户装了 mkcert。
+    // 证书链挂在 mkcert 自己的根 CA 上（由 mkcert -install 装进系统钥匙串），跟下面的自签是两套根。
+    func issue(_ host: inout Host, withMkcert version: MkCertVersion) async throws {
+        let paths = certificatePaths(host)
+        try FileManager.default.createDirectory(at: URL(fileURLWithPath: paths.cert).deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        let output = try await Command.run(version.executable.path,
+                                           ["-cert-file", paths.cert, "-key-file", paths.key] + host.aliases)
+        guard output.status == 0 else { throw CommandError(message: output.text) }
+        host.sslCert = paths.cert
+        host.sslKey = paths.key
+        // 对应 FlyEnv MkCertStore.taskConfirm：签完就把站点的 HTTPS 打开，不用用户再回表单勾一次。
+        host.useSSL = true
+    }
+
     // 站点要 https 时确保 sslCert / sslKey 就绪。根 CA 只在第一次生成并装进系统钥匙串。
     func issue(_ host: inout Host) async throws {
         let fm = FileManager.default
@@ -231,7 +253,8 @@ final class HostService {
             try await trustRootCertificate()
         }
 
-        let hostDirectory = caDirectory.appendingPathComponent(host.id, isDirectory: true)
+        let paths = certificatePaths(host)
+        let hostDirectory = URL(fileURLWithPath: paths.cert).deletingLastPathComponent()
         try? fm.removeItem(at: hostDirectory)
         try fm.createDirectory(at: hostDirectory, withIntermediateDirectories: true)
         let name = hostDirectory.appendingPathComponent("CA-\(host.id)")
@@ -245,8 +268,22 @@ final class HostService {
         try await openssl(["x509", "-req", "-in", name.path + ".csr", "-out", name.path + ".crt",
                            "-extfile", name.path + ".ext", "-CA", rootCertificate.path, "-CAkey", base.path + ".key",
                            "-CAcreateserial", "-CAserial", base.path + ".srl", "-sha256", "-days", "3650"])
-        host.sslCert = name.path + ".crt"
-        host.sslKey = name.path + ".key"
+        host.sslCert = paths.cert
+        host.sslKey = paths.key
+    }
+
+    // 证书的到期时间和指纹。mkcert 没有查询命令，跑 openssl 读。
+    // 文件不在或读不出来就返回 nil —— 界面显示「未签发」即可，不值得为它弹个错。
+    func certificateInfo(_ host: Host) async -> CertificateInfo? {
+        let path = certificatePaths(host).cert
+        guard FileManager.default.fileExists(atPath: path),
+              let output = try? await Command.run("/usr/bin/openssl",
+                                                  ["x509", "-noout", "-enddate", "-fingerprint", "-sha256", "-in", path]),
+              output.status == 0 else { return nil }
+        return CertificateInfo(
+            // openssl 把日补成两位（"Jan  6"），split 顺便把双空格收成一个 —— 也省掉了 trim。
+            expiry: firstCapture(#"notAfter=(.+)"#, in: output.text)?.split(separator: " ").joined(separator: " ") ?? "",
+            fingerprint: firstCapture(#"Fingerprint=([0-9A-Fa-f:]+)"#, in: output.text) ?? "")
     }
 
     // 把根 CA 加进系统钥匙串。要一次管理员授权；CA 已经生成过就不会再走到这里。

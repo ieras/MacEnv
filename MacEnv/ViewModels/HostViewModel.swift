@@ -7,6 +7,8 @@ final class HostViewModel: ObservableObject {
 
     @Published var hosts: [Host] = []
     @Published var selectedID: String?
+    // 已签发证书的到期时间和指纹，按 host.id 索引。没签发过的站点不在里面。
+    @Published var certificates: [String: CertificateInfo] = [:]
     @Published var logText = ""
     @Published var logKind = "access"
     @Published var hostsSynced = false
@@ -54,7 +56,15 @@ final class HostViewModel: ObservableObject {
         state.run {
             var item = host
             self.service.autoFillRewrite(&item)
-            if item.useSSL && item.autoSSL { try await self.service.issue(&item) }
+            if item.useSSL && item.autoSSL {
+                // 装了 mkcert 就走它（根 CA 由 mkcert -install 装进系统钥匙串），
+                // 没装回落内置 openssl 自签。两条路的证书落地路径完全相同。
+                if let mkcert = self.services.mkcert.defaultVersion {
+                    try await self.service.issue(&item, withMkcert: mkcert)
+                } else {
+                    try await self.service.issue(&item)
+                }
+            }
             if !item.useSSL { item.sslCert = ""; item.sslKey = "" }
             try self.service.write(item)
             if let index = self.hosts.firstIndex(where: { $0.id == item.id }) {
@@ -68,6 +78,32 @@ final class HostViewModel: ObservableObject {
             self.state.message = L("message.hostSaved") + item.name
             if let note = await self.writeHosts() { self.state.message += " · " + note }
         }
+    }
+
+    // 用 mkcert 给一个站点签证书。对应 FlyEnv MkCertStore.generateCert + taskConfirm：
+    // 签完自动开 HTTPS 并重写 vhost，不用用户再回表单勾一次。
+    func sign(_ host: Host, using version: MkCertVersion?) {
+        guard let version else { state.message = L("mkcert.noVersion"); return }
+        state.run {
+            var item = host
+            try await self.service.issue(&item, withMkcert: version)
+            try self.service.write(item)
+            if let index = self.hosts.firstIndex(where: { $0.id == item.id }) { self.hosts[index] = item }
+            try self.service.save(self.hosts)
+            self.services.nginx.reloadIfRunning()
+            await self.loadCertificates()
+            self.state.message = L("mkcert.signedDone") + item.name
+            if let note = await self.writeHosts() { self.state.message += " · " + note }
+        }
+    }
+
+    // 每个站点的证书到期时间和指纹。没有证书文件的站点直接跳过，界面按「未签发」显示。
+    func loadCertificates() async {
+        var result: [String: CertificateInfo] = [:]
+        for host in hosts {
+            if let info = await service.certificateInfo(host) { result[host.id] = info }
+        }
+        certificates = result
     }
 
     func delete(_ host: Host) {

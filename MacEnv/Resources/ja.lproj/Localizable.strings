@@ -60,6 +60,7 @@
 "action.customPathHint" = "カスタムバージョンパス：このパス配下の bin と sbin で実行ファイルを検索します";
 "action.createIni" = "php.ini を作成";
 "action.openFolder" = "フォルダを開く";
+"action.copyPath" = "パスをコピー";
 "action.editPhpIni" = "php.ini を編集";
 "action.search" = "検索";
 "action.enable" = "有効化";
@@ -231,6 +232,7 @@
 "menu.quit" = "MacEnv を終了";
 
 "tab.hosts" = "サイト";
+"tab.siteCert" = "サイト証明書";
 "tab.hostLogs" = "サイトログ";
 "tab.hostsFile" = "システム hosts";
 "tab.vhostTemplate" = "サイトテンプレート";
@@ -254,6 +256,11 @@
 "host.phpStatic" = "静的";
 "host.ssl" = "HTTPS を有効化";
 "host.autoSSL" = "証明書を自動発行";
+"host.sslHint" = "有効にするとサイトが HTTPS ポートも待ち受けます。";
+"host.autoSSLHint" = "サイト保存時に証明書を自動発行します。MkCert があれば MkCert、なければ内蔵 openssl で自己署名します。";
+"host.sslCertPath" = "証明書ファイル";
+"host.sslKeyPath" = "秘密鍵ファイル";
+"host.sslPort" = "HTTPS ポート";
 "host.rewrite" = "リライト規則";
 "host.rewriteHint" = "空欄ならディレクトリ構成からフレームワークを判定し（WordPress / Laravel / Yii / ThinkPHP）、ルートをエントリディレクトリへ自動で切り替えます。";
 "host.autoFill" = "自動判定";
@@ -264,6 +271,25 @@
 "host.copyURL" = "サイトURLをコピー";
 "host.copyPath" = "サイトディレクトリをコピー";
 "host.rewriteTemplate" = "テンプレートを適用";
+
+// 站点证书（MkCert）
+"mkcert.certificates" = "証明書";
+"mkcert.installed" = "インストール済み";
+"mkcert.notInstalled" = "MkCert がインストールされていません";
+"mkcert.installHint" = "「バージョン管理」からインストールしてください（Static / Homebrew / MacPorts のいずれでも可）。";
+"mkcert.toVersions" = "バージョン管理へ";
+"mkcert.recheck" = "再確認";
+"mkcert.installCA" = "CA 証明書をインストール";
+"mkcert.caroot" = "CA ルート";
+"mkcert.caInstalled" = "CA 証明書をインストールしました";
+"mkcert.noVersion" = "先に「バージョン管理」で MkCert をインストールしてください。";
+"mkcert.generate" = "発行";
+"mkcert.signed" = "発行済み";
+"mkcert.unsigned" = "未発行";
+"mkcert.expiry" = "有効期限：";
+"mkcert.fingerprint" = "フィンガープリント：";
+"mkcert.signedDone" = "証明書を発行しました：";
+"mkcert.empty" = "サイトがありません。証明書はサイト単位で発行します。「サイト」で作成してください。";
 
 "hosts.synced" = "/etc/hosts 同期済み";
 "hosts.unsynced" = "/etc/hosts 未同期";

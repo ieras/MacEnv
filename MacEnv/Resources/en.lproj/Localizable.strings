@@ -60,6 +60,7 @@
 "action.customPathHint" = "Custom version path: executables are looked up in the bin and sbin of this path";
 "action.createIni" = "Create php.ini";
 "action.openFolder" = "Open folder";
+"action.copyPath" = "Copy path";
 "action.editPhpIni" = "Edit php.ini";
 "action.search" = "Search";
 "action.enable" = "Enable";
@@ -231,6 +232,7 @@
 "menu.quit" = "Quit MacEnv";
 
 "tab.hosts" = "Sites";
+"tab.siteCert" = "Site Certificates";
 "tab.hostLogs" = "Site logs";
 "tab.hostsFile" = "System hosts";
 "tab.vhostTemplate" = "Site templates";
@@ -254,6 +256,11 @@
 "host.phpStatic" = "Static";
 "host.ssl" = "Enable HTTPS";
 "host.autoSSL" = "Issue certificate automatically";
+"host.sslHint" = "The site will also listen on an HTTPS port.";
+"host.autoSSLHint" = "Issue a certificate automatically when the site is saved. Uses MkCert when installed, otherwise the built-in openssl self-signing.";
+"host.sslCertPath" = "Certificate";
+"host.sslKeyPath" = "Private key";
+"host.sslPort" = "HTTPS port";
 "host.rewrite" = "Rewrite rules";
 "host.rewriteHint" = "Leave empty to detect the framework from the directory layout (WordPress / Laravel / Yii / ThinkPHP) and move the root to the entry directory.";
 "host.autoFill" = "Detect";
@@ -264,6 +271,25 @@
 "host.copyURL" = "Copy site URL";
 "host.copyPath" = "Copy site folder";
 "host.rewriteTemplate" = "Apply template";
+
+// 站点证书（MkCert）
+"mkcert.certificates" = "Certificates";
+"mkcert.installed" = "installed";
+"mkcert.notInstalled" = "MkCert is not installed";
+"mkcert.installHint" = "Install one from the Versions tab — Static, Homebrew, or MacPorts.";
+"mkcert.toVersions" = "Go to Versions";
+"mkcert.recheck" = "Recheck";
+"mkcert.installCA" = "Install CA";
+"mkcert.caroot" = "CA Root";
+"mkcert.caInstalled" = "CA installed";
+"mkcert.noVersion" = "Install MkCert from the Versions tab first.";
+"mkcert.generate" = "Issue";
+"mkcert.signed" = "Signed";
+"mkcert.unsigned" = "Not signed";
+"mkcert.expiry" = "Expires: ";
+"mkcert.fingerprint" = "SHA-256: ";
+"mkcert.signedDone" = "Issued certificate: ";
+"mkcert.empty" = "No sites yet. Certificates are issued per site — create one under Sites first.";
 
 "hosts.synced" = "/etc/hosts in sync";
 "hosts.unsynced" = "/etc/hosts out of sync";

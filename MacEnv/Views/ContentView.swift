@@ -5,6 +5,7 @@ struct ContentView: View {
     @ObservedObject var nginxVM: NginxViewModel
     @ObservedObject var databaseVM: DatabaseViewModel
     @ObservedObject var redisVM: RedisViewModel
+    @ObservedObject var certVM: MkCertViewModel
     @ObservedObject var phpVM: PhpViewModel
     @ObservedObject var hostVM: HostViewModel
     @ObservedObject var goVM: GoViewModel
@@ -60,7 +61,7 @@ struct ContentView: View {
                 GoManagementView(app: app, vm: goVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "hosts" {
-                HostManagementView(app: app, vm: hostVM)
+                HostManagementView(app: app, vm: hostVM, certVM: certVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "redis" {
                 RedisManagementView(app: app, vm: redisVM)
@@ -151,11 +152,9 @@ struct ContentView: View {
                     .contentShape(Rectangle()).onTapGesture { selectedPage = "quick-start" }
 
                     // 分组、条目顺序全读 moduleGroups，跟设置页的模块开关同一份配置。
-                    // 控制台标题和快捷启动行上面已经画了，所以这一组不再重复画标题。
+                    // 控制台那一组的标题和快捷启动行上面已经画了，moduleGroups 里也不再有它。
                     ForEach(moduleGroups, id: \.0) { group in
-                        if group.0 != "sidebar.console" {
-                            Text(L(group.0)).font(.headline).foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 12)
-                        }
+                        Text(L(group.0)).font(.headline).foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 12)
                         ForEach(group.1.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
                     }
                 }

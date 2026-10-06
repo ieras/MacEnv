@@ -1,4 +1,11 @@
 import SwiftUI
+import AppKit
+
+// 拷到剪切板。站点列表（网址 / 目录）和证书页（CA 根目录）共用这一条。
+func copyText(_ text: String) {
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(text, forType: .string)
+}
 
 struct NginxIcon: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -32,6 +39,20 @@ struct RedisIcon: View {
 
     var body: some View {
         Image("RedisIcon")
+            .renderingMode(.template)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .foregroundStyle(colorScheme == .dark ? .white : .blue)
+    }
+}
+
+// 站点 / 站点证书共用。mkcert 那个盾牌 + SSL 字样的图标，跟 FlyEnv 用的是同一份。
+struct SSLIcon: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Image("SSLIcon")
             .renderingMode(.template)
             .resizable()
             .interpolation(.high)
@@ -371,13 +392,13 @@ extension View {
     func panelHeader() -> some View { modifier(PanelHeader()) }
 }
 
-// 按模块 id 取图标：站点用系统 globe，nginx/php/go 有专属 icon，其余按数据库 kind 取。
+// 按模块 id 取图标：站点用 SSL 盾牌，nginx/php/go 有专属 icon，其余按数据库 kind 取。
 struct ModuleIcon: View {
     let id: String
 
     var body: some View {
         switch id {
-        case "hosts": Image(systemName: "globe")
+        case "hosts": SSLIcon()
         case "nginx": NginxIcon()
         case "php": PhpIcon()
         case "go": GoIcon()
@@ -461,11 +482,12 @@ enum AppTheme {
     static let radiusRow: CGFloat = 10
     static let radiusOverlay: CGFloat = 10
 
-    // 弹窗尺寸规范：宽度一律 560；高度两档 —— 常规 360，多字段表单 560
-    // （站点编辑有 7 个字段 + 两个多行编辑器，360 高一次只能看见 2 个字段）。
+    // 弹窗尺寸规范：宽度一律 560；高度三档 —— 常规 360，多字段表单 560，
+    // 超长表单 680（站点编辑展开 SSL 后最多 12 个字段 + 两个多行编辑器，560 装不下）。
     static let sheetWidth: CGFloat = 560
     static let sheetHeight: CGFloat = 360
     static let formSheetHeight: CGFloat = 560
+    static let tallSheetHeight: CGFloat = 680
 
     // 主色调和侧栏选中色按明暗两套给，系统色一失焦就变灰，所以自己算。
     static func tint(_ scheme: ColorScheme) -> Color {

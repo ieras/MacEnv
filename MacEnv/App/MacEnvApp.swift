@@ -95,7 +95,7 @@ struct MacEnvApp: App {
 
     var body: some Scene {
         Window(L("app.name"), id: "main") {
-            ContentView(app: model, nginxVM: model.nginxVM, databaseVM: model.databaseVM, redisVM: model.redisVM, phpVM: model.phpVM, hostVM: model.hostVM, goVM: model.goVM)
+            ContentView(app: model, nginxVM: model.nginxVM, databaseVM: model.databaseVM, redisVM: model.redisVM, certVM: model.certVM, phpVM: model.phpVM, hostVM: model.hostVM, goVM: model.goVM)
                 .frame(minWidth: 900, minHeight: 620)
                 .id(model.state.language)
                 .onAppear { delegate.model = model; model.state.applyTheme() }

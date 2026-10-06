@@ -19,17 +19,25 @@ final class StaticCatalogService {
     // 列表里显示的名字前缀。默认是 app 首字母大写，但 one-env 的接口名不总是好看的那个
     // （golang → "Golang-1.27.1"，而 Go 官方和 FlyEnv 都写 "Go-1.27.1"）。
     let displayName: String
+    // one-env 对 mkcert 这类工具直接给裸二进制（没有扩展名、不是压缩包），拷到 bin/ 下就算装完。
+    let rawBinary: Bool
     static let defaultEndpoint = URL(string: "https://api.one-env.com/api/version/fetch")!
     private var cache: URL { root.appendingPathComponent("catalog/static-\(app).json") }
     private var archives: URL { root.appendingPathComponent("cache", isDirectory: true) }
     private var versionsDirectory: URL { root.appendingPathComponent("server/\(app)/versions", isDirectory: true) }
     private static let refreshInterval: TimeInterval = 3600
 
-    init(root: URL, app: String = "nginx", binaryNames: [String] = ["nginx"], displayName: String? = nil) {
+    init(root: URL, app: String = "nginx", binaryNames: [String] = ["nginx"], displayName: String? = nil, rawBinary: Bool = false) {
         self.root = root
         self.app = app
         self.binaryNames = binaryNames
         self.displayName = displayName ?? app.capitalized
+        self.rawBinary = rawBinary
+    }
+
+    // 下载缓存的落点。裸二进制没有扩展名，别拼出个 "xxx.tar." 来。
+    private func archiveURL(_ version: StaticVersion) -> URL {
+        archives.appendingPathComponent("static-\(app)-\(version.version)\(rawBinary ? "" : ".tar." + version.url.pathExtension)")
     }
 
     // 上次请求结果永久保存在磁盘，界面任何时候都能先显示它。
@@ -69,7 +77,7 @@ final class StaticCatalogService {
         let fm = FileManager.default
         try fm.createDirectory(at: archives, withIntermediateDirectories: true)
         try fm.createDirectory(at: versionsDirectory, withIntermediateDirectories: true)
-        let archive = archives.appendingPathComponent("static-\(app)-\(version.version).tar.\(version.url.pathExtension)")
+        let archive = archiveURL(version)
         if !fm.fileExists(atPath: archive.path) {
             let (temporary, response) = try await URLSession.shared.download(from: version.url)
             if let status = (response as? HTTPURLResponse)?.statusCode, !(200..<300).contains(status) {
@@ -77,6 +85,18 @@ final class StaticCatalogService {
             }
             try? fm.removeItem(at: archive)
             try fm.moveItem(at: temporary, to: archive)
+        }
+        // 落点跟解包模式一致（<app>-<ver>/bin/<name>），所以 uninstall / updateFlags 一行都不用改。
+        if rawBinary {
+            let bin = versionsDirectory.appendingPathComponent("\(app)-\(version.version)/bin", isDirectory: true)
+            try? fm.removeItem(at: bin.deletingLastPathComponent())
+            try fm.createDirectory(at: bin, withIntermediateDirectories: true)
+            let file = bin.appendingPathComponent(binaryNames[0])
+            try fm.copyItem(at: archive, to: file)
+            try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: file.path)
+            // Go 编出来的裸二进制带 quarantine 属性，不去掉会被 Gatekeeper 拦。
+            _ = try? await Command.run("/usr/bin/xattr", ["-cr", file.path])
+            return
         }
         let staging = versionsDirectory.appendingPathComponent(".staging-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
@@ -110,7 +130,7 @@ final class StaticCatalogService {
         let fm = FileManager.default
         return versions.map {
             var version = $0
-            version.downloaded = fm.fileExists(atPath: archives.appendingPathComponent("static-\(app)-\(version.version).tar.\($0.url.pathExtension)").path)
+            version.downloaded = fm.fileExists(atPath: archiveURL(version).path)
             version.installed = binaryNames.contains { name in
                 fm.isExecutableFile(atPath: versionsDirectory.appendingPathComponent("\(app)-\(version.version)/sbin/\(name)").path) ||
                     fm.isExecutableFile(atPath: versionsDirectory.appendingPathComponent("\(app)-\(version.version)/bin/\(name)").path)

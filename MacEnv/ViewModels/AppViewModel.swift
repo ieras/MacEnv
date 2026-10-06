@@ -5,9 +5,11 @@ import ServiceManagement
 
 // 模块分组与顺序的唯一来源：设置页的模块开关、侧边栏的条目都按它渲染。
 // 要调顺序、换分组，只改这一个数组。
+//
+// 没有 "sidebar.console" 这一组：控制台只剩快捷启动，而它在侧边栏里是硬编码画的
+// （设置页不把它当模块开关）。留一个空组会在设置页画出「标题 + 点了没反应的开关 + 空白网格」。
 let moduleGroups: [(String, [String])] = [
-    ("sidebar.console", ["hosts"]),
-    ("sidebar.web", ["nginx"]),
+    ("sidebar.web", ["hosts", "nginx"]),
     ("sidebar.database", ["mysql", "mariadb"]),
     ("sidebar.cache", ["redis"]),
     ("sidebar.language", ["php", "go"]),
@@ -145,6 +147,7 @@ final class AppViewModel: ObservableObject {
     let nginxVM: NginxViewModel
     let databaseVM: DatabaseViewModel
     let redisVM: RedisViewModel
+    let certVM: MkCertViewModel
     let phpVM: PhpViewModel
     let swooleVM: SwooleViewModel
     let composerVM: ComposerViewModel
@@ -156,6 +159,7 @@ final class AppViewModel: ObservableObject {
         nginxVM = NginxViewModel(state: state, services: services)
         databaseVM = DatabaseViewModel(state: state, services: services)
         redisVM = RedisViewModel(state: state, services: services)
+        certVM = MkCertViewModel(state: state, services: services)
         phpVM = PhpViewModel(state: state, services: services)
         swooleVM = SwooleViewModel(state: state, services: services)
         composerVM = ComposerViewModel(state: state, services: services)
@@ -247,7 +251,8 @@ final class AppViewModel: ObservableObject {
         async let mysql: Void = databaseVM.refresh(.mysql)
         async let mariadb: Void = databaseVM.refresh(.mariadb)
         async let redis: Void = redisVM.refresh()
+        async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, nginx, mysql, mariadb, redis, hosts)
+        _ = await (swoole, composer, go, nginx, mysql, mariadb, redis, cert, hosts)
     }
 }

@@ -4,6 +4,7 @@ import AppKit
 struct HostManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: HostViewModel
+    @ObservedObject var certVM: MkCertViewModel
     @State private var tab = 0
     @State private var editing: Host?
     @State private var configHost: Host?
@@ -12,13 +13,13 @@ struct HostManagementView: View {
     var body: some View {
         ModulePage {
             SegmentedTabs(
-                titles: [L("tab.hosts"), L("tab.hostLogs"), L("tab.hostsFile"), L("tab.vhostTemplate")],
+                titles: [L("tab.hosts"), L("tab.siteCert"), L("tab.hostLogs"), L("tab.hostsFile"), L("tab.vhostTemplate")],
                 selection: $tab
             )
         } content: {
             page
         }
-        .onChange(of: tab) { value in if value == 1 { vm.loadLog() } }
+        .onChange(of: tab) { value in if value == 2 { vm.loadLog() } }
         .task { await vm.refresh() }
         .sheet(item: $editing) { HostEditorView(vm: vm, host: $0) }
         .sheet(item: $configHost) { HostConfigView(vm: vm, host: $0) }
@@ -34,9 +35,10 @@ struct HostManagementView: View {
     @ViewBuilder
     private var page: some View {
         switch tab {
-        case 1: logPanel
-        case 2: hostsPanel
-        case 3: templatePanel
+        case 1: CertificatePanelView(app: app, vm: certVM, hostVM: vm)
+        case 2: logPanel
+        case 3: hostsPanel
+        case 4: templatePanel
         default: listPanel
         }
     }
@@ -58,7 +60,7 @@ struct HostManagementView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 Text(L("host.title")).font(.title3)
-                Image(systemName: "globe").foregroundStyle(.secondary)
+                SSLIcon().frame(width: 22, height: 22)
                 Button { editing = Host() } label: { Image(systemName: "plus") }
                     .help(L("host.new"))
                     .disabled(app.state.busy)
@@ -80,7 +82,7 @@ struct HostManagementView: View {
                 Button(host.name) { NSWorkspace.shared.open(URL(string: host.url)!) }
                     .buttonStyle(.borderless)
                     .help(L("host.visit"))
-                Button { copy(host.url) } label: { Image(systemName: "doc.on.doc") }
+                Button { copyText(host.url) } label: { Image(systemName: "doc.on.doc") }
                     .buttonStyle(.borderless)
                     .help(L("host.copyURL"))
                 if host.useSSL { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(AppTheme.green) }
@@ -95,7 +97,7 @@ struct HostManagementView: View {
                     Text(URL(fileURLWithPath: host.root).lastPathComponent)
                 }
                 .buttonStyle(.borderless).help(tilde(host.root))
-                Button { copy(host.root) } label: { Image(systemName: "doc.on.doc") }
+                Button { copyText(host.root) } label: { Image(systemName: "doc.on.doc") }
                     .buttonStyle(.borderless)
                     .help(L("host.copyPath"))
             }
@@ -111,17 +113,11 @@ struct HostManagementView: View {
                 Button(L("host.park")) { vm.park(host) }.disabled(app.state.busy)
                 Divider()
                 Button(host.isTop ? L("host.unpin") : L("host.pin")) { vm.toggleTop(host) }
-                Button(L("tab.hostLogs")) { vm.selectedID = host.id; vm.loadLog(); tab = 1 }
+                Button(L("tab.hostLogs")) { vm.selectedID = host.id; vm.loadLog(); tab = 2 }
                 Divider()
                 Button(L("action.delete"), role: .destructive) { deleting = host }
             } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
         }
-    }
-
-    // 拷到剪切板。网址和站点目录共用这一条。
-    private func copy(_ text: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
     }
 
     // MARK: - 日志
@@ -273,16 +269,7 @@ struct HostEditorView: View {
                         TextField(L("host.markHint"), text: $host.mark).textFieldStyle(.roundedBorder)
                     }
                     field(L("column.path"), hint: L("host.rootHint")) {
-                        HStack(spacing: 8) {
-                            // 框里显示 ~，落库时展开回绝对路径。host.root 必须**始终**是绝对路径：
-                            // 自动识别伪静态要拿它去 fileExists，写 vhost 时也是原样塞进 nginx 配置，
-                            // 而 nginx 不认 ~ —— 之前占位符写着 ~/Sites/myapp 但真敲进去是坏的。
-                            TextField("~/Sites/myapp", text: Binding(
-                                get: { tilde(host.root) },
-                                set: { host.root = expandTilde($0) }
-                            )).textFieldStyle(.roundedBorder)
-                            Button { chooseRoot() } label: { Image(systemName: "folder") }.buttonStyle(.borderless)
-                        }
+                        pathField($host.root, "~/Sites/myapp", directory: true)
                     }
                     HStack(alignment: .top, spacing: 16) {
                         field("PHP") {
@@ -298,6 +285,24 @@ struct HostEditorView: View {
                             TextField("80", value: $host.port, format: .number).textFieldStyle(.roundedBorder).frame(width: 80)
                         }
                     }
+                    // 勾了「启用 HTTPS」才展开证书那一摊，否则表单一直挂着四五个用不上的字段。
+                    VStack(alignment: .leading, spacing: 14) {
+                        Toggle(L("host.ssl"), isOn: $host.useSSL).toggleStyle(ServiceSwitch())
+                        if host.useSSL {
+                            Toggle(L("host.autoSSL"), isOn: $host.autoSSL).toggleStyle(ServiceSwitch())
+                            Text(L("host.autoSSLHint")).font(.caption).foregroundStyle(.secondary)
+                            if !host.autoSSL {
+                                field(L("host.sslCertPath")) { pathField($host.sslCert, "cert", directory: false) }
+                                field(L("host.sslKeyPath")) { pathField($host.sslKey, "key", directory: false) }
+                            }
+                            field(L("host.sslPort")) {
+                                TextField("443", value: $host.sslPort, format: .number).textFieldStyle(.roundedBorder).frame(width: 80)
+                            }
+                        } else {
+                            Text(L("host.sslHint")).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     field(L("host.rewrite"), hint: L("host.rewriteHint")) {
                         Picker("", selection: $rewriteTemplate) {
                             Text(L("host.rewriteTemplate")).tag("")
@@ -332,7 +337,7 @@ struct HostEditorView: View {
             }
             .padding(20)
         }
-        .frame(width: AppTheme.sheetWidth, height: AppTheme.formSheetHeight)
+        .frame(width: AppTheme.sheetWidth, height: AppTheme.tallSheetHeight)
         .onAppear { if rewriteTemplates.isEmpty { rewriteTemplates = loadRewriteTemplates() } }
     }
 
@@ -362,14 +367,27 @@ struct HostEditorView: View {
             .overlay(RoundedRectangle(cornerRadius: AppTheme.radiusCard).stroke(AppTheme.stroke))
     }
 
-    private func chooseRoot() {
+    // 路径输入框：框里显示 ~，落库时展开回绝对路径。站点根目录和证书 / 私钥共用。
+    // host.root 必须**始终**是绝对路径：自动识别伪静态要拿它去 fileExists，写 vhost 时也是
+    // 原样塞进 nginx 配置，而 nginx 不认 ~ —— 之前占位符写着 ~/Sites/myapp 但真敲进去是坏的。
+    private func pathField(_ text: Binding<String>, _ placeholder: String, directory: Bool) -> some View {
+        HStack(spacing: 8) {
+            TextField(placeholder, text: Binding(
+                get: { tilde(text.wrappedValue) },
+                set: { text.wrappedValue = expandTilde($0) }
+            )).textFieldStyle(.roundedBorder)
+            Button { choose(text, directory: directory) } label: { Image(systemName: "folder") }.buttonStyle(.borderless)
+        }
+    }
+
+    private func choose(_ target: Binding<String>, directory: Bool) {
         let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.canCreateDirectories = true
+        panel.canChooseDirectories = directory
+        panel.canChooseFiles = !directory
+        panel.canCreateDirectories = directory
         panel.showsHiddenFiles = true
         guard panel.runModal() == .OK, let url = panel.urls.first else { return }
-        host.root = url.path
+        target.wrappedValue = url.path
     }
 }
 

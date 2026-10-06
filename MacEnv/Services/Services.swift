@@ -9,6 +9,7 @@ final class Services {
     let mysql: DatabaseService
     let mariadb: DatabaseService
     let redis: RedisService
+    let mkcert: MkCertService
     let php: PhpService
     let phpFpm: PhpFpmService
     let swoole: SwooleService
@@ -26,6 +27,8 @@ final class Services {
             "php": StaticCatalogService(root: root, app: "php", binaryNames: ["php"]),
             "swoole-cli": StaticCatalogService(root: root, app: "swoole-cli", binaryNames: ["swoole-cli"]),
             "composer": StaticCatalogService(root: root, app: "composer", binaryNames: ["composer"]),
+            // one-env 对 mkcert 直接给裸二进制（不是压缩包），所以要 rawBinary。
+            "mkcert": StaticCatalogService(root: root, app: "mkcert", binaryNames: ["mkcert"], rawBinary: true),
             // one-env 的目录接口只认 "golang"，传 "go" 它会回 400（app 类型错误）。
             "golang": StaticCatalogService(root: root, app: "golang", binaryNames: ["go"], displayName: "Go")
         ]
@@ -34,6 +37,7 @@ final class Services {
         mysql = DatabaseService(kind: .mysql, root: root)
         mariadb = DatabaseService(kind: .mariadb, root: root)
         redis = RedisService(root: root)
+        mkcert = MkCertService(root: root)
         php = PhpService(root: root)
         phpFpm = PhpFpmService(root: root)
         swoole = SwooleService(root: root)
