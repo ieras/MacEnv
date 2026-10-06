@@ -83,7 +83,7 @@ final class PathService {
         try FileManager.default.createDirectory(at: aliasDirectory, withIntermediateDirectories: true)
         let file = aliasDirectory.appendingPathComponent(name)
         // 别名脚本要用用户自己的 shell 跑；fish 里 $@ 得写成 $argv。
-        try "#!\(shell)\n\(doubleQuoted(executable.path)) \(shellName == "fish" ? "$argv" : "$@")\n".write(to: file, atomically: true, encoding: .utf8)
+        try "#!\(shell)\n\(doubleQuoted(shellPath(executable.path))) \(shellName == "fish" ? "$argv" : "$@")\n".write(to: file, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: file.path)
         try rewriteShellPath()
     }
@@ -92,6 +92,7 @@ final class PathService {
         try? FileManager.default.removeItem(at: aliasDirectory.appendingPathComponent(alias.name))
     }
 
+    // 给子进程用的必须是绝对路径：$HOME 进了 Process.environment 没人替你展开。
     private func managedPaths() -> [String] {
         let links = (try? FileManager.default.contentsOfDirectory(at: envDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
         return links.flatMap { [$0.path, $0.appendingPathComponent("bin").path, $0.appendingPathComponent("sbin").path] } + [aliasDirectory.path]
@@ -109,7 +110,8 @@ final class PathService {
         if let start = content.range(of: begin), let finish = content.range(of: end, range: start.lowerBound..<content.endIndex) {
             content.removeSubrange(start.lowerBound..<finish.upperBound)
         }
-        let paths = managedPaths()
+        // 写进 shell 配置的那一版把家目录换成 $HOME（`~` 在引号里不展开，会直接让这条 PATH 失效）。
+        let paths = managedPaths().map(shellPath)
         // fish 的 PATH 是数组，得一个一个塞，不能用 export PATH="a:b:c" 那套。
         let block = shellName == "fish"
             ? "\(begin)\nset -gx PATH \(paths.map { "\"\($0)\"" }.joined(separator: " ")) $PATH\n\(end)\n"
@@ -118,17 +120,17 @@ final class PathService {
         let next = content + block
         // 内容一模一样就别动用户的文件，也别留备份。
         guard next != original else { return }
-        try backup(original)
-        try next.write(to: shellFile, atomically: true, encoding: .utf8)
+        try backup(original, name: shellFile.lastPathComponent)
+        // 非原子写：rc 文件可能是软链（链到 dotfiles 仓库很常见），原子写会把它换成普通文件。
+        try next.write(toFile: shellFile.path, atomically: false, encoding: .utf8)
     }
 
     // 改用户的 shell 配置文件之前先留一份。只保留最近 5 份，免得越攒越多。
-    private func backup(_ content: String) throws {
+    private func backup(_ content: String, name: String) throws {
         guard !content.isEmpty else { return }
         let fm = FileManager.default
         let directory = root.appendingPathComponent("backup", isDirectory: true)
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
-        let name = shellFile.lastPathComponent
         let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
         try content.write(to: directory.appendingPathComponent("\(name).\(stamp).bak"), atomically: true, encoding: .utf8)
         let olds = ((try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [])

@@ -29,6 +29,14 @@ func expandTilde(_ path: String) -> String {
     return path.hasPrefix("~/") ? home + String(path.dropFirst(1)) : path
 }
 
+// 写进 shell 配置文件（.zshrc / config.fish / 别名脚本）的路径：家目录那一段换成 $HOME。
+// 跟 tilde 的区别：~ 在引号里**不会展开** —— `export PATH="~/x:$PATH"` 里的 ~ 是字面量，
+// shell 按 PATH 找命令时也不认，结果就是这条 PATH 直接失效。$HOME 才是会展开的那个。
+func shellPath(_ path: String) -> String {
+    let home = FileManager.default.homeDirectoryForCurrentUser.path
+    return path.hasPrefix(home + "/") ? "$HOME" + String(path.dropFirst(home.count)) : path
+}
+
 // MacEnv 的数据根目录：~/Library/Application Support/MacEnv。服务和设置都落在这里。
 let macEnvDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
     .appendingPathComponent("MacEnv", isDirectory: true)
