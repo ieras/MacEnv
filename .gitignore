@@ -7,9 +7,8 @@ xcuserdata/
 .DS_Store
 reference/
 # 工具自身的工作目录
-.workbuddy-ai
+.workbuddy-ai/
 # 文档只在本地留着，暂不随仓库公开
 docs/
 AGENTS.md
-docs
-Design
+Design/
