@@ -24,22 +24,22 @@ final class SwooleService {
     // StaticCatalogService 的「已安装」标记也能直接对上。
     func installedVersions(customDirectories: [String] = []) async throws -> [SwooleVersion] {
         let fm = FileManager.default
-        var candidates: [URL] = []
+        var candidates: [(URL, String)] = []
         for item in (try? fm.contentsOfDirectory(at: versionsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? [] {
             for path in ["bin/swoole-cli", "swoole-cli"] {
                 let file = item.appendingPathComponent(path)
-                if fm.isExecutableFile(atPath: file.path) { candidates.append(file); break }
+                if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Static")); break }
             }
         }
         for item in customDirectories.map({ URL(fileURLWithPath: $0, isDirectory: true) }) {
             for path in ["swoole-cli", "bin/swoole-cli"] {
                 let file = item.appendingPathComponent(path)
-                if fm.isExecutableFile(atPath: file.path) { candidates.append(file) }
+                if fm.isExecutableFile(atPath: file.path) { candidates.append((file, L("source.custom"))) }
             }
         }
         var seen = Set<String>()
         var result: [SwooleVersion] = []
-        for file in candidates {
+        for (file, source) in candidates {
             let executable = file.resolvingSymlinksInPath()
             guard fm.isExecutableFile(atPath: executable.path), seen.insert(executable.path).inserted else { continue }
             // 每次扫描都补一遍运行时文件：用户手删了 php 或 composer 能自愈，已存在的不覆盖。
@@ -48,7 +48,8 @@ final class SwooleService {
             result.append(SwooleVersion(version: probe.swoole,
                                         phpVersion: probe.php,
                                         directory: executable.deletingLastPathComponent().deletingLastPathComponent(),
-                                        executable: executable))
+                                        executable: executable,
+                                        source: source))
         }
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }

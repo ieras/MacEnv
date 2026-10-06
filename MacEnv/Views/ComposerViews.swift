@@ -52,10 +52,11 @@ struct ComposerPanel: View {
         .task { await vm.loadStatic() }
     }
 
-    // 版本 / 路径 / 环境变量。宽度交给 DataTable 按容器反推。
+    // 版本 / 路径 / 来源 / 环境变量。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 60),
          TableColumn(title: L("column.path"), minWidth: 140, weight: 1),
+         TableColumn(title: L("column.source"), minWidth: 70),
          TableColumn(title: L("column.env"), minWidth: 56)]
     }
 
@@ -66,6 +67,7 @@ struct ComposerPanel: View {
                 Text(tilde(version.directory.path)).lineLimit(1).truncationMode(.middle)
             }
             .buttonStyle(.borderless).help(tilde(version.directory.path))
+            Text(version.source).foregroundStyle(.secondary)
             EnvironmentVariableButton(membership: vm.pathMembership[version.id, default: .none]) { vm.togglePath(version) }
                 .disabled(app.state.busy)
         }

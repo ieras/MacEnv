@@ -13,16 +13,16 @@ final class ComposerService {
 
     func installedVersions(customDirectories: [String] = []) throws -> [ComposerVersion] {
         let fm = FileManager.default
-        var candidates: [URL] = []
+        var candidates: [(URL, String)] = []
         for item in (try? fm.contentsOfDirectory(at: versionsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? [] {
-            candidates.append(item.appendingPathComponent("bin/composer"))
+            candidates.append((item.appendingPathComponent("bin/composer"), "Static"))
         }
         for item in customDirectories.map({ URL(fileURLWithPath: $0, isDirectory: true) }) {
-            for path in ["composer", "bin/composer"] { candidates.append(item.appendingPathComponent(path)) }
+            for path in ["composer", "bin/composer"] { candidates.append((item.appendingPathComponent(path), L("source.custom"))) }
         }
         var seen = Set<String>()
         var result: [ComposerVersion] = []
-        for file in candidates {
+        for (file, fallback) in candidates {
             let executable = file.resolvingSymlinksInPath()
             // composer 是个 phar：__HALT_COMPILER() 之后紧跟二进制清单和压缩负载，
             // 整个文件不是合法 UTF-8。String(contentsOf:encoding:.utf8) 是严格解码，
@@ -35,7 +35,8 @@ final class ComposerService {
                   let version = firstCapture("public const VERSION = '(\\d+(?:\\.\\d+){1,4})'", in: String(decoding: data, as: UTF8.self)) else { continue }
             result.append(ComposerVersion(version: version,
                                           directory: executable.deletingLastPathComponent().deletingLastPathComponent(),
-                                          executable: executable))
+                                          executable: executable,
+                                          source: source(of: executable, fallback: fallback)))
         }
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
@@ -57,5 +58,13 @@ final class ComposerService {
 
     func uninstall(_ version: StaticVersion) throws {
         try FileManager.default.removeItem(at: versionsDirectory.appendingPathComponent("composer-\(version.version)"))
+    }
+
+    // brew / macports 的 composer 是软链，而且它们就在 PATH 里 —— 会被当成「自定义」，标错了。
+    // 解析到真身之后按落点认来源，跟 PhpService 认 MacPorts 是同一个写法。
+    private func source(of executable: URL, fallback: String) -> String {
+        if executable.path.hasPrefix("/opt/homebrew") { return "Homebrew" }
+        if executable.path.hasPrefix("/opt/local") { return "MacPorts" }
+        return fallback
     }
 }

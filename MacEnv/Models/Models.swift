@@ -261,6 +261,7 @@ struct SwooleVersion: Identifiable, Hashable {
     let phpVersion: String
     let directory: URL
     let executable: URL
+    let source: String
 
     var id: String { executable.path }
 }
@@ -290,11 +291,12 @@ enum GvmAction {
     case install, uninstall, useDefault
 }
 
-// composer 就是一个 .phar，装完只有版本号和路径两件事要记。
+// composer 就是一个 .phar，装完只有版本号、路径和来源三件事要记。
 struct ComposerVersion: Identifiable, Hashable {
     let version: String
     let directory: URL
     let executable: URL
+    let source: String
 
     var id: String { executable.path }
 }
