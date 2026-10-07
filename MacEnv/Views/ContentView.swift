@@ -20,17 +20,24 @@ struct ContentView: View {
 
     private var busy: Bool { app.state.busy }
 
-    // 快捷启动里只要有一个在跑，电源键就是绿的；全关才是灰的。
-    private var quickStartRunning: Bool { app.state.quickStartTargets.contains { app.targetRunning($0) } }
+    // quick-start.json 里存的 key 可能指向已卸载的版本（僵尸 key）：列表只渲染还存在的服务，
+    // 计数、电源键、自启动必须用同一个口径，不然数字对不上列表。
+    private var quickStartTargets: [LaunchTarget] {
+        app.launchTargets.filter { app.state.quickStartTargets.contains($0.key) }
+    }
 
-    // 模块开关关掉的条目不出现在侧栏；当前正看着的那页被关掉就回落到快捷启动，避免右侧白屏。
-    private var page: String { (app.state.modules[selectedPage] ?? true) ? selectedPage : "quick-start" }
+    private var quickStartKeys: [String] { quickStartTargets.map(\.key) }
+
+    // 快捷启动里只要有一个在跑，电源键就是绿的；全关才是灰的。
+    private var quickStartRunning: Bool { quickStartTargets.contains { app.targetRunning($0.key) } }
 
     // 侧栏那一行显示「在跑/总数」，比如 1/3。
     private var quickStartCountLabel: String {
-        let total = app.state.quickStartTargets.count
-        return "\(app.state.quickStartTargets.filter { app.targetRunning($0) }.count)/\(total)"
+        "\(quickStartTargets.filter { app.targetRunning($0.key) }.count)/\(quickStartTargets.count)"
     }
+
+    // 模块开关关掉的条目不出现在侧栏；当前正看着的那页被关掉就回落到快捷启动，避免右侧白屏。
+    private var page: String { (app.state.modules[selectedPage] ?? true) ? selectedPage : "quick-start" }
 
     private func presentToast() {
         toastDismissTask?.cancel()
@@ -54,11 +61,17 @@ struct ContentView: View {
         } detail: {
             if page == "quick-start" {
                 QuickStartListView(app: app, nginxVM: nginxVM, databaseVM: databaseVM, phpVM: phpVM)
+            } else if page == "tools" {
+                ToolsView(app: app, vm: app.toolsVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "php" {
                 PhpManagementView(app: app, vm: phpVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "go" {
                 GoManagementView(app: app, vm: goVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "java" {
+                JavaManagementView(app: app, vm: app.javaVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "hosts" {
                 HostManagementView(app: app, vm: hostVM, certVM: certVM)
@@ -128,7 +141,7 @@ struct ContentView: View {
         .task {
             guard !isTesting else { return }
             await app.refreshAll()
-            if app.state.autoStartService { app.launch(app.state.quickStartTargets) }
+            if app.state.autoStartService { app.launch(quickStartKeys) }
         }
     }
 
@@ -138,25 +151,29 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L("sidebar.console")).font(.headline).foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 12)
                     HStack(spacing: 8) {
-                        Image(systemName: "bolt.fill").frame(width: 20, height: 20)
+                        AssetIcon(name: "StartIcon").frame(width: 20, height: 20)
                         Text(L("sidebar.quickStart"))
                         Spacer()
                         Text(quickStartCountLabel).foregroundStyle(.secondary).monospacedDigit()
                         // 电源键跟它管的东西待在同一行、最右侧：点一下起/停快捷启动里的全部服务。
                         Button {
-                            app.launch(app.state.quickStartTargets, stop: quickStartRunning)
+                            app.launch(quickStartKeys, stop: quickStartRunning)
                         } label: {
                             Image(systemName: quickStartRunning ? "power.circle.fill" : "power.circle")
                                 .foregroundStyle(quickStartRunning ? AppTheme.green : .secondary)
                         }
                         .buttonStyle(.borderless)
                         .help(quickStartRunning ? L("menu.stopQuickStart") : L("menu.startQuickStart"))
-                        .disabled(busy || app.state.quickStartTargets.isEmpty)
+                        .disabled(busy || quickStartTargets.isEmpty)
                     }
                     .padding(.horizontal, 8).padding(.vertical, 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(page == "quick-start" ? sidebarSelection : .clear, in: RoundedRectangle(cornerRadius: AppTheme.radiusRow))
                     .contentShape(Rectangle()).onTapGesture { selectedPage = "quick-start" }
+
+                    // 环境工具紧贴快捷启动下面：都是「控制台」这一组的东西。
+                    // 这一组不放进 moduleGroups（那会把「控制台」标题画两遍），条目从 consoleModules 来。
+                    ForEach(consoleModules.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
 
                     // 分组、条目顺序全读 moduleGroups，跟设置页的模块开关同一份配置。
                     // 控制台那一组的标题和快捷启动行上面已经画了，moduleGroups 里也不再有它。
@@ -192,9 +209,10 @@ struct ContentView: View {
     @ViewBuilder
     private func moduleTrailing(_ id: String) -> some View {
         switch id {
-        // 站点、Go 都没有常驻进程，只显示数量。
+        // 站点、Go、Java 都没有常驻进程，只显示数量。
         case "hosts": Text(String(hostVM.hosts.count)).foregroundStyle(.secondary)
         case "go": Text(String(goVM.versions.count)).foregroundStyle(.secondary)
+        case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(.secondary)
         case "nginx":
             Toggle("", isOn: Binding(get: { nginxVM.isRunning }, set: { _ in
                 if nginxVM.isRunning {

@@ -125,7 +125,7 @@ final class GoService {
     // 有些版本装过之后官方下架了，listall 里没有，但仍得在列表里显示成已安装。
     func gvmVersions() async throws -> [GvmVersion] {
         guard gvmInstalled else { throw CommandError(message: L("error.gvmMissing")) }
-        let setup = "source \(Self.quote(gvmInitScript.path))"
+        let setup = "source \(singleQuoted(gvmInitScript.path))"
         // GVM 是 zsh 脚本（scripts/functions 用了 zsh 的 -regex-match），必须用 /bin/zsh 跑。
         // 用 /bin/bash 的话 bash 不认 zsh 语法，gvm 函数根本定义不出来，所有子命令全挂。
         async let available = Command.run("/bin/zsh", ["-c", "\(setup) && gvm listall"])
@@ -179,8 +179,6 @@ final class GoService {
     // 先把悬空的 default 清掉再干活，FlyEnv 的 sanitize 也是这一步。
     private static let gvmSanitize = #"if [ -n "$GOROOT" ] && [ ! -d "$GOROOT" ]; then rm -f "$GVM_ROOT/environments/default"; unset GOROOT GOPATH GOBIN gvm_go_name gvm_pkgset_name; fi"#
 
-    private var process: Process?
-
     // GVM installer 往这些文件里挑**已存在的**追加 source 行（它的 update_profile），没有标记注释，
     // 所以卸载时只能挨个扫一遍、按内容删行。fish 的配置不可能是 bash 语法那行，不用管。
     var profileFiles: [URL] {
@@ -201,13 +199,12 @@ final class GoService {
         try FileManager.default.removeItem(at: gvmRoot)
     }
 
-    func installGvm(onOutput: @escaping (String) -> Void) async throws {
+    func installGvm(onStart: @escaping (Process) -> Void, onOutput: @escaping (String) -> Void) async throws {
         // 这时候还没有 gvm 的初始化脚本可 source，所以单独跑官方 installer。
-        try await run("bash < <(curl -sSL \(Self.gvmInstaller))", onOutput: onOutput)
+        try await run("bash < <(curl -sSL \(Self.gvmInstaller))", onStart: onStart, onOutput: onOutput)
     }
-
     // install 加 -B：装预编译的二进制包，而不是把源码拉下来现场编译（那要几十分钟）。
-    func gvm(_ action: GvmAction, version: GvmVersion, onOutput: @escaping (String) -> Void) async throws {
+    func gvm(_ action: GvmAction, version: GvmVersion, onStart: @escaping (Process) -> Void, onOutput: @escaping (String) -> Void) async throws {
         var script = ""
         switch action {
         case .install: script = "gvm install \(version.name) -B"
@@ -217,21 +214,14 @@ final class GoService {
             if version.isDefault { script += #" && rm -f "$GVM_ROOT/environments/default""# }
         case .useDefault: script = "gvm use \(version.name) --default"
         }
-        try await run("source \(Self.quote(gvmInitScript.path)) && \(Self.gvmSanitize) && \(script)", onOutput: onOutput)
+        try await run("source \(singleQuoted(gvmInitScript.path)) && \(Self.gvmSanitize) && \(script)", onStart: onStart, onOutput: onOutput)
     }
 
-    func cancelGvm() {
-        // 只能杀到 bash，它拉起来的 curl / gvm 子进程可能还活着，但至少界面不再转圈。
-        process?.terminate()
-        process = nil
-    }
-
-    private func run(_ command: String, onOutput: @escaping (String) -> Void) async throws {
+    private func run(_ command: String, onStart: @escaping (Process) -> Void, onOutput: @escaping (String) -> Void) async throws {
         // 同上：gvm 的 install/uninstall/use 都是 zsh 子命令，必须 /bin/zsh。
-        let status = try await Command.stream("/bin/zsh", ["-c", command], onStart: { self.process = $0 }, onOutput: onOutput)
-        process = nil
+        // onStart 把 Process 交回调用方（AppState 的任务日志靠它做取消），服务本身不持有进程。
+        let status = try await Command.stream("/bin/zsh", ["-c", command], onStart: onStart, onOutput: onOutput)
         guard status == 0 else { throw CommandError(message: L("error.gvmFailed") + "（\(status)）") }
     }
 
-    static func quote(_ value: String) -> String { "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 }

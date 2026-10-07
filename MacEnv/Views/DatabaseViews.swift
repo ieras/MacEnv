@@ -66,6 +66,12 @@ struct DatabaseManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
+                Button {
+                    refreshing = true
+                    Task { await vm.refresh(kind); refreshing = false }
+                } label: { Image(systemName: "arrow.clockwise") }
+                .help(L("action.refreshVersions"))
+                .disabled(app.state.busy || refreshing)
             }
             .panelHeader()
             Divider()
@@ -116,9 +122,7 @@ struct DatabaseManagementView: View {
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(kind, source, force: true); refreshing = false }
-            }, actions: {
-                if source == "Homebrew" { Button(L("action.updateBrew")) { vm.brewAction("update", kind, kind.rawValue) }.disabled(app.state.busy) }
-            })
+            }, actions: {})
             Divider()
             if source == "Homebrew" {
                 if vm.formulae[kind, default: []].isEmpty {
@@ -128,11 +132,15 @@ struct DatabaseManagementView: View {
                 }
             } else if source == "Static" {
                 StaticVersionListView(versions: vm.staticVersions[kind, default: []]) { vm.installStatic($0, kind) } uninstall: { vm.uninstallStatic($0, kind) }
-            } else {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(FileManager.default.isExecutableFile(atPath: "/opt/local/bin/port") ? L("macports.detectedDatabase") + kind.title + L("macports.detectedSuffix") : L("macports.missing"))
-                    Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                }.padding(24)
+            } else if source == "MacPorts" {
+                if app.toolsVM.macPortsInstalled {
+                    PortListView(items: vm.portItems[kind, default: []], loading: vm.portLoading, busy: app.state.busy,
+                                 load: { await vm.loadPortItems(kind) },
+                                 install: { vm.portAction("install", kind, $0) },
+                                 uninstall: { vm.portAction("uninstall", kind, $0) })
+                } else {
+                    Text(L("tools.missingMacPorts")).padding(24)
+                }
             }
             Spacer()
         }

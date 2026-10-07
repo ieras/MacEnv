@@ -1,9 +1,9 @@
 import SwiftUI
 
 @MainActor
-final class NginxViewModel: ObservableObject {
-    private let state: AppState
-    private let services: Services
+final class NginxViewModel: ObservableObject, PortListHost {
+    let state: AppState
+    let services: Services
 
     @Published var versions: [NginxVersion] = []
     @Published var staticVersions: [StaticVersion] = []
@@ -114,8 +114,18 @@ final class NginxViewModel: ObservableObject {
     }
 
     func refreshVersionManager(_ source: String, force: Bool = false) async {
-        if source == "Static" { await loadStatic(force: force) } else { await refresh() }
+        switch source {
+        case "Static": await loadStatic(force: force)
+        case "MacPorts": await loadPortItems(force: force)
+        default: await refresh()
+        }
     }
+
+    // MARK: - MacPorts 清单（加载与装/卸在 PortListHost 协议扩展里）
+
+    @Published var portItems: [PortItem] = []
+    @Published var portLoading = false
+    var portApp: String { "nginx" }
 
     func loadStatic(force: Bool = false) async {
         guard !staticLoading else { return }

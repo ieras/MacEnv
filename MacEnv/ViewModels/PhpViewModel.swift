@@ -1,9 +1,9 @@
 import SwiftUI
 
 @MainActor
-final class PhpViewModel: ObservableObject {
-    private let state: AppState
-    private let services: Services
+final class PhpViewModel: ObservableObject, PortListHost {
+    let state: AppState
+    let services: Services
 
     @Published var versions: [PhpVersion] = []
     @Published var staticVersions: [StaticVersion] = []
@@ -114,8 +114,18 @@ final class PhpViewModel: ObservableObject {
     }
 
     func refreshVersionManager(_ source: String, force: Bool = false) async {
-        if source == "Static" { await loadStatic(force: force) } else { await refresh() }
+        switch source {
+        case "Static": await loadStatic(force: force)
+        case "MacPorts": await loadPortItems(force: force)
+        default: await refresh()
+        }
     }
+
+    // MARK: - MacPorts 清单（加载与装/卸在 PortListHost 协议扩展里）
+
+    @Published var portItems: [PortItem] = []
+    @Published var portLoading = false
+    var portApp: String { "php" }
 
     func loadStatic(force: Bool = false) async {
         guard !staticLoading else { return }
@@ -211,7 +221,7 @@ final class PhpViewModel: ObservableObject {
             // MacPorts 装的时候才列它，否则装了也加载不了，只会把用户引到坑里。
             let macports = extensionSource == "macports" && version.executable.path.hasPrefix("/opt/local")
             let names = macports
-                ? services.php.macportsExtensions(version.majorMinor)
+                ? await services.php.macportsExtensions(version.majorMinor)
                 : services.php.availableExtensions(version.majorMinor)
             // brew 的 .so 留在 Cellar 的 keg 里（要再拷一份），MacPorts 的直接落在扩展目录，判定方式不同。
             let kegs = macports ? [] : ((try? FileManager.default.contentsOfDirectory(atPath: "/opt/homebrew/Cellar")) ?? [])

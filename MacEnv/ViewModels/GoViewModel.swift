@@ -1,9 +1,9 @@
 import SwiftUI
 
 @MainActor
-final class GoViewModel: ObservableObject {
-    private let state: AppState
-    private let services: Services
+final class GoViewModel: ObservableObject, PortListHost {
+    let state: AppState
+    let services: Services
 
     @Published var versions: [GoVersion] = []
     @Published var staticVersions: [StaticVersion] = []
@@ -21,8 +21,6 @@ final class GoViewModel: ObservableObject {
     @Published var gvmInstalled: Bool?
     @Published var gvmVersions: [GvmVersion] = []
     @Published var gvmLoading = false
-    @Published var gvmBusy = false
-    @Published var gvmLog = ""
     @Published var gvmSearch = ""
 
     init(state: AppState, services: Services) {
@@ -55,8 +53,18 @@ final class GoViewModel: ObservableObject {
     }
 
     func refreshVersionManager(_ source: String, force: Bool = false) async {
-        if source == "Static" { await loadStatic(force: force) } else { await refresh() }
+        switch source {
+        case "Static": await loadStatic(force: force)
+        case "MacPorts": await loadPortItems(force: force)
+        default: await refresh()
+        }
     }
+
+    // MARK: - MacPorts 清单（加载与装/卸在 PortListHost 协议扩展里）
+
+    @Published var portItems: [PortItem] = []
+    @Published var portLoading = false
+    var portApp: String { "golang" }
 
     func brewAction(_ action: String, formula: String) {
         state.runStreaming(taskTitle(action, formula)) { report, attach in
@@ -126,10 +134,9 @@ final class GoViewModel: ObservableObject {
     }
 
     func installGvm() {
-        runGvm {
-            try await self.services.go.installGvm { self.appendLog($0) }
+        state.runStreaming(L("gvm.install")) { report, attach in
+            try await self.services.go.installGvm(onStart: attach, onOutput: report)
             self.gvmInstalled = self.services.go.gvmInstalled
-            self.state.message = L("message.gvmInstalled")
             await self.loadGvmVersions()
             await self.refresh()
         }
@@ -151,41 +158,16 @@ final class GoViewModel: ObservableObject {
     }
 
     func gvm(_ action: GvmAction, version: GvmVersion) {
-        runGvm {
-            try await self.services.go.gvm(action, version: version) { self.appendLog($0) }
+        let title = action == .install
+            ? String(format: L("message.installingFor"), "Go \(version.version)")
+            : action == .uninstall
+                ? String(format: L("message.uninstallingFor"), "Go \(version.version)")
+                : String(format: L("message.gvmDefaultSet"), version.version)
+        state.runStreaming(title) { report, attach in
+            try await self.services.go.gvm(action, version: version, onStart: attach, onOutput: report)
             await self.loadGvmVersions()
             // gvm 装/卸的是真版本目录，已安装列表要跟着变。
             await self.refresh()
-            switch action {
-            case .install: self.state.message = version.name + " " + L("message.installed")
-            case .uninstall: self.state.message = version.name + " " + L("message.uninstalled")
-            case .useDefault: self.state.message = String(format: L("message.gvmDefaultSet"), version.version)
-            }
-        }
-    }
-
-    func cancelGvm() {
-        services.go.cancelGvm()
-        gvmBusy = false
-        appendLog("\n" + L("message.gvmCancelled") + "\n")
-    }
-
-    private func appendLog(_ text: String) {
-        gvmLog += text
-        // 只留最后 20000 字：gvm install -B 的输出能刷出几百行，全存着没意义还拖慢界面。
-        if gvmLog.count > 20000 { gvmLog = String(gvmLog.suffix(20000)) }
-    }
-
-    // GVM 的任务不能走 state.busy：它一跑就是好几分钟，
-    // 把全局 busy 点亮会让侧栏所有开关全灰，那是误导 —— 起停服务跟装 Go 没关系。
-    private func runGvm(_ work: @escaping () async throws -> Void) {
-        guard !gvmBusy else { return }
-        gvmBusy = true
-        gvmLog = ""
-        Task {
-            defer { gvmBusy = false }
-            do { try await work() }
-            catch { state.message = error.localizedDescription }
         }
     }
 }

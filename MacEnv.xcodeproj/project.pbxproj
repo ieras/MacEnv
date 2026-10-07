@@ -52,10 +52,22 @@
 		100000000000000000000055 /* HostViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000055 /* HostViews.swift */; };
 		100000000000000000000056 /* HostDefaults in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000056 /* HostDefaults */; };
 		100000000000000000000061 /* RewriteDefaults in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000061 /* RewriteDefaults */; };
+		100000000000000000000077 /* ToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000077 /* ToolService.swift */; };
+		100000000000000000000078 /* ToolsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000078 /* ToolsViewModel.swift */; };
+		100000000000000000000079 /* ToolsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000079 /* ToolsViews.swift */; };
+		100000000000000000000080 /* JavaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000080 /* JavaService.swift */; };
+		100000000000000000000081 /* JavaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000081 /* JavaViewModel.swift */; };
+		100000000000000000000082 /* JavaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000082 /* JavaViews.swift */; };
 		100000000000000000000057 /* GoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000057 /* GoService.swift */; };
 		100000000000000000000058 /* GoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000058 /* GoViewModel.swift */; };
 		100000000000000000000059 /* GoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000059 /* GoViews.swift */; };
 		100000000000000000000060 /* GoServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000060 /* GoServiceTests.swift */; };
+		100000000000000000000090 /* MavenService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000090 /* MavenService.swift */; };
+		100000000000000000000091 /* MavenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000091 /* MavenViewModel.swift */; };
+		100000000000000000000092 /* MavenViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000092 /* MavenViews.swift */; };
+		100000000000000000000093 /* GradleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000093 /* GradleService.swift */; };
+		100000000000000000000094 /* GradleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000094 /* GradleViewModel.swift */; };
+		100000000000000000000095 /* GradleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000095 /* GradleViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,10 +132,22 @@
 		200000000000000000000055 /* HostViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostViews.swift; sourceTree = "<group>"; };
 		200000000000000000000056 /* HostDefaults */ = {isa = PBXFileReference; lastKnownFileType = folder; path = HostDefaults; sourceTree = "<group>"; };
 		200000000000000000000061 /* RewriteDefaults */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RewriteDefaults; sourceTree = "<group>"; };
+		200000000000000000000077 /* ToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolService.swift; sourceTree = "<group>"; };
+		200000000000000000000078 /* ToolsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000079 /* ToolsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsViews.swift; sourceTree = "<group>"; };
+		200000000000000000000080 /* JavaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaService.swift; sourceTree = "<group>"; };
+		200000000000000000000081 /* JavaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000082 /* JavaViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaViews.swift; sourceTree = "<group>"; };
 		200000000000000000000057 /* GoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoService.swift; sourceTree = "<group>"; };
 		200000000000000000000058 /* GoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000059 /* GoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViews.swift; sourceTree = "<group>"; };
 		200000000000000000000060 /* GoServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoServiceTests.swift; sourceTree = "<group>"; };
+		200000000000000000000090 /* MavenService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MavenService.swift; sourceTree = "<group>"; };
+		200000000000000000000091 /* MavenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MavenViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000092 /* MavenViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MavenViews.swift; sourceTree = "<group>"; };
+		200000000000000000000093 /* GradleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradleService.swift; sourceTree = "<group>"; };
+		200000000000000000000094 /* GradleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradleViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000095 /* GradleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradleViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -204,6 +228,10 @@
 				200000000000000000000047 /* ComposerService.swift */,
 				200000000000000000000057 /* GoService.swift */,
 				200000000000000000000053 /* HostService.swift */,
+				200000000000000000000077 /* ToolService.swift */,
+				200000000000000000000090 /* MavenService.swift */,
+				200000000000000000000093 /* GradleService.swift */,
+				200000000000000000000080 /* JavaService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -221,6 +249,10 @@
 				200000000000000000000048 /* ComposerViewModel.swift */,
 				200000000000000000000058 /* GoViewModel.swift */,
 				200000000000000000000054 /* HostViewModel.swift */,
+				200000000000000000000078 /* ToolsViewModel.swift */,
+				200000000000000000000091 /* MavenViewModel.swift */,
+				200000000000000000000094 /* GradleViewModel.swift */,
+				200000000000000000000081 /* JavaViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -240,6 +272,10 @@
 				200000000000000000000049 /* ComposerViews.swift */,
 				200000000000000000000059 /* GoViews.swift */,
 				200000000000000000000055 /* HostViews.swift */,
+				200000000000000000000079 /* ToolsViews.swift */,
+				200000000000000000000092 /* MavenViews.swift */,
+				200000000000000000000095 /* GradleViews.swift */,
+				200000000000000000000082 /* JavaViews.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -421,6 +457,18 @@
 				100000000000000000000057 /* GoService.swift in Sources */,
 				100000000000000000000058 /* GoViewModel.swift in Sources */,
 				100000000000000000000059 /* GoViews.swift in Sources */,
+				100000000000000000000077 /* ToolService.swift in Sources */,
+				100000000000000000000078 /* ToolsViewModel.swift in Sources */,
+				100000000000000000000079 /* ToolsViews.swift in Sources */,
+				100000000000000000000080 /* JavaService.swift in Sources */,
+				100000000000000000000081 /* JavaViewModel.swift in Sources */,
+				100000000000000000000090 /* MavenService.swift in Sources */,
+				100000000000000000000091 /* MavenViewModel.swift in Sources */,
+				100000000000000000000092 /* MavenViews.swift in Sources */,
+				100000000000000000000093 /* GradleService.swift in Sources */,
+				100000000000000000000094 /* GradleViewModel.swift in Sources */,
+				100000000000000000000095 /* GradleViews.swift in Sources */,
+				100000000000000000000082 /* JavaViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

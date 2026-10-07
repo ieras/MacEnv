@@ -6,18 +6,31 @@ import ServiceManagement
 // 模块分组与顺序的唯一来源：设置页的模块开关、侧边栏的条目都按它渲染。
 // 要调顺序、换分组，只改这一个数组。
 //
-// 没有 "sidebar.console" 这一组：控制台只剩快捷启动，而它在侧边栏里是硬编码画的
+// 没有 "sidebar.console" 这一组：控制台只剩快捷启动和环境工具，而它在侧边栏里是硬编码画的
 // （设置页不把它当模块开关）。留一个空组会在设置页画出「标题 + 点了没反应的开关 + 空白网格」。
 let moduleGroups: [(String, [String])] = [
     ("sidebar.web", ["hosts", "nginx"]),
     ("sidebar.database", ["mysql", "mariadb"]),
     ("sidebar.cache", ["redis"]),
-    ("sidebar.language", ["php", "go"]),
+    ("sidebar.language", ["php", "go", "java"]),
 ]
+
+// 控制台组的内容。它跟 moduleGroups 一样要同时喂给侧栏和设置页，
+// 只是因为它那组的标题是手画的，不能塞进上面那个数组，所以单列一份。
+let consoleModules = ["tools"]
 
 func moduleName(_ id: String) -> String { L("module." + id) }
 
+// 长任务（装 / 卸 / 下载 / 解包）的进度。日志浮层显示它；跑完留在原地等用户关 ——
+// 失败原因就在最后几行，自动关掉等于让用户没法看。
 struct TaskProgress {
+    let title: String
+    var log = ""
+    var running = true
+    // 子进程句柄，取消按钮靠它真杀掉任务。提权任务交不上来（osascript 拿不到 pid），就杀不到。
+    var process: Process?
+}
+
 // 全局共享状态：忙碌、提示、外观、语言、快捷启动。
 @MainActor
 final class AppState: ObservableObject {
@@ -85,6 +98,10 @@ final class AppState: ObservableObject {
 
     private var quickStartFile: URL { macEnvDirectory.appendingPathComponent("quick-start.json") }
 
+    // 快捷启动僵尸 key 的清洗钩子：任何写操作（run / runStreaming）跑完调一次。
+    // 实现由 AppViewModel 注入 —— launchTargets 在它那儿，state 不该知道服务。
+    var pruneQuickStart: (() -> Void)?
+
     init() {
         if let data = try? Data(contentsOf: quickStartFile), let value = try? JSONDecoder().decode([String].self, from: data) {
             // php-fpm 的启停已全绑 nginx 联动，快捷启动里不再提供勾选，历史勾选一次清掉。
@@ -120,6 +137,7 @@ extension AppState {
             defer { busy = false }
             do { try await work() }
             catch { message = error.localizedDescription }
+            pruneQuickStart?()
         }
     }
 
@@ -137,6 +155,7 @@ extension AppState {
             catch { self.appendTaskLog("\n" + error.localizedDescription + "\n") }
             self.task?.running = false
             self.task?.process = nil
+            self.pruneQuickStart?()
         }
     }
 
@@ -199,7 +218,11 @@ final class AppViewModel: ObservableObject {
     let swooleVM: SwooleViewModel
     let composerVM: ComposerViewModel
     let goVM: GoViewModel
+    let javaVM: JavaViewModel
+    let mavenVM: MavenViewModel
+    let gradleVM: GradleViewModel
     let hostVM: HostViewModel
+    let toolsVM: ToolsViewModel
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -211,8 +234,15 @@ final class AppViewModel: ObservableObject {
         swooleVM = SwooleViewModel(state: state, services: services)
         composerVM = ComposerViewModel(state: state, services: services)
         goVM = GoViewModel(state: state, services: services)
+        javaVM = JavaViewModel(state: state, services: services)
+        mavenVM = MavenViewModel(state: state, services: services)
+        gradleVM = GradleViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
+        toolsVM = ToolsViewModel(state: state, services: services)
         serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM]
+        // 卸掉 Homebrew 会把 nginx / php / mysql / redis / go 一起带走，工具页看不到那些 VM，
+        // 所以由这里注入一个「刷全部」的回调 —— 反过来让工具页依赖 AppViewModel 是转圈依赖。
+        toolsVM.onRefreshAll = { [weak self] in await self?.refreshAll() }
         services.nginx.onExit = { [weak self] in self?.nginxVM.syncRunning() }
         services.phpFpm.onExit = { [weak self] in self?.phpVM.objectWillChange.send() }
         services.mysql.onExit = { [weak self] in self?.databaseVM.objectWillChange.send() }
@@ -220,6 +250,14 @@ final class AppViewModel: ObservableObject {
         services.redis.onExit = { [weak self] in self?.redisVM.objectWillChange.send() }
         // state 是独立的 ObservableObject，转发后观察本类的视图才会随它重绘。
         state.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
+        // 任何装/卸跑完都清洗一遍快捷启动：指向已不存在版本的 key 当场删掉，
+        // 不然 quick-start.json 里会攒僵尸 key（计数对不上列表就是它闹的）。
+        // 启动时 refreshAll 已把全部版本扫完，不必担心「还没扫到就误删」。
+        state.pruneQuickStart = { [weak self] in
+            guard let self else { return }
+            let valid = Set(self.launchTargets.map(\.key))
+            self.state.quickStartTargets.removeAll { !valid.contains($0) }
+        }
     }
 
     var root: URL { services.root }
@@ -294,12 +332,15 @@ final class AppViewModel: ObservableObject {
         async let swoole: Void = swooleVM.refresh()
         async let composer: Void = composerVM.refresh()
         async let go: Void = goVM.refresh()
+        async let java: Void = javaVM.refresh()
+        async let maven: Void = mavenVM.refresh()
+        async let gradle: Void = gradleVM.refresh()
         async let nginx: Void = nginxVM.refresh()
         async let mysql: Void = databaseVM.refresh(.mysql)
         async let mariadb: Void = databaseVM.refresh(.mariadb)
         async let redis: Void = redisVM.refresh()
         async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, nginx, mysql, mariadb, redis, cert, hosts)
+        _ = await (swoole, composer, go, java, maven, gradle, nginx, mysql, mariadb, redis, cert, hosts)
     }
 }

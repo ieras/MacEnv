@@ -107,9 +107,7 @@ struct CertificatePanelView: View {
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
-            }, actions: {
-                if source == "Homebrew" { Button(L("action.updateBrew")) { vm.brewAction("update", "mkcert") }.disabled(app.state.busy) }
-            })
+            }, actions: {})
             Divider()
             if source == "Homebrew" {
                 if vm.formulae.isEmpty {
@@ -119,13 +117,15 @@ struct CertificatePanelView: View {
                 }
             } else if source == "Static" {
                 StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
-            } else {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(FileManager.default.isExecutableFile(atPath: "/opt/local/bin/port")
-                         ? L("macports.detectedDatabase") + "MkCert" + L("macports.detectedSuffix")
-                         : L("macports.missing"))
-                    Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                }.padding(24)
+            } else if source == "MacPorts" {
+                if app.toolsVM.macPortsInstalled {
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                                 load: { await vm.loadPortItems() },
+                                 install: { vm.portAction("install", $0) },
+                                 uninstall: { vm.portAction("uninstall", $0) })
+                } else {
+                    Text(L("tools.missingMacPorts")).padding(24)
+                }
             }
             Spacer()
         }

@@ -35,9 +35,9 @@ final class GoServiceTests: XCTestCase {
         XCTAssertEqual(GoService.goRoot(of: URL(fileURLWithPath: "/tmp/go1.24.4/go")).path, "/tmp/go1.24.4")
     }
 
-    // gvm 的初始化脚本路径可能带空格，拼进 shell 命令前必须引号包好。
+    // 路径可能带空格或单引号，拼进 shell 命令前必须用 singleQuoted 包好。
     func testShellQuote() {
-        XCTAssertEqual(GoService.quote("/Users/a b/.gvm/scripts/gvm"), "'/Users/a b/.gvm/scripts/gvm'")
-        XCTAssertEqual(GoService.quote("/Users/a'b"), "'/Users/a'\\''b'")
+        XCTAssertEqual(singleQuoted("/Users/a b/.gvm/scripts/gvm"), "'/Users/a b/.gvm/scripts/gvm'")
+        XCTAssertEqual(singleQuoted("/Users/a'b"), "'/Users/a'\\''b'")
     }
 }

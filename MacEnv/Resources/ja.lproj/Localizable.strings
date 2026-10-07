@@ -39,7 +39,6 @@
 "action.restart" = "再起動";
 "action.install" = "インストール";
 "action.uninstall" = "アンインストール";
-"action.updateBrew" = "Brew を更新";
 "action.upgradeTo" = " に更新";
 "action.add" = "追加";
 "action.edit" = "編集";
@@ -93,10 +92,8 @@
 "log.start" = "起動エラー";
 "log.iniError" = "PHP エラーログ";
 
-"message.extensionInstalled" = "%@ をインストールしました";
 "message.extensionEnabled" = "%@ を有効化しました";
 "message.extensionDisabled" = "%@ を無効化しました";
-"message.extensionUninstalled" = "%@ をアンインストールしました";
 "message.noFunctionMatched" = "一致する関数名がありません";
 
 "error.phpExtensionUnsupported" = "この PHP は動的拡張に対応していません（静的ビルド）";
@@ -119,13 +116,9 @@
 "brew.install" = "Homebrew をインストール";
 "brew.noFormulaList" = "Homebrew のバージョン一覧が見つかりません。";
 "brew.notInstalled" = "未インストール";
+"port.empty" = "インストール可能なバージョンがありません";
 
-"macports.detectedNginx" = "MacPorts を検出しました。Nginx はサービス一覧に表示されます。";
-"macports.detectedPhp" = "MacPorts を検出しました。インストールした PHP はサービス一覧に表示されます。";
-"macports.detectedDatabase" = "MacPorts を検出しました。インストール済みの ";
-"macports.detectedSuffix" = " はサービス一覧に表示されます。";
 "macports.missing" = "MacPorts が見つかりません";
-"macports.install" = "MacPorts をインストール";
 
 "config.openFolder" = "設定ファイルのディレクトリを開く";
 "config.openFile" = "設定ファイルを開く";
@@ -150,8 +143,6 @@
 "message.configReloaded" = "Nginx 設定を再読み込みしました";
 "message.configSaved" = "設定を保存しました";
 "message.configSavedReloaded" = "設定を保存し、Nginx をリロードしました";
-"message.installed" = "をインストールしました：";
-"message.uninstalled" = "をアンインストールしました：";
 "message.stopFirst" = "先に Nginx を停止してください";
 "message.aliasExists" = "エイリアスが既に存在します";
 "message.started" = "起動しました";
@@ -212,7 +203,6 @@
 "settings.launchAtLogin" = "ログイン時に起動";
 "settings.hideOnClose" = "ウィンドウを閉じたらメニューバーに隠す";
 "settings.autoStartService" = "起動時にクイック起動のサービスを立ち上げる";
-"settings.brewSource" = "Brew ミラー";
 "settings.proxyHost" = "プロキシ";
 "settings.proxyPort" = "ポート";
 "settings.codeFontSize" = "コードの文字サイズ";
@@ -265,9 +255,6 @@
 "host.rewrite" = "リライト規則";
 "host.rewriteHint" = "空欄ならディレクトリ構成からフレームワークを判定し（WordPress / Laravel / Yii / ThinkPHP）、ルートをエントリディレクトリへ自動で切り替えます。";
 "host.autoFill" = "自動判定";
-"host.proxy" = "リバースプロキシ";
-"host.proxyPath" = "パス接頭辞";
-"host.proxyEmpty" = "リバースプロキシ規則はありません。パス接頭辞は ^~ 前方一致で上流へ転送されます。";
 "host.editConfig" = "設定を編集";
 "host.copyURL" = "サイトURLをコピー";
 "host.copyPath" = "サイトディレクトリをコピー";
@@ -327,14 +314,10 @@
 "source.system" = "システム";
 "column.default" = "デフォルト";
 "message.noGoInstalled" = "Go はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
-"message.noGvmVersions" = "GVM がバージョンを返しませんでした。右上の更新を試してください。";
-"message.gvmInstalled" = "GVM をインストールしました";
 "message.gvmDefaultSet" = "デフォルトバージョンを %@ に切り替えました";
-"message.gvmCancelled" = "キャンセルしました";
 "gvm.checking" = "GVM を確認中…";
 "gvm.intro" = "GVM（Go Version Manager）はサードパーティ製の Go バージョン管理ツールです。インストールするとここで複数バージョンを管理できます。";
 "gvm.install" = "GVM をインストール";
-"gvm.preparing" = "準備中…";
 "gvm.setDefault" = "デフォルトに設定";
 "error.gvmMissing" = "GVM がインストールされていません";
 "error.gvmFailed" = "GVM コマンドが失敗しました";
@@ -343,9 +326,10 @@
 "alert.uninstallGvmTitle" = "GVM をアンインストールしますか？";
 "alert.uninstallGvmMessage" = "%@ と、シェル設定内の GVM 関連の行をすべて削除します。GVM でインストールした %d 個の Go バージョンも一緒に削除され、復元できません。";
 "message.gvmUninstalled" = "GVM をアンインストールしました";
-"macports.detectedGo" = "MacPorts を検出しました。インストールした Go はインストール済みリストに表示されます。";
 "alert.uninstallGoTitle" = "Homebrew の Go をアンインストールしますか？";
 "alert.uninstallGoMessage" = "brew uninstall %@ を実行します。GOROOT のツールチェーンが削除され、他のバージョンは Homebrew が処理します。";
+
+// MARK: - グローバルタスクログ
 "action.update" = "更新";
 "action.upgrade" = "アップグレード";
 "message.taskTitle" = "%@ %@";
@@ -355,3 +339,56 @@
 "message.taskCancelled" = "キャンセルしました";
 "error.brewFailed" = "Homebrew コマンドが失敗しました";
 "error.unpackFailed" = "展開に失敗しました";
+
+// MARK: - 環境ツールページ
+"module.tools" = "環境ツール";
+"column.name" = "名前";
+"tools.installed" = "インストール済み";
+"tools.notInstalled" = "未インストール";
+"tools.installBrew" = "Homebrew をインストール";
+"tools.updateBrew" = "Homebrew を更新";
+"tools.uninstallBrew" = "Homebrew をアンインストール";
+"tools.installMacPorts" = "MacPorts をインストール";
+"tools.uninstallMacPorts" = "MacPorts をアンインストール";
+"tools.installSDKMAN" = "SDKMAN をインストール";
+"tools.uninstallSDKMAN" = "SDKMAN をアンインストール";
+"tools.missingMacPorts" = "MacPorts が見つかりません。「環境ツール」からインストールしてください。";
+"tools.missingGvm" = "GVM が見つかりません。「環境ツール」からインストールしてください。";
+"tools.empty" = "まだ何もインストールされていません。";
+"alert.uninstallBrewTitle" = "Homebrew をアンインストールしますか？";
+"alert.uninstallBrewMessage" = "Homebrew 本体と、それで入れた %d 個の formula をすべて削除します —— MacEnv が管理している nginx / PHP / MySQL / Redis / Go も含まれます。これらのサービスは即座に MacEnv から消え、復元できません。";
+"alert.uninstallMacPortsTitle" = "MacPorts をアンインストールしますか？";
+"alert.uninstallMacPortsMessage" = "%d 個の port をアンインストールしたうえで、/opt/local と関連するシステムファイルを削除し、シェル設定の PATH も消します。復元できません。";
+"alert.uninstallSDKMANTitle" = "SDKMAN をアンインストールしますか？";
+"alert.uninstallSDKMANMessage" = "~/.sdkman と、シェル設定内の SDKMAN 関連の行を削除します。sdk で入れた %d 個の candidate も一緒に削除され、復元できません。";
+"error.toolCommandFailed" = "コマンドが失敗しました";
+"error.toolTimeout" = "タイムアウトしました（バックグラウンドでは動作中の可能性があります）";
+"error.macPortsReleaseFailed" = "MacPorts のリリース情報を取得できませんでした";
+"error.macPortsNoPackage" = "本機のシステム（%@）に合うインストーラが公式 release にありません。macports.org/install.php から手動でインストールしてください";
+"error.macPortsInstallFailed" = "インストールは終了しましたが /opt/local/bin/port が見つかりません";
+"error.sdkmanMissing" = "SDKMAN がインストールされていません";
+"module.java" = "Java";
+"column.vendor" = "ベンダー";
+"java.setDefault" = "既定に設定";
+"sdkman.default" = "現在の既定";
+"message.noJavaInstalled" = "インストール済みの Java がありません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"message.noSdkmanVersions" = "SDKMAN がバージョンを返しませんでした。右上の更新を試してください。";
+"message.sdkmanDefaultSet" = "%@ を既定の Java に設定しました";
+"tools.missingSDKMAN" = "SDKMAN が見つかりません。「環境ツール」からインストールしてください。";
+"alert.uninstallJavaTitle" = "Homebrew JDK をアンインストールしますか？";
+"alert.uninstallJavaMessage" = "brew uninstall %@ を実行します。他のバージョンの扱いは Homebrew に任せます。";
+"alert.uninstallSdkmanJavaTitle" = "この JDK をアンインストールしますか？";
+"alert.uninstallSdkmanJavaMessage" = "sdk uninstall java %@ を実行します。~/.sdkman 内のこのバージョンは削除され、復元できません。";
+"module.maven" = "Maven";
+"module.gradle" = "Gradle";
+"column.directory" = "ディレクトリ";
+"message.noMavenInstalled" = "インストール済みの Maven がありません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"message.noGradleInstalled" = "インストール済みの Gradle がありません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"alert.uninstallMavenTitle" = "Homebrew Maven をアンインストールしますか？";
+"alert.uninstallMavenMessage" = "brew uninstall %@ を実行します。他のバージョンの扱いは Homebrew に任せます。";
+"alert.uninstallGradleTitle" = "Homebrew Gradle をアンインストールしますか？";
+"alert.uninstallGradleMessage" = "brew uninstall %@ を実行します。他のバージョンの扱いは Homebrew に任せます。";
+"alert.uninstallSdkmanMavenTitle" = "この Maven をアンインストールしますか？";
+"alert.uninstallSdkmanMavenMessage" = "sdk uninstall maven %@ を実行します。~/.sdkman 内のこのバージョンは削除され、復元できません。";
+"alert.uninstallSdkmanGradleTitle" = "この Gradle をアンインストールしますか？";
+"alert.uninstallSdkmanGradleMessage" = "sdk uninstall gradle %@ を実行します。~/.sdkman 内のこのバージョンは削除され、復元できません。";

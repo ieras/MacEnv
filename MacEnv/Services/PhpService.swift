@@ -12,6 +12,9 @@ final class PhpService {
     var directory: URL { root.appendingPathComponent("server/php", isDirectory: true) }
     var versionsDirectory: URL { directory.appendingPathComponent("versions", isDirectory: true) }
     private var archives: URL { root.appendingPathComponent("cache", isDirectory: true) }
+    // MacPorts 扩展名的缓存落点，跟版本管理页的 port 清单同一个目录。
+    private var cacheDirectory: URL { root.appendingPathComponent("catalog", isDirectory: true) }
+    private static let portRefreshInterval: TimeInterval = 3600
 
     init(root: URL) { self.root = root }
 
@@ -44,6 +47,13 @@ final class PhpService {
                 if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Static", nil)) }
             }
         }
+        // MacPorts：CLI 在 /opt/local/bin/php<NN>，fpm 在 /opt/local/sbin/php-fpm<NN>，
+        // 配置在 /opt/local/etc/php<NN>。只认 php<数字> 这个命名，php-config74 之类不要。
+        for item in (try? fm.contentsOfDirectory(at: URL(fileURLWithPath: "/opt/local/bin", isDirectory: true), includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? [] {
+            let name = item.lastPathComponent
+            guard name.range(of: "^php\\d+$", options: .regularExpression) != nil, fm.isExecutableFile(atPath: item.path) else { continue }
+            candidates.append((item, "MacPorts", nil))
+        }
         var seen = Set<String>()
         var result: [PhpVersion] = []
         for (file, source, formula) in candidates {
@@ -52,7 +62,11 @@ final class PhpService {
             guard fm.isExecutableFile(atPath: executable.path),
                   (try? executable.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true,
                   seen.insert(executable.path).inserted else { continue }
-            let directory = executable.deletingLastPathComponent().deletingLastPathComponent()
+            // MacPorts 的 CLI 直接躺在 /opt/local/bin，目录取它自己那一层（PATH 开关也要的
+            // 就是这个目录）；brew keg / static 包都是「包根/bin/php」，往上退两级才是包根。
+            let digits = executable.lastPathComponent.dropFirst("php".count)
+            let directory = source == "MacPorts" ? executable.deletingLastPathComponent()
+                                                 : executable.deletingLastPathComponent().deletingLastPathComponent()
             // 候选现在包含用户 PATH 里的任意目录，跑不起来是常态（架构不对、缺动态库、
             // 甚至根本不是二进制）。用 try? 兜住，否则一个坏候选能把整次扫描带走。
             let output = try? await Command.run(executable.path, ["-v"])
@@ -70,10 +84,19 @@ final class PhpService {
                     .dropFirst(4).split(separator: " ").first.map(String.init)
             }
             if version == nil { version = formula.flatMap { _ in directory.lastPathComponent.components(separatedBy: "_").first } }
+            // MacPorts 的 CLI 名字自带版本号，跑不起来时退回端口名推断：php74 → 7.4。
+            if version == nil, source == "MacPorts", let n = Int(digits), (10...99).contains(n) {
+                version = "\(n / 10).\(n % 10)"
+            }
             guard let version, !version.isEmpty else { continue }
+            // fpm 跟 CLI 同一个数字后缀（php74 ↔ php-fpm74），真实路径直接带给模型。
+            var fpmOverride: URL?
+            if source == "MacPorts", !digits.isEmpty {
+                fpmOverride = URL(fileURLWithPath: "/opt/local/sbin/php-fpm\(digits)")
+            }
             result.append(PhpVersion(version: version, directory: directory, executable: executable,
                                      source: directory.path.hasPrefix("/opt/local") ? "MacPorts" : source,
-                                     formula: formula, runnable: runnable))
+                                     formula: formula, runnable: runnable, fpmOverride: fpmOverride))
         }
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
@@ -222,22 +245,40 @@ final class PhpService {
 
     var macportsInstalled: Bool { FileManager.default.isExecutableFile(atPath: Self.macportsPort) }
 
-    // 可安装的 MacPorts 扩展：读本地 PortIndex（每行第一段就是 port 名），
-    // 不跑 `port search` —— 那个要先 sync 索引，联网要等好几秒。
-    // MacPorts 的 PHP 扩展 port 一律叫 php<XX>-<名字>（php84-swoole、php84-redis…）。
-    func macportsExtensions(_ majorMinor: String) -> [String] {
+    // 可安装的 MacPorts 扩展：port search 直查（FlyEnv 同款），不读本地 PortIndex ——
+    // 索引路径跟着 sources.conf 走（rsync 源在 tarballs/ports/ 下，file:// 本地源又不一样），
+    // 硬编码路径读不到就静默空表，这个坑已经踩过一次。不跑 `port search` 的联网 sync 顾虑
+    // 不存在：search 只查本地索引，不联网。
+    // 主 php port 的 SAPI 子 port（fpm/cgi/apache2handler）类别恰好是「lang www」，
+    // 不是可加载的扩展，滤掉；其他子 port（curl/openssl 等）类别是「lang php net www」，
+    // 不含连续的「lang www」，正好保留。名字统一小写，跟 brew tap 的公式名对齐。
+    // 结果按版本缓存一小时（同版本管理页 port 清单的写法）：扩展名清单不会变，
+    // 装没装由扩展目录里的 .so 现判，不进缓存。
+    func macportsExtensions(_ majorMinor: String) async -> [String] {
         let prefix = "php" + majorMinor.replacingOccurrences(of: ".", with: "") + "-"
-        let sources = "/opt/local/var/macports/sources"
-        guard let dirs = try? FileManager.default.contentsOfDirectory(atPath: sources) else { return [] }
+        let cache = cacheDirectory.appendingPathComponent("port-\(prefix)extensions.json")
+        let modified = (try? FileManager.default.attributesOfItem(atPath: cache.path))?[.modificationDate] as? Date
+        if let modified, Date().timeIntervalSince(modified) < Self.portRefreshInterval,
+           let data = try? Data(contentsOf: cache),
+           let names = try? JSONDecoder().decode([String].self, from: data) { return names }
+        guard let output = try? await Command.run(Self.macportsPort, ["search", "--name", "--line", prefix]) else {
+            return ((try? Data(contentsOf: cache)).flatMap { try? JSONDecoder().decode([String].self, from: $0) }) ?? []
+        }
+        let names = Self.parsePortExtensionNames(output.stdout, prefix: prefix)
+        if !names.isEmpty {
+            try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+            try? JSONEncoder().encode(names).write(to: cache, options: .atomic)
+        }
+        return names
+    }
+
+    // 解析拆出来给单测喂样例。
+    static func parsePortExtensionNames(_ text: String, prefix: String) -> [String] {
         var names: Set<String> = []
-        for dir in dirs {
-            let index = "\(sources)/\(dir)/macports/release/tarballs/PortIndex"
-            guard let text = try? String(contentsOfFile: index, encoding: .utf8) else { continue }
-            for line in text.split(separator: "\n") where line.hasPrefix(prefix) {
-                if let name = line.split(separator: " ").first, name.count > prefix.count {
-                    names.insert(String(name.dropFirst(prefix.count)))
-                }
-            }
+        for line in text.split(whereSeparator: \.isNewline) where !line.contains("lang www") {
+            guard let name = line.split(separator: "\t", omittingEmptySubsequences: true).first,
+                  name.hasPrefix(prefix), name.count > prefix.count else { continue }
+            names.insert(String(name.dropFirst(prefix.count)).lowercased())
         }
         return names.sorted()
     }

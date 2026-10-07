@@ -106,6 +106,12 @@ struct PhpManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
+                Button {
+                    refreshing = true
+                    Task { await vm.refresh(); refreshing = false }
+                } label: { Image(systemName: "arrow.clockwise") }
+                .help(L("action.refreshVersions"))
+                .disabled(app.state.busy || refreshing)
             }.panelHeader()
             Divider()
             DataTable(columns: tableColumns, rows: vm.versions, empty: L("message.noPhpInstalled")) { version in
@@ -150,9 +156,7 @@ struct PhpManagementView: View {
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
-            }, actions: {
-                if source == "Homebrew" { Button(L("action.updateBrew")) { vm.brewAction("update", formula: "php") }.disabled(app.state.busy) }
-            })
+            }, actions: {})
             Divider()
             if source == "Homebrew" {
                 if vm.formulae.isEmpty {
@@ -170,10 +174,14 @@ struct PhpManagementView: View {
                     }
                 }
             } else if source == "MacPorts" {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(FileManager.default.isExecutableFile(atPath: "/opt/local/bin/port") ? L("macports.detectedPhp") : L("macports.missing"))
-                    Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                }.padding(24)
+                if app.toolsVM.macPortsInstalled {
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                                 load: { await vm.loadPortItems() },
+                                 install: { vm.portAction("install", $0) },
+                                 uninstall: { vm.portAction("uninstall", $0) })
+                } else {
+                    Text(L("tools.missingMacPorts")).padding(24)
+                }
             } else {
                 StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             }
@@ -307,10 +315,8 @@ struct PhpManagementView: View {
     private var availableExtensionList: some View {
         VStack(spacing: 0) {
             if vm.extensionSource == "macports" && !vm.macportsAvailable {
-                Text(L("macports.missing")).foregroundStyle(.secondary)
-                    .padding(.horizontal, 30).padding(.top, 30).frame(maxWidth: .infinity, alignment: .leading)
-                Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                    .padding(.horizontal, 30).padding(.top, 10)
+                Text(L("tools.missingMacPorts")).foregroundStyle(.secondary)
+                    .padding(30).frame(maxWidth: .infinity, alignment: .leading)
                 Spacer()
             } else if vm.extensionSource == "macports" && !vm.macportsUsable {
                 // MacPorts 的 .so 是给 MacPorts 自己的 PHP 编译的，拷到别家的 PHP 上加载不了。

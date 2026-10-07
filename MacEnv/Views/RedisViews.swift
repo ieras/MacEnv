@@ -57,6 +57,12 @@ struct RedisManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
+                Button {
+                    refreshing = true
+                    Task { await vm.refresh(); refreshing = false }
+                } label: { Image(systemName: "arrow.clockwise") }
+                .help(L("action.refreshVersions"))
+                .disabled(app.state.busy || refreshing)
             }
             .panelHeader()
             Divider()
@@ -104,10 +110,12 @@ struct RedisManagementView: View {
                                  linkURL: URL(string: "https://redis.io/downloads/")!,
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true
-                Task { await vm.refresh(); refreshing = false }
-            }, actions: {
-                if source == "Homebrew" { Button(L("action.updateBrew")) { vm.brewAction("update", "redis") }.disabled(app.state.busy) }
-            })
+                Task {
+                    if source == "MacPorts" { await vm.loadPortItems(force: true) }
+                    await vm.refresh()
+                    refreshing = false
+                }
+            }, actions: {})
             Divider()
             if source == "Homebrew" {
                 if vm.formulae.isEmpty {
@@ -115,13 +123,15 @@ struct RedisManagementView: View {
                 } else {
                     BrewListView(formulae: vm.formulae, busy: app.state.busy) { vm.brewAction($0, $1) }
                 }
-            } else {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(FileManager.default.isExecutableFile(atPath: "/opt/local/bin/port")
-                         ? L("macports.detectedDatabase") + "Redis" + L("macports.detectedSuffix")
-                         : L("macports.missing"))
-                    Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                }.padding(24)
+            } else if source == "MacPorts" {
+                if app.toolsVM.macPortsInstalled {
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                                 load: { await vm.loadPortItems() },
+                                 install: { vm.portAction("install", $0) },
+                                 uninstall: { vm.portAction("uninstall", $0) })
+                } else {
+                    Text(L("tools.missingMacPorts")).padding(24)
+                }
             }
             Spacer()
         }

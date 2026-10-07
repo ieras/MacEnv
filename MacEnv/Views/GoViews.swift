@@ -1,7 +1,8 @@
 import SwiftUI
 
 // Go 是一等语言模块（FlyEnv 里跟 PHP / Node 同级），所以自己占一个页面而不是挂在 PHP 下面。
-// 三个 tab：已安装（含环境变量开关）、版本管理（静态包）、GVM（第三方 Go 版本管理器）。
+// 两个 tab：已安装（含环境变量开关）、版本管理（静态包 / Homebrew / MacPorts / GVM）。
+// GVM 的**本体**（装 / 卸 / 路径）在环境工具页，这里只把「用 GVM 装的 Go」当一个来源。
 struct GoManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: GoViewModel
@@ -12,18 +13,17 @@ struct GoManagementView: View {
     @State private var confirmUninstall = false
     // 卸载必须记住点的是哪一行，不能在 alert 里写死公式名 —— PHP 页面就栽过这个跟头。
     @State private var uninstallFormula: String?
-    @State private var confirmUninstallGvm = false
 
     var body: some View {
         ModulePage {
-            SegmentedTabs(titles: [L("tab.installed"), L("tab.versions"), "GVM"], selection: $tab)
+            SegmentedTabs(titles: [L("tab.installed"), L("tab.versions")], selection: $tab)
         } content: {
             page
         }
-        // 单参数写法：双参数的 onChange 要 macOS 14，本工程最低 13。
-        // 只在切到 GVM 时才去检测 ~/.gvm —— 每次开页面都跑一遍没必要。
-        .onChange(of: tab) { value in if value == 2 { vm.checkGvm() } }
         .task { await vm.loadStatic() }
+        // GVM 装没装要现问文件系统，切到那个来源再问 —— 上面那个「进 Go 页就 checkGvm」
+        // 的 onChange 随 GVM 面板一起搬走了，不补回来的话装了 GVM 也显示「未检测到」。
+        .onChange(of: source) { value in if value == "GVM" { vm.checkGvm() } }
         .sheet(isPresented: $customPathEditor) { CustomPathEditor(title: "Go", paths: $vm.customDirectories) }
         .alert(L("alert.uninstallGoTitle"), isPresented: $confirmUninstall) {
             Button(L("action.cancel"), role: .cancel) { uninstallFormula = nil }
@@ -32,35 +32,29 @@ struct GoManagementView: View {
                 uninstallFormula = nil
             }
         } message: { Text(String(format: L("alert.uninstallGoMessage"), uninstallFormula ?? "")) }
-        .alert(L("alert.uninstallGvmTitle"), isPresented: $confirmUninstallGvm) {
-            Button(L("action.cancel"), role: .cancel) {}
-            Button(L("action.uninstall"), role: .destructive) { vm.uninstallGvm() }
-        } message: { Text(String(format: L("alert.uninstallGvmMessage"), tilde(vm.gvmRootPath), vm.gvmInstalledCount)) }
     }
 
     @ViewBuilder
     private var page: some View {
         switch tab {
         case 1: versionManager
-        case 2: gvmPanel
         default: installedTable
         }
     }
 
     // MARK: - 版本管理
 
-    // 三个来源跟 Nginx / 数据库那两个页面一致：Static（我们自己下的官方包）、
-    // Homebrew、MacPorts。后两个交给系统包管理器，我们只负责显示和调它。
+    // 四个来源跟其他页面的分法一致：Static（我们自己下的官方包）、Homebrew、MacPorts、
+    // GVM。后三个交给第三方工具，我们只负责显示和调它。GVM 没装时给一句指路，
+    // 不丢一张空表过来。
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts"], source: $source,
+            VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts", "GVM"], source: $source,
                                  linkURL: URL(string: "https://go.dev/dl/")!,
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
-            }, actions: {
-                if source == "Homebrew" { Button(L("action.updateBrew")) { vm.brewAction("update", formula: "go") }.disabled(app.state.busy) }
-            })
+            }, actions: {})
             Divider()
             if source == "Homebrew" {
                 if vm.formulae.isEmpty {
@@ -78,10 +72,22 @@ struct GoManagementView: View {
                     }
                 }
             } else if source == "MacPorts" {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(FileManager.default.isExecutableFile(atPath: "/opt/local/bin/port") ? L("macports.detectedGo") : L("macports.missing"))
-                    Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                }.padding(24)
+                if app.toolsVM.macPortsInstalled {
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                                 load: { await vm.loadPortItems() },
+                                 install: { vm.portAction("install", $0) },
+                                 uninstall: { vm.portAction("uninstall", $0) })
+                } else {
+                    Text(L("tools.missingMacPorts")).padding(24)
+                }
+            } else if source == "GVM" {
+                if vm.gvmInstalled == true {
+                    GvmVersionTable(vm: vm)
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(L("tools.missingGvm"))
+                    }.padding(24)
+                }
             } else {
                 StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             }
@@ -127,105 +133,5 @@ struct GoManagementView: View {
                     .disabled(app.state.busy)
             }
         }
-    }
-
-    // MARK: - GVM
-
-    private var gvmPanel: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Text("GVM").font(.title3)
-                Text(tilde(vm.gvmRootPath)).font(.caption).foregroundStyle(.secondary)
-                    .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
-                Spacer()
-                if vm.gvmBusy {
-                    ProgressView().controlSize(.small)
-                    Button(L("action.cancel")) { vm.cancelGvm() }
-                } else if vm.gvmInstalled == true {
-                    // 卸载 GVM 本体。跟「卸载 CA 证书」同一排同一个图标，不用重新找。
-                    Button { confirmUninstallGvm = true } label: { Image(systemName: "trash") }
-                        .help(L("gvm.uninstall"))
-                        .disabled(app.state.busy || vm.gvmBusy)
-                    Button { Task { await vm.loadGvmVersions() } } label: { Image(systemName: "arrow.clockwise") }
-                        .help(L("action.refreshVersions"))
-                        .disabled(vm.gvmLoading)
-                    TextField(L("action.search"), text: $vm.gvmSearch).textFieldStyle(.roundedBorder).frame(width: 160)
-                }
-            }
-            .panelHeader()
-            Divider()
-            gvmContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        }
-    }
-
-    @ViewBuilder
-    private var gvmContent: some View {
-        if vm.gvmBusy {
-            gvmLogView
-        } else if vm.gvmInstalled == nil {
-            HStack(spacing: 8) {
-                ProgressView().controlSize(.small)
-                Text(L("gvm.checking")).foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .font(.callout)
-        } else if vm.gvmInstalled == false {
-            VStack(alignment: .leading, spacing: 14) {
-                Text(L("gvm.intro")).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Button(L("gvm.install")) { vm.installGvm() }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(30)
-        } else {
-            gvmVersionTable
-        }
-    }
-
-    private var gvmColumns: [TableColumn] {
-        [TableColumn(title: L("column.version"), minWidth: 90, weight: 1),
-         TableColumn(title: L("column.installed"), minWidth: 70),
-         TableColumn(title: L("column.default"), minWidth: 70),
-         TableColumn(title: L("column.operation"), minWidth: 170, weight: 3)]
-    }
-
-    private var gvmVersionTable: some View {
-        DataTable(columns: gvmColumns, rows: filteredGvmVersions, empty: L("message.noGvmVersions")) { version in
-            Text(version.version)
-            Group {
-                if version.installed { Image(systemName: "checkmark").foregroundStyle(AppTheme.green) }
-                else { Text("—").foregroundStyle(.secondary) }
-            }
-            Group {
-                if version.isDefault {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.blue)
-                } else if version.installed {
-                    Button(L("gvm.setDefault")) { vm.gvm(.useDefault, version: version) }.buttonStyle(.borderless)
-                } else {
-                    Text("—").foregroundStyle(.secondary)
-                }
-            }
-            Button(version.installed ? L("action.uninstall") : L("action.install")) {
-                vm.gvm(version.installed ? .uninstall : .install, version: version)
-            }
-            .buttonStyle(.borderless)
-        }
-    }
-
-    private var gvmLogView: some View {
-        ScrollView(.vertical) {
-            Text(vm.gvmLog.isEmpty ? L("gvm.preparing") : vm.gvmLog)
-                .font(.system(.caption, design: .monospaced))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .textSelection(.enabled)
-                .padding(20)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-    private var filteredGvmVersions: [GvmVersion] {
-        let key = vm.gvmSearch.trimmingCharacters(in: .whitespaces)
-        let list = key.isEmpty ? vm.gvmVersions : vm.gvmVersions.filter { $0.version.contains(key) || $0.name.contains(key) }
-        return list.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
 }

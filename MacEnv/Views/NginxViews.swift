@@ -92,6 +92,12 @@ struct NginxManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
+                Button {
+                    refreshing = true
+                    Task { await vm.refresh(); refreshing = false }
+                } label: { Image(systemName: "arrow.clockwise") }
+                .help(L("action.refreshVersions"))
+                .disabled(app.state.busy || refreshing)
             }.panelHeader()
             Divider()
             DataTable(columns: tableColumns, rows: vm.versions, empty: L("message.noNginxInstalled")) { version in
@@ -141,9 +147,7 @@ struct NginxManagementView: View {
                                  busy: app.state.busy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
-            }, actions: {
-                if source == "Homebrew" { Button(L("action.updateBrew")) { vm.brewAction("update") }.disabled(app.state.busy) }
-            })
+            }, actions: {})
             Divider()
             if source == "Homebrew" {
                 if let formula = vm.formula {
@@ -162,10 +166,15 @@ struct NginxManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 }
             } else if source == "MacPorts" {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(FileManager.default.isExecutableFile(atPath: "/opt/local/bin/port") ? L("macports.detectedNginx") : L("macports.missing"))
-                    Link(L("macports.install"), destination: URL(string: "https://www.macports.org/install.php")!)
-                }.padding(24)
+                // 装 MacPorts 本体的入口统一收在环境工具页；装好了这里直接给可装清单。
+                if app.toolsVM.macPortsInstalled {
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                                 load: { await vm.loadPortItems() },
+                                 install: { vm.portAction("install", $0) },
+                                 uninstall: { vm.portAction("uninstall", $0) })
+                } else {
+                    Text(L("tools.missingMacPorts")).padding(24)
+                }
             } else {
                 StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             }

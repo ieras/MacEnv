@@ -45,9 +45,6 @@ struct SettingsView: View {
 
     private var developer: some View {
         Form {
-            Picker(L("settings.brewSource"), selection: $app.state.brewSource) {
-                ForEach(BrewSource.allCases) { Text($0.title).tag($0) }
-            }
             TextField(L("settings.catalogService"), text: $app.state.catalogURL,
                       prompt: Text(StaticCatalogService.defaultEndpoint.absoluteString))
             Text(L("settings.catalogServiceHint") + StaticCatalogService.defaultEndpoint.absoluteString)
@@ -68,25 +65,34 @@ struct SettingsView: View {
     private var modules: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
+                // 「控制台」不来自 moduleGroups（侧栏里那个标题是手画的），但它的开关得在这儿，
+                // 否则「环境工具」一旦关掉就再也没地方打开。
+                moduleGroupCard(title: L("sidebar.console"), ids: consoleModules)
                 ForEach(moduleGroups, id: \.0) { group in
-                    // 分类名右边的开关照 FlyEnv：整组一键全开/全关，组内有一个开着就算开。
-                    HStack {
-                        Text(L(group.0)).font(.headline)
-                        Spacer()
-                        Toggle("", isOn: Binding(
-                            get: { group.1.contains { app.state.modules[$0] ?? true } },
-                            set: { value in group.1.forEach { app.state.modules[$0] = value } }
-                        ))
-                        .labelsHidden().toggleStyle(ServiceSwitch())
-                    }
-                    .padding(.bottom, 8)
-                    Divider().padding(.bottom, 10)
-                    LazyVGrid(columns: moduleColumns, spacing: 10) {
-                        ForEach(group.1, id: \.self) { moduleCard($0) }
-                    }
-                    .padding(.bottom, 18)
+                    moduleGroupCard(title: L(group.0), ids: group.1)
                 }
             }
+        }
+    }
+
+    // 分类名右边的开关照 FlyEnv：整组一键全开/全关，组内有一个开着就算开。
+    private func moduleGroupCard(title: String, ids: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(title).font(.headline)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { ids.contains { app.state.modules[$0] ?? true } },
+                    set: { value in ids.forEach { app.state.modules[$0] = value } }
+                ))
+                .labelsHidden().toggleStyle(ServiceSwitch())
+            }
+            .padding(.bottom, 8)
+            Divider().padding(.bottom, 10)
+            LazyVGrid(columns: moduleColumns, spacing: 10) {
+                ForEach(ids, id: \.self) { moduleCard($0) }
+            }
+            .padding(.bottom, 18)
         }
     }
 

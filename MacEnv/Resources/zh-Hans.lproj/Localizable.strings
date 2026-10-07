@@ -39,7 +39,6 @@
 "action.restart" = "重启";
 "action.install" = "安装";
 "action.uninstall" = "卸载";
-"action.updateBrew" = "更新 Brew";
 "action.upgradeTo" = "更新到 ";
 "action.add" = "添加";
 "action.edit" = "编辑";
@@ -93,10 +92,8 @@
 "log.start" = "启动错误";
 "log.iniError" = "PHP 错误日志";
 
-"message.extensionInstalled" = "%@ 已安装";
 "message.extensionEnabled" = "%@ 已启用";
 "message.extensionDisabled" = "%@ 已禁用";
-"message.extensionUninstalled" = "%@ 已卸载";
 "message.noFunctionMatched" = "没有匹配的函数名";
 
 "error.phpExtensionUnsupported" = "该 PHP 不支持动态扩展（静态编译）";
@@ -119,13 +116,9 @@
 "brew.install" = "安装 Homebrew";
 "brew.noFormulaList" = "未检测到 Homebrew 版本列表。";
 "brew.notInstalled" = "未安装";
+"port.empty" = "没有可安装的版本";
 
-"macports.detectedNginx" = "已检测到 MacPorts。本机 Nginx 会显示在服务列表。";
-"macports.detectedPhp" = "已检测到 MacPorts，安装的 PHP 会显示在服务列表。";
-"macports.detectedDatabase" = "已检测到 MacPorts，安装的 ";
-"macports.detectedSuffix" = " 会显示在服务列表。";
 "macports.missing" = "未检测到 MacPorts";
-"macports.install" = "安装 MacPorts";
 
 "config.openFolder" = "打开配置文件目录";
 "config.openFile" = "打开配置文件";
@@ -150,8 +143,6 @@
 "message.configReloaded" = "Nginx 配置已重载";
 "message.configSaved" = "配置已保存";
 "message.configSavedReloaded" = "配置已保存，Nginx 已重载";
-"message.installed" = "已安装 ";
-"message.uninstalled" = "已卸载 ";
 "message.stopFirst" = "请先停止 Nginx";
 "message.aliasExists" = "别名已存在";
 "message.started" = "已启动";
@@ -212,7 +203,6 @@
 "settings.launchAtLogin" = "开机启动";
 "settings.hideOnClose" = "关闭窗口后隐藏到菜单栏";
 "settings.autoStartService" = "启动时自动拉起快捷服务";
-"settings.brewSource" = "Brew 下载源";
 "settings.proxyHost" = "代理地址";
 "settings.proxyPort" = "端口";
 "settings.codeFontSize" = "代码字号";
@@ -265,9 +255,6 @@
 "host.rewrite" = "伪静态规则";
 "host.rewriteHint" = "留空则按目录结构自动识别（WordPress / Laravel / Yii / ThinkPHP），并自动把根目录切到入口目录。";
 "host.autoFill" = "自动识别";
-"host.proxy" = "反向代理";
-"host.proxyPath" = "路径前缀";
-"host.proxyEmpty" = "没有反向代理规则。路径前缀会按 ^~ 前缀匹配转到上游地址。";
 "host.editConfig" = "编辑配置";
 "host.copyURL" = "复制站点网址";
 "host.copyPath" = "复制站点目录";
@@ -327,14 +314,10 @@
 "source.system" = "系统";
 "column.default" = "默认";
 "message.noGoInstalled" = "暂无已安装 Go，请在版本管理中安装或添加本地目录。";
-"message.noGvmVersions" = "GVM 没给出任何版本，点右上角刷新试试。";
-"message.gvmInstalled" = "GVM 已安装";
 "message.gvmDefaultSet" = "默认版本已切换到 %@";
-"message.gvmCancelled" = "已取消";
 "gvm.checking" = "正在检测 GVM…";
 "gvm.intro" = "GVM（Go Version Manager）是第三方的 Go 版本管理器，装好后可以在这里安装和切换多个 Go 版本。";
 "gvm.install" = "安装 GVM";
-"gvm.preparing" = "正在准备…";
 "gvm.setDefault" = "设为默认";
 "error.gvmMissing" = "GVM 未安装，请先安装 GVM";
 "error.gvmFailed" = "GVM 命令执行失败";
@@ -343,9 +326,9 @@
 "alert.uninstallGvmTitle" = "卸载 GVM？";
 "alert.uninstallGvmMessage" = "将删除 %@ 以及 shell 配置里的所有 GVM 相关行，通过 GVM 安装的 %d 个 Go 版本会一并删除，无法恢复。";
 "message.gvmUninstalled" = "GVM 已卸载";
-"macports.detectedGo" = "已检测到 MacPorts，安装的 Go 会显示在已安装列表。";
 "alert.uninstallGoTitle" = "卸载 Homebrew Go？";
 "alert.uninstallGoMessage" = "将执行 brew uninstall %@，GOROOT 里的工具链会被删除，其他版本由 Homebrew 自行处理。";
+
 // MARK: - 全局任务日志
 "action.update" = "更新";
 "action.upgrade" = "升级";
@@ -356,3 +339,56 @@
 "message.taskCancelled" = "已取消";
 "error.brewFailed" = "Homebrew 命令执行失败";
 "error.unpackFailed" = "解包失败";
+
+// MARK: - 环境工具页
+"module.tools" = "环境工具";
+"column.name" = "名称";
+"tools.installed" = "已安装";
+"tools.notInstalled" = "未安装";
+"tools.installBrew" = "安装 Homebrew";
+"tools.updateBrew" = "更新 Homebrew";
+"tools.uninstallBrew" = "卸载 Homebrew";
+"tools.installMacPorts" = "安装 MacPorts";
+"tools.uninstallMacPorts" = "卸载 MacPorts";
+"tools.installSDKMAN" = "安装 SDKMAN";
+"tools.uninstallSDKMAN" = "卸载 SDKMAN";
+"tools.missingMacPorts" = "未检测到 MacPorts，请到「环境工具」里安装。";
+"tools.missingGvm" = "未检测到 GVM，请到「环境工具」里安装。";
+"tools.empty" = "这里还没有装东西。";
+"alert.uninstallBrewTitle" = "卸载 Homebrew？";
+"alert.uninstallBrewMessage" = "将删除 Homebrew 本体，以及它装过的全部 %d 个公式 —— 包括 MacEnv 正在管理的 nginx / PHP / MySQL / Redis / Go。这些服务会立刻从 MacEnv 里消失，且无法恢复。";
+"alert.uninstallMacPortsTitle" = "卸载 MacPorts？";
+"alert.uninstallMacPortsMessage" = "将先卸载 %d 个 port，然后删除 /opt/local 及相关系统文件，并清掉 shell 配置里的 PATH。无法恢复。";
+"alert.uninstallSDKMANTitle" = "卸载 SDKMAN？";
+"alert.uninstallSDKMANMessage" = "将删除 ~/.sdkman 以及 shell 配置里的 SDKMAN 相关行。用 sdk 装的 %d 个 candidate 会一并删除，无法恢复。";
+"error.toolCommandFailed" = "命令执行失败";
+"error.toolTimeout" = "任务超时，已停止等待（后台可能还在跑）";
+"error.macPortsReleaseFailed" = "读取 MacPorts 发布信息失败";
+"error.macPortsNoPackage" = "官方 release 里没有适配本机系统（%@）的安装包，请到 macports.org/install.php 手动安装";
+"error.macPortsInstallFailed" = "安装结束但没找到 /opt/local/bin/port";
+"error.sdkmanMissing" = "SDKMAN 未安装";
+"module.java" = "Java";
+"column.vendor" = "发行商";
+"java.setDefault" = "设为默认";
+"sdkman.default" = "当前默认";
+"message.noJavaInstalled" = "暂无已安装 Java，请在版本管理中安装或添加本地目录。";
+"message.noSdkmanVersions" = "SDKMAN 没给出任何版本，点右上角刷新试试。";
+"message.sdkmanDefaultSet" = "已把 %@ 设为默认 Java";
+"tools.missingSDKMAN" = "未检测到 SDKMAN，请到「环境工具」里安装。";
+"alert.uninstallJavaTitle" = "卸载 Homebrew JDK？";
+"alert.uninstallJavaMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
+"alert.uninstallSdkmanJavaTitle" = "卸载这个 JDK？";
+"alert.uninstallSdkmanJavaMessage" = "将执行 sdk uninstall java %@，~/.sdkman 里的这个版本会被删除，无法恢复。";
+"module.maven" = "Maven";
+"module.gradle" = "Gradle";
+"column.directory" = "目录";
+"message.noMavenInstalled" = "暂无已安装 Maven，请在版本管理中安装或添加本地目录。";
+"message.noGradleInstalled" = "暂无已安装 Gradle，请在版本管理中安装或添加本地目录。";
+"alert.uninstallMavenTitle" = "卸载 Homebrew Maven？";
+"alert.uninstallMavenMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
+"alert.uninstallGradleTitle" = "卸载 Homebrew Gradle？";
+"alert.uninstallGradleMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
+"alert.uninstallSdkmanMavenTitle" = "卸载这个 Maven？";
+"alert.uninstallSdkmanMavenMessage" = "将执行 sdk uninstall maven %@，~/.sdkman 里的这个版本会被删除，无法恢复。";
+"alert.uninstallSdkmanGradleTitle" = "卸载这个 Gradle？";
+"alert.uninstallSdkmanGradleMessage" = "将执行 sdk uninstall gradle %@，~/.sdkman 里的这个版本会被删除，无法恢复。";

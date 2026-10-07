@@ -3,9 +3,9 @@ import SwiftUI
 // MkCert 的版本管理 + 根 CA。mkcert 没有常驻进程，所以这里没有启停 / 端口 / 配置 / 日志那一套，
 // 只有「装了哪些版本、根 CA 在哪、要不要把根 CA 装进钥匙串」。
 @MainActor
-final class MkCertViewModel: ObservableObject {
-    private let state: AppState
-    private let services: Services
+final class MkCertViewModel: ObservableObject, PortListHost {
+    let state: AppState
+    let services: Services
 
     @Published var versions: [MkCertVersion] = []
     @Published var staticVersions: [StaticVersion] = []
@@ -48,8 +48,18 @@ final class MkCertViewModel: ObservableObject {
     }
 
     func refreshVersionManager(_ source: String, force: Bool = false) async {
-        if source == "Static" { await loadStatic(force: force) } else { await refresh() }
+        switch source {
+        case "Static": await loadStatic(force: force)
+        case "MacPorts": await loadPortItems(force: force)
+        default: await refresh()
+        }
     }
+
+    // MARK: - MacPorts 清单（加载与装/卸在 PortListHost 协议扩展里）
+
+    @Published var portItems: [PortItem] = []
+    @Published var portLoading = false
+    var portApp: String { "mkcert" }
 
     func loadStatic(force: Bool = false) async {
         guard !staticLoading else { return }

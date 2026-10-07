@@ -68,13 +68,21 @@ enum Command {
     //    osascript 的返回值里被吞掉，日志文件永远是空的。
     // ⚠️ osascript 非交互，脚本里任何 read / sudo 密码提示都会挂死。
     // ⚠️ 后台那半边进程我们拿不到 exit status，所以让脚本自己在最后一行 echo 退出码。
+    // do shell script 没有控制终端，macOS 的 nohup 在这里尝试脱离 console 会失败；后台子进程也没有
+    // 可挂断的终端，因此不用 nohup，只需把 stdin/stdout/stderr 全部显式断开。
+    static func privilegedLaunchCommand(script: URL, log: URL) -> String {
+        "/bin/bash \(singleQuoted(script.path)) < /dev/null > \(singleQuoted(log.path)) 2>&1 & echo started"
+    }
+
     static func privilegedStream(_ command: String, report: @escaping (String) -> Void) async throws {
         let name = "macenv-task-" + UUID().uuidString
         let script = FileManager.default.temporaryDirectory.appendingPathComponent(name + ".sh")
         let log = FileManager.default.temporaryDirectory.appendingPathComponent(name + ".log")
         try ("#!/bin/bash\n" + command + "\necho \"__MACENV_EXIT=$?\"\n").write(to: script, atomically: true, encoding: .utf8)
         try Data().write(to: log)
-        try await privileged("nohup /bin/bash \(singleQuoted(script.path)) > \(singleQuoted(log.path)) 2>&1 & echo started")
+        // 任务跑完（或失败）就把脚本和日志收走，别让 /var/folders 里越攒越多。
+        defer { try? FileManager.default.removeItem(at: script); try? FileManager.default.removeItem(at: log) }
+        try await privileged(privilegedLaunchCommand(script: script, log: log))
 
         var offset: UInt64 = 0
         var tail = ""

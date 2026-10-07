@@ -15,7 +15,11 @@ final class Services {
     let swoole: SwooleService
     let composer: ComposerService
     let go: GoService
+    let java: JavaService
+    let maven: MavenService
+    let gradle: GradleService
     let hosts: HostService
+    let tools: ToolService
     private let catalogs: [String: StaticCatalogService]
 
     init() {
@@ -30,7 +34,11 @@ final class Services {
             // one-env 对 mkcert 直接给裸二进制（不是压缩包），所以要 rawBinary。
             "mkcert": StaticCatalogService(root: root, app: "mkcert", binaryNames: ["mkcert"], rawBinary: true),
             // one-env 的目录接口只认 "golang"，传 "go" 它会回 400（app 类型错误）。
-            "golang": StaticCatalogService(root: root, app: "golang", binaryNames: ["go"], displayName: "Go")
+            "golang": StaticCatalogService(root: root, app: "golang", binaryNames: ["go"], displayName: "Go"),
+            // JDK 的 tarball 里是 Contents/Home/bin/java，「往上退两级」正好落在 Home 这一层。
+            "java": StaticCatalogService(root: root, app: "java", binaryNames: ["java"]),
+            "maven": StaticCatalogService(root: root, app: "maven", binaryNames: ["mvn"], displayName: "Maven"),
+            "gradle": StaticCatalogService(root: root, app: "gradle", binaryNames: ["gradle"], displayName: "Gradle")
         ]
         nginx = NginxService(root: root)
         paths = PathService(root: root)
@@ -44,6 +52,11 @@ final class Services {
         composer = ComposerService(root: root)
         go = GoService(root: root)
         hosts = HostService(root: root)
+        tools = ToolService(root: root)
+        // Java 复用工具页的 SDKMAN 检测，所以必须排在 tools 后面。
+        java = JavaService(root: root, tools: tools)
+        maven = MavenService(root: root, tools: tools)
+        gradle = GradleService(root: root, tools: tools)
     }
 
     func database(_ kind: DatabaseKind) -> DatabaseService { kind == .mysql ? mysql : mariadb }

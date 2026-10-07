@@ -95,7 +95,13 @@ final class StaticCatalogService {
         }
         let staging = versionsDirectory.appendingPathComponent(".staging-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
-        let status = try await Command.stream("/usr/bin/tar", [version.url.pathExtension == "gz" ? "-xzf" : "-xJf", archive.path, "-C", staging.path], onOutput: report)
+        // one-env 的 Gradle 是 .zip，其余（含 Maven）是 .tar.gz / .tar.xz。
+        let status: Int32
+        if version.url.pathExtension == "zip" {
+            status = try await Command.stream("/usr/bin/unzip", ["-q", archive.path, "-d", staging.path], onOutput: report)
+        } else {
+            status = try await Command.stream("/usr/bin/tar", [version.url.pathExtension == "gz" ? "-xzf" : "-xJf", archive.path, "-C", staging.path], onOutput: report)
+        }
         guard status == 0 else {
             try? fm.removeItem(at: staging)
             throw CommandError(message: L("error.unpackFailed") + "（\(status)）")

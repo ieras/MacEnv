@@ -106,6 +106,8 @@ final class PathService {
     func processEnvironment() -> [String: String] {
         var environment = ProcessInfo.processInfo.environment
         environment["PATH"] = managedPaths().joined(separator: ":") + ":" + (environment["PATH"] ?? "")
+        // 子进程拿软链没意义（它不会去解析 $HOME），给真身。
+        for (name, link) in managedExports() { environment[name] = link.resolvingSymlinksInPath().path }
         return environment
     }
 
@@ -124,10 +126,42 @@ final class PathService {
         try? FileManager.default.removeItem(at: aliasDirectory.appendingPathComponent(alias.name))
     }
 
+    // 光把 bin 塞进 PATH 对 Java 不够：mvn / gradlew 启动先读 JAVA_HOME，读不到才退到
+    // /usr/libexec/java_home（那挑的是机器上版本最高的那个，不是用户在 MacEnv 里选的那个）。
+    // env/ 下建了哪种软链，就顺带 export 哪个变量 —— 值是软链本身（指向 JDK Home，含 bin 和
+    // release），不是它下面的 bin；JAVA_HOME 指到 bin 会让 mvn 找不到 lib/tools.jar 那一层。
+    //
+    // Go 不跟着做：go 二进制能顺着自己的路径推 GOROOT，官方也明确说不要设（设错了反而炸），
+    // gvm 那条路由它自己的 environments 脚本管。
+    private static let homeVariables = ["java": "JAVA_HOME"]
+
+    private func managedExports() -> [(String, URL)] {
+        let links = (try? FileManager.default.contentsOfDirectory(at: envDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+        return links.compactMap { link in
+            guard let name = Self.homeVariables[link.lastPathComponent] else { return nil }
+            return (name, link)
+        }
+    }
+
     // 给子进程用的必须是绝对路径：$HOME 进了 Process.environment 没人替你展开。
     private func managedPaths() -> [String] {
         let links = (try? FileManager.default.contentsOfDirectory(at: envDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
         return links.flatMap { [$0.path, $0.appendingPathComponent("bin").path, $0.appendingPathComponent("sbin").path] } + [aliasDirectory.path]
+    }
+
+    // 单拎出来是为了能单测：这两行直接落进用户的 shell 配置，fish 的 `set -gx` 和 POSIX 的
+    // `export` 写错一个字整条 PATH 就废了，而真跑一遍等于改用户的 rc 文件 —— 测不起。
+    static func shellBlock(paths: [String], exports: [(String, String)], fish: Bool) -> String {
+        let begin = "# >>> MacEnv PATH >>>"
+        let end = "# <<< MacEnv PATH <<<"
+        // fish 的 PATH 是数组，得一个一个塞，不能用 export PATH="a:b:c" 那套。
+        let pathLine = fish
+            ? "set -gx PATH \(paths.map { "\"\($0)\"" }.joined(separator: " ")) $PATH\n"
+            : "export PATH=\"\(paths.joined(separator: ":")):$PATH\"\n"
+        let homeLines = exports.map { name, value in
+            fish ? "set -gx \(name) \"\(value)\"\n" : "export \(name)=\"\(value)\"\n"
+        }.joined()
+        return "\(begin)\n\(pathLine)\(homeLines)\(end)\n"
     }
 
     private func rewriteShellPath() throws {
@@ -143,11 +177,10 @@ final class PathService {
             content.removeSubrange(start.lowerBound..<finish.upperBound)
         }
         // 写进 shell 配置的那一版把家目录换成 $HOME（`~` 在引号里不展开，会直接让这条 PATH 失效）。
-        let paths = managedPaths().map(shellPath)
-        // fish 的 PATH 是数组，得一个一个塞，不能用 export PATH="a:b:c" 那套。
-        let block = shellName == "fish"
-            ? "\(begin)\nset -gx PATH \(paths.map { "\"\($0)\"" }.joined(separator: " ")) $PATH\n\(end)\n"
-            : "\(begin)\nexport PATH=\"\(paths.joined(separator: ":")):$PATH\"\n\(end)\n"
+        // JAVA_HOME 这一行与 PATH 同生死：软链没了，下次重写它自然就不在里面了，不用另外清。
+        let block = Self.shellBlock(paths: managedPaths().map(shellPath),
+                                    exports: managedExports().map { ($0.0, shellPath($0.1.path)) },
+                                    fish: shellName == "fish")
         if !content.isEmpty && !content.hasSuffix("\n") { content.append("\n") }
         let next = content + block
         // 内容一模一样就别动用户的文件，也别留备份。

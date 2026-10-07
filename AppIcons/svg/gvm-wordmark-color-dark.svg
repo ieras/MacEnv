@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 333 333" width="333" height="333">
+  <!-- GVM 字标（合并版 · 深色变体）。坐标与 gvm.svg 完全一致，仅配色不同：
+       深色下速度线 + G 固定蓝 #0A84FF（不跟主题转白），vm 转白 #FFFFFF 以保持对比，绿点固定 #91D300。 -->
+  <g transform="translate(-5, 61.75)">
+    <!-- 速度线 -->
+    <g fill="#0A84FF">
+      <rect x="12" y="48" width="52" height="14" rx="7"/>
+      <rect x="5"  y="88" width="66" height="14" rx="7"/>
+      <rect x="12" y="128" width="52" height="14" rx="7"/>
+    </g>
+    <!-- G -->
+    <text x="80" y="160"
+          font-family="'Arial Black', Impact, Arial, sans-serif"
+          font-size="148"
+          font-weight="900"
+          fill="#0A84FF"
+          letter-spacing="-8">G</text>
+    <!-- vm -->
+    <text x="200" y="155"
+          font-family="'Arial Black', Impact, Arial, sans-serif"
+          font-size="92"
+          font-weight="900"
+          fill="#FFFFFF"
+          letter-spacing="-4">vm</text>
+  </g>
+  <!-- 绿点：垂直对齐 v 左笔画中心（x=202），落在它正上方 -->
+  <circle cx="208" cy="146" r="15" fill="#91D300"/>
+</svg>

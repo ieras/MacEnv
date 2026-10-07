@@ -107,7 +107,34 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func refreshVersionManager(_ kind: DatabaseKind, _ source: String, force: Bool = false) async {
-        if source == "Static" { await loadStatic(kind, force: force) } else { await refresh(kind) }
+        switch source {
+        case "Static": await loadStatic(kind, force: force)
+        case "MacPorts": await loadPortItems(kind, force: force)
+        default: await refresh(kind)
+        }
+    }
+
+    // MARK: - MacPorts 清单
+
+    @Published var portItems: [DatabaseKind: [PortItem]] = [:]
+    @Published var portLoading = false
+
+    func loadPortItems(_ kind: DatabaseKind, force: Bool = false) async {
+        // 缓存先上屏（installed 按落点现判），新鲜就到此为止，过期才真跑 port search。
+        portItems[kind] = services.tools.portCached(app: kind.rawValue)
+        if !force, services.tools.portCacheFresh(app: kind.rawValue) { return }
+        guard !portLoading else { return }
+        portLoading = true
+        defer { portLoading = false }
+        portItems[kind] = await services.tools.portItems(app: kind.rawValue, force: force)
+    }
+
+    func portAction(_ action: String, _ kind: DatabaseKind, _ item: PortItem) {
+        state.runStreaming(taskTitle(action, item.name)) { report, _ in
+            try await self.services.tools.port(action, app: kind.rawValue, name: item.name, report: report)
+            await self.loadPortItems(kind)
+            await self.refresh(kind)
+        }
     }
 
     func loadStatic(_ kind: DatabaseKind, force: Bool = false) async {

@@ -1,9 +1,9 @@
 import SwiftUI
 
 @MainActor
-final class RedisViewModel: ObservableObject {
-    private let state: AppState
-    private let services: Services
+final class RedisViewModel: ObservableObject, PortListHost {
+    let state: AppState
+    let services: Services
 
     @Published var versions: [RedisVersion] = []
     @Published var formulae: [BrewFormulaItem] = []
@@ -50,6 +50,12 @@ final class RedisViewModel: ObservableObject {
         }
         objectWillChange.send()
     }
+
+    // MARK: - MacPorts 清单（加载与装/卸在 PortListHost 协议扩展里）
+
+    @Published var portItems: [PortItem] = []
+    @Published var portLoading = false
+    var portApp: String { "redis" }
 
     func operate(_ operation: String, _ version: RedisVersion) async {
         guard !state.busy else { return }

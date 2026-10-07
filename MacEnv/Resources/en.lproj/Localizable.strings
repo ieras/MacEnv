@@ -39,7 +39,6 @@
 "action.restart" = "Restart";
 "action.install" = "Install";
 "action.uninstall" = "Uninstall";
-"action.updateBrew" = "Update Brew";
 "action.upgradeTo" = "Upgrade to ";
 "action.add" = "Add";
 "action.edit" = "Edit";
@@ -93,10 +92,8 @@
 "log.start" = "Startup errors";
 "log.iniError" = "PHP error log";
 
-"message.extensionInstalled" = "%@ installed";
 "message.extensionEnabled" = "%@ enabled";
 "message.extensionDisabled" = "%@ disabled";
-"message.extensionUninstalled" = "%@ uninstalled";
 "message.noFunctionMatched" = "No matching function name";
 
 "error.phpExtensionUnsupported" = "This PHP does not support dynamic extensions (statically built)";
@@ -119,13 +116,9 @@
 "brew.install" = "Install Homebrew";
 "brew.noFormulaList" = "No Homebrew version list detected.";
 "brew.notInstalled" = "Not installed";
+"port.empty" = "No installable versions";
 
-"macports.detectedNginx" = "MacPorts detected. Local Nginx builds appear in the service list.";
-"macports.detectedPhp" = "MacPorts detected. PHP installed with it appears in the service list.";
-"macports.detectedDatabase" = "MacPorts detected. Installed ";
-"macports.detectedSuffix" = " builds appear in the service list.";
 "macports.missing" = "MacPorts not detected";
-"macports.install" = "Install MacPorts";
 
 "config.openFolder" = "Open config directory";
 "config.openFile" = "Open config file";
@@ -150,8 +143,6 @@
 "message.configReloaded" = "Nginx config reloaded";
 "message.configSaved" = "Config saved";
 "message.configSavedReloaded" = "Config saved, Nginx reloaded";
-"message.installed" = "Installed ";
-"message.uninstalled" = "Uninstalled ";
 "message.stopFirst" = "Stop Nginx first";
 "message.aliasExists" = "Alias already exists";
 "message.started" = "started";
@@ -212,7 +203,6 @@
 "settings.launchAtLogin" = "Launch at login";
 "settings.hideOnClose" = "Hide to menu bar on close";
 "settings.autoStartService" = "Start quick-start services on launch";
-"settings.brewSource" = "Brew mirror";
 "settings.proxyHost" = "Proxy host";
 "settings.proxyPort" = "Port";
 "settings.codeFontSize" = "Code font size";
@@ -265,9 +255,6 @@
 "host.rewrite" = "Rewrite rules";
 "host.rewriteHint" = "Leave empty to detect the framework from the directory layout (WordPress / Laravel / Yii / ThinkPHP) and move the root to the entry directory.";
 "host.autoFill" = "Detect";
-"host.proxy" = "Reverse proxy";
-"host.proxyPath" = "Path prefix";
-"host.proxyEmpty" = "No reverse proxy rules. A path prefix is forwarded to the upstream with ^~ prefix matching.";
 "host.editConfig" = "Edit Config";
 "host.copyURL" = "Copy site URL";
 "host.copyPath" = "Copy site folder";
@@ -327,14 +314,10 @@
 "source.system" = "System";
 "column.default" = "Default";
 "message.noGoInstalled" = "No Go installed yet — install one from the version manager or add a local directory.";
-"message.noGvmVersions" = "GVM returned no versions. Try the refresh button.";
-"message.gvmInstalled" = "GVM installed";
 "message.gvmDefaultSet" = "Default version switched to %@";
-"message.gvmCancelled" = "Cancelled";
 "gvm.checking" = "Checking GVM…";
 "gvm.intro" = "GVM (Go Version Manager) is a third-party Go version manager. Install it to manage multiple Go versions here.";
 "gvm.install" = "Install GVM";
-"gvm.preparing" = "Preparing…";
 "gvm.setDefault" = "Set default";
 "error.gvmMissing" = "GVM is not installed";
 "error.gvmFailed" = "GVM command failed";
@@ -343,9 +326,10 @@
 "alert.uninstallGvmTitle" = "Uninstall GVM?";
 "alert.uninstallGvmMessage" = "This deletes %@ and every GVM-related line in your shell config. The %d Go versions installed through GVM go with it and cannot be recovered.";
 "message.gvmUninstalled" = "GVM uninstalled";
-"macports.detectedGo" = "MacPorts detected. Go installed with it shows up in the installed list.";
 "alert.uninstallGoTitle" = "Uninstall Homebrew Go?";
 "alert.uninstallGoMessage" = "This runs brew uninstall %@. The toolchain inside its GOROOT is removed; other versions are handled by Homebrew.";
+
+// MARK: - Global task log
 "action.update" = "Update";
 "action.upgrade" = "Upgrade";
 "message.taskTitle" = "%@ %@";
@@ -355,3 +339,56 @@
 "message.taskCancelled" = "Cancelled";
 "error.brewFailed" = "Homebrew command failed";
 "error.unpackFailed" = "Failed to unpack the archive";
+
+// MARK: - Environment tools page
+"module.tools" = "Environment Tools";
+"column.name" = "Name";
+"tools.installed" = "Installed";
+"tools.notInstalled" = "Not installed";
+"tools.installBrew" = "Install Homebrew";
+"tools.updateBrew" = "Update Homebrew";
+"tools.uninstallBrew" = "Uninstall Homebrew";
+"tools.installMacPorts" = "Install MacPorts";
+"tools.uninstallMacPorts" = "Uninstall MacPorts";
+"tools.installSDKMAN" = "Install SDKMAN";
+"tools.uninstallSDKMAN" = "Uninstall SDKMAN";
+"tools.missingMacPorts" = "MacPorts not found — install it from Environment Tools.";
+"tools.missingGvm" = "GVM not found — install it from Environment Tools.";
+"tools.empty" = "Nothing installed through this tool yet.";
+"alert.uninstallBrewTitle" = "Uninstall Homebrew?";
+"alert.uninstallBrewMessage" = "This deletes Homebrew itself plus all %d formulae it installed — including the nginx / PHP / MySQL / Redis / Go that MacEnv manages. Those services disappear from MacEnv immediately and cannot be recovered.";
+"alert.uninstallMacPortsTitle" = "Uninstall MacPorts?";
+"alert.uninstallMacPortsMessage" = "This uninstalls %d ports, then removes /opt/local and related system files, and cleans the PATH entries from your shell config. This cannot be undone.";
+"alert.uninstallSDKMANTitle" = "Uninstall SDKMAN?";
+"alert.uninstallSDKMANMessage" = "This deletes ~/.sdkman and every SDKMAN-related line in your shell config. The %d candidates installed with sdk go with it and cannot be recovered.";
+"error.toolCommandFailed" = "Command failed";
+"error.toolTimeout" = "Timed out — stopped waiting (it may still be running in the background)";
+"error.macPortsReleaseFailed" = "Could not read the MacPorts release info";
+"error.macPortsNoPackage" = "The official releases have no installer matching this system (%@). Install manually from macports.org/install.php";
+"error.macPortsInstallFailed" = "Install finished but /opt/local/bin/port is missing";
+"error.sdkmanMissing" = "SDKMAN is not installed";
+"module.java" = "Java";
+"column.vendor" = "Vendor";
+"java.setDefault" = "Set default";
+"sdkman.default" = "Default";
+"message.noJavaInstalled" = "No Java installed yet. Install one from Version Manager or add a local directory.";
+"message.noSdkmanVersions" = "SDKMAN returned no versions — try refreshing from the top right.";
+"message.sdkmanDefaultSet" = "Set %@ as the default Java";
+"tools.missingSDKMAN" = "SDKMAN not found — install it from Environment Tools.";
+"alert.uninstallJavaTitle" = "Uninstall Homebrew JDK?";
+"alert.uninstallJavaMessage" = "This runs brew uninstall %@. Other versions are left to Homebrew.";
+"alert.uninstallSdkmanJavaTitle" = "Uninstall this JDK?";
+"alert.uninstallSdkmanJavaMessage" = "This runs sdk uninstall java %@. That version is removed from ~/.sdkman and cannot be recovered.";
+"module.maven" = "Maven";
+"module.gradle" = "Gradle";
+"column.directory" = "Directory";
+"message.noMavenInstalled" = "No Maven installed yet. Install one from Version Manager or add a local directory.";
+"message.noGradleInstalled" = "No Gradle installed yet. Install one from Version Manager or add a local directory.";
+"alert.uninstallMavenTitle" = "Uninstall Homebrew Maven?";
+"alert.uninstallMavenMessage" = "This runs brew uninstall %@. Other versions are left to Homebrew.";
+"alert.uninstallGradleTitle" = "Uninstall Homebrew Gradle?";
+"alert.uninstallGradleMessage" = "This runs brew uninstall %@. Other versions are left to Homebrew.";
+"alert.uninstallSdkmanMavenTitle" = "Uninstall this Maven?";
+"alert.uninstallSdkmanMavenMessage" = "This runs sdk uninstall maven %@. That version is removed from ~/.sdkman and cannot be recovered.";
+"alert.uninstallSdkmanGradleTitle" = "Uninstall this Gradle?";
+"alert.uninstallSdkmanGradleMessage" = "This runs sdk uninstall gradle %@. That version is removed from ~/.sdkman and cannot be recovered.";

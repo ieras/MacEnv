@@ -115,6 +115,53 @@ struct ComposerIcon: View {
     }
 }
 
+// 按资源名取图标。上面那八个每个抄了一遍同样的五行情，从环境工具页开始不再这么写：
+// 资源名和调用处的 id 一一对应（MacPorts / SDKMAN / GVM / Java / Tools），
+// 一个 view 全包了。上面那批是历史遗留，没动它们。
+// Homebrew 不在这儿 —— 它是硬编码双色，要走 original，见下面的 HomebrewIcon。
+struct AssetIcon: View {
+    let name: String
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Image(name)
+            .renderingMode(.template)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .foregroundStyle(colorScheme == .dark ? .white : .blue)
+    }
+}
+
+// Homebrew 图标是硬编码双色（浅色 #0088FF 描边 + 白泡沫 / 深色白描边 + #1E1E1E 泡沫），
+// 资源里挂了明暗两套变体，所以这里必须走 original 渲染 —— template 会把所有颜色压成同一个
+// 前景色，白泡沫和蓝啤酒立刻分不开，整张塌成一坨剪影（试过，就是「朴素换色」那个下场）。
+// 系统按当前 NSAppearance 自动选变体，不用在这里读 colorScheme。
+// ⚠️ 泡沫填充写死了面板底色 #1E1E1E，这张图只放在 AppTheme.panelBackground 上，
+//    挪到别的背景（比如白卡片）会露出一块色斑。
+struct HomebrewIcon: View {
+    var body: some View {
+        Image("HomebrewIcon")
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+    }
+}
+
+// GVM 字标：单色剪影（currentColor），跟 MacPorts 同一套路。
+// 走 template 渲染 + 主题前景色，浅色蓝、深色白自动跟主题，颜色一处可调。
+struct GvmIcon: View {
+    @Environment(\.colorScheme) private var colorScheme
+    var body: some View {
+        Image("GVMIcon")
+            .renderingMode(.template)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .foregroundStyle(colorScheme == .dark ? .white : .blue)
+    }
+}
+
 // 版本列表统一列宽：库 / 版本 / 是否安装 / 操作。
 // Static、Homebrew、GVM 这几个列表字段一样，列宽就必须一样，否则切换来源时列位置会跳。
 // MARK: - 表格
@@ -243,6 +290,41 @@ struct BrewListView: View {
             }
             .buttonStyle(.borderless)
         }
+    }
+}
+
+// MacPorts 渠道的可装清单：Nginx / PHP / Database / Redis / Go / Java 等模块共用。
+// 查询与判装在 ToolService.portCatalogs，这里只管展示；load 在视图出现时自动跑
+// （缓存铺底 + 过期才真查），装/卸按钮的确认交给任务日志流。
+struct PortListView: View {
+    let items: [PortItem]
+    var loading = false
+    let busy: Bool
+    let load: () async -> Void
+    let install: (PortItem) -> Void
+    let uninstall: (PortItem) -> Void
+
+    var body: some View {
+        DataTable(columns: versionTableColumns, rows: items,
+                  loading: loading, loadingText: L("message.loadingVersions"),
+                  empty: L("port.empty")) { item in
+            Text(item.name)
+            Text(item.version)
+            Group {
+                if item.installed { Image(systemName: "checkmark").foregroundStyle(AppTheme.green) }
+                else { Text(L("brew.notInstalled")).foregroundStyle(.secondary) }
+            }
+            HStack(spacing: 16) {
+                if item.installed {
+                    Button(L("action.uninstall")) { uninstall(item) }.disabled(busy)
+                } else {
+                    Button(L("action.install")) { install(item) }.disabled(busy)
+                }
+            }
+            .buttonStyle(.borderless)
+        }
+        // 视图一出现（切来源 tab / 切页内 tab）就自动加载：快路径是读一次本地缓存，无感知。
+        .task { await load() }
     }
 }
 
@@ -402,6 +484,8 @@ struct ModuleIcon: View {
         case "nginx": NginxIcon()
         case "php": PhpIcon()
         case "go": GoIcon()
+        case "java": AssetIcon(name: "JavaIcon")
+        case "tools": AssetIcon(name: "ToolsIcon")
         case "redis": RedisIcon()
         default: DatabaseIcon(kind: DatabaseKind(rawValue: id) ?? .mysql)
         }

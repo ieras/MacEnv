@@ -52,6 +52,12 @@ func doubleQuoted(_ value: String) -> String {
     "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
 }
 
+// 单引号包裹。shell 里唯一「一个字面量都不解释」的写法，脚本里的路径优先用它 ——
+// 双引号里 $ ` \ 都还会展开，用户目录名里带个 $ 就出事。
+func singleQuoted(_ value: String) -> String {
+    "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+}
+
 // 日志跑久了能有几百 MB，整个读进来会把界面卡住 —— 统一只读尾部 512KB。
 // 文件不存在或读不了都返回空串，界面上显示空就行，不值得为它弹个错。
 func readLogTail(_ url: URL) -> String {
@@ -82,6 +88,9 @@ extension PhpVersion: ServiceVersion {}
 extension SwooleVersion: ServiceVersion {}
 extension GoVersion: ServiceVersion {}
 extension ComposerVersion: ServiceVersion {}
+extension JavaVersion: ServiceVersion {}
+extension MavenVersion: ServiceVersion {}
+extension GradleVersion: ServiceVersion {}
 
 struct NginxVersion: Identifiable, Hashable {
     var id: String { executable.path }
@@ -180,9 +189,12 @@ struct PhpVersion: Identifiable, Hashable {
     // 而且每次崩溃系统都往 DiagnosticReports 里丢一份报告。扫描时既然已经知道结果了，
     // 就别让后面的 php -i / php -m 再崩一遍 —— 探测类调用先看这个标志直接跳过。
     let runnable: Bool
+    // MacPorts 的 fpm 叫 php-fpm<NN>、躺在 /opt/local/sbin，不符合
+    // 「directory/sbin/php-fpm」的布局，扫描时把真实路径带进来。
+    var fpmOverride: URL? = nil
 
     var id: String { "\(source):\(executable.path)" }
-    var fpm: URL { directory.appendingPathComponent("sbin/php-fpm") }
+    var fpm: URL { fpmOverride ?? directory.appendingPathComponent("sbin/php-fpm") }
     // 8.4.15 → 8.4。扩展公式名（apcu@8.4）和 ini 路径（etc/php/8.4）都按大版本号分组。
     var majorMinor: String { version.split(separator: ".").prefix(2).joined(separator: ".") }
 }
@@ -297,6 +309,51 @@ struct GvmVersion: Identifiable, Hashable {
 
 enum GvmAction {
     case install, uninstall, useDefault
+}
+
+// Java 跟 Go 同构：没有常驻进程，一个版本要记的就是 JDK Home（directory）和 java 二进制。
+// vendor 从 <Home>/release 里读，用来区分 Microsoft / Oracle / Amazon 这些发行版。
+struct JavaVersion: Identifiable, Hashable {
+    let version: String
+    let vendor: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+// SDKMAN 的 `sdk list java` 一行。identifier 是 sdk 自己的安装标识（21.0.12-amzn），
+// vendor 只在换厂商那一行出现，续行是空的 —— 解析时要继承上一行。
+struct SdkmanVersion: Identifiable, Hashable {
+    let vendor: String
+    let library: String
+    let version: String
+    let identifier: String
+    let installed: Bool
+    let isDefault: Bool
+
+    var id: String { identifier }
+}
+
+// Maven / Gradle 跟 Go 同构：没有常驻进程，一个版本记 Maven Home（含 bin/）和 mvn / gradle 二进制。
+// source 只用来在界面上区分它从哪来：我们自己装的静态包 / 用户加的目录 / SDKMAN / Homebrew / MacPorts。
+struct MavenVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+struct GradleVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
 }
 
 // composer 就是一个 .phar，装完只有版本号、路径和来源三件事要记。

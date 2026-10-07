@@ -29,7 +29,6 @@ struct ComposerPanel: View {
                 } label: { Image(systemName: "arrow.clockwise") }
                 .help(L("action.refreshVersions"))
                 .disabled(app.state.busy || refreshing)
-                if source == "brew" { Button(L("action.updateBrew")) { vm.brewAction("update", formula: "composer") }.disabled(app.state.busy) }
             }
             .panelHeader()
             Divider()

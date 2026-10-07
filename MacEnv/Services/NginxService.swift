@@ -151,8 +151,6 @@ final class NginxService {
         try await stopAll()
         try prepare()
         var content = try String(contentsOf: config, encoding: .utf8)
-        content = content.replacingOccurrences(of: "(?m)^\\s*#?\\s*user\\s+[^;]+;[^\\n]*\\n?", with: "", options: .regularExpression)
-        content = "user \(NSUserName());\n" + content
         let paths = ["client_body", "proxy", "fastcgi", "uwsgi", "scgi"].filter { !content.contains($0 + "_temp_path") }.map { "    \($0)_temp_path run/\($0)_temp;" }
         if !paths.isEmpty { content = content.replacingOccurrences(of: "http\\s*\\{", with: "http {\n" + paths.joined(separator: "\n"), options: .regularExpression) }
         try content.write(to: config, atomically: true, encoding: .utf8)
