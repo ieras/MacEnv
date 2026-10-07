@@ -65,6 +65,13 @@ final class NginxService {
                 try? fm.removeItem(at: file)
             }
         }
+        // MacEnv 以当前用户前台跑 nginx，user 指令只在 master 是 root 时才有意义 —— 留着就是每次
+        // 启动往 error.log 里塞一条 [warn]。模板里已经注释掉了，但**老版本装出来的 conf 是代码硬写
+        // 进去的 `user <用户名>;`**，而上面那段拷贝对已存在的文件一律不覆盖，那份脏配置会永远留在
+        // 磁盘上（.default 同理，它是「恢复默认」按钮的来源）。所以这里主动清一遍：
+        // 新装靠模板、老装靠自愈，两条路都干净。只删未注释的行，模板里那行注释原样留着。
+        stripUserDirective(config)
+        stripUserDirective(defaultConfig)
         var content = try String(contentsOf: config, encoding: .utf8)
         if content.contains("#PREFIX#") {
             content = content.replacingOccurrences(of: "#PREFIX#/common/logs/access.log", with: doubleQuoted(accessLog.path))
@@ -77,6 +84,15 @@ final class NginxService {
             content.insert(contentsOf: "\n    server {\n        listen 80;\n        server_name localhost;\n    }\n", at: index)
             try content.write(to: config, atomically: true, encoding: .utf8)
         }
+    }
+
+    // 只吃未注释的 `user ...;`：正则要求行首（可带缩进）直接就是 user，`#user` 和
+    // `#user  nobody;  # 说明` 这类注释行一个字都不动。内容没变就不写盘。
+    private func stripUserDirective(_ file: URL) {
+        guard let content = try? String(contentsOf: file, encoding: .utf8) else { return }
+        let cleaned = content.replacingOccurrences(of: "(?m)^[ \\t]*user[ \\t]+[^;]+;[^\\n]*\\n?", with: "", options: .regularExpression)
+        guard cleaned != content else { return }
+        try? cleaned.write(to: file, atomically: true, encoding: .utf8)
     }
 
     func installedVersions(customDirectories: [String]) async throws -> [NginxVersion] {

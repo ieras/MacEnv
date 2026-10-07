@@ -61,13 +61,23 @@ jobs:
             cd "$GITHUB_WORKSPACE"
           done
 
+      # 仓库是直接往 main 推提交、不开 PR，GitHub 自动生成的 notes 只会剩一行
+      # 「Full Changelog」，等于没有。所以发布说明直接用 tag 的注解消息（`git tag -a -F`）。
+      - name: 取发布说明
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          git fetch --tags --force --quiet
+          git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > build/release-body.md
+          cat build/release-body.md
+
       - name: 发布
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
+          body_path: build/release-body.md
           files: |
             build/Products/Release/MacEnv-arm64.zip
             build/Products/Release/MacEnv-arm64.zip.sha256
             build/Products/Release/MacEnv-x86_64.zip
             build/Products/Release/MacEnv-x86_64.zip.sha256
-          generate_release_notes: true

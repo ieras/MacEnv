@@ -60,55 +60,55 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 
 <div align="center">
 <p><strong>浅色主题 · 蓝色图标</strong></p>
-<img src="AppIcons/tile/nginx-light.png" width="96" hspace="3" alt="Nginx">
-<img src="AppIcons/tile/mysql-light.png" width="96" hspace="3" alt="MySQL">
-<img src="AppIcons/tile/mariadb-light.png" width="96" hspace="3" alt="MariaDB">
-<img src="AppIcons/tile/redis-light.png" width="96" hspace="3" alt="Redis">
-<img src="AppIcons/tile/php-light.png" width="96" hspace="3" alt="PHP">
-<img src="AppIcons/tile/go-light.png" width="96" hspace="3" alt="Go">
-<img src="AppIcons/tile/java-light.png" width="96" hspace="3" alt="Java">
-<img src="AppIcons/tile/maven-light.png" width="96" hspace="3" alt="Maven">
+<img src="AppIcons/tile/nginx-light.png" width="86" hspace="1" alt="Nginx">
+<img src="AppIcons/tile/mysql-light.png" width="86" hspace="1" alt="MySQL">
+<img src="AppIcons/tile/mariadb-light.png" width="86" hspace="1" alt="MariaDB">
+<img src="AppIcons/tile/redis-light.png" width="86" hspace="1" alt="Redis">
+<img src="AppIcons/tile/php-light.png" width="86" hspace="1" alt="PHP">
+<img src="AppIcons/tile/go-light.png" width="86" hspace="1" alt="Go">
+<img src="AppIcons/tile/java-light.png" width="86" hspace="1" alt="Java">
+<img src="AppIcons/tile/maven-light.png" width="86" hspace="1" alt="Maven">
 <br>
-<img src="AppIcons/tile/gradle-light.png" width="96" hspace="3" alt="Gradle">
-<img src="AppIcons/tile/homebrew-light.png" width="96" hspace="3" alt="Homebrew">
-<img src="AppIcons/tile/macports-light.png" width="96" hspace="3" alt="MacPorts">
-<img src="AppIcons/tile/sdkman-light.png" width="96" hspace="3" alt="SDKMAN">
-<img src="AppIcons/tile/composer-light.png" width="96" hspace="3" alt="Composer">
-<img src="AppIcons/tile/swoole-light.png" width="96" hspace="3" alt="Swoole CLI">
-<img src="AppIcons/tile/tools-light.png" width="96" hspace="3" alt="环境工具">
-<img src="AppIcons/tile/ssl-light.png" width="96" hspace="3" alt="SSL 证书">
+<img src="AppIcons/tile/gradle-light.png" width="86" hspace="1" alt="Gradle">
+<img src="AppIcons/tile/homebrew-light.png" width="86" hspace="1" alt="Homebrew">
+<img src="AppIcons/tile/macports-light.png" width="86" hspace="1" alt="MacPorts">
+<img src="AppIcons/tile/sdkman-light.png" width="86" hspace="1" alt="SDKMAN">
+<img src="AppIcons/tile/composer-light.png" width="86" hspace="1" alt="Composer">
+<img src="AppIcons/tile/swoole-light.png" width="86" hspace="1" alt="Swoole CLI">
+<img src="AppIcons/tile/tools-light.png" width="86" hspace="1" alt="环境工具">
+<img src="AppIcons/tile/ssl-light.png" width="86" hspace="1" alt="SSL 证书">
 <br>
-<img src="AppIcons/tile/start-light.png" width="96" hspace="3" alt="快捷启动">
-<img src="AppIcons/tile/tray-light.png" width="96" hspace="3" alt="菜单栏">
-<img src="AppIcons/tile/gvm-light.png" width="96" hspace="3" alt="GVM 矢量字标">
-<img src="AppIcons/tile/gvm-wordmark-color-light.png" width="96" hspace="3" alt="GVM 彩色字标">
-<img src="AppIcons/tile/gvm-wordmark-solid-light.png" width="96" hspace="3" alt="GVM 单色字标">
-<img src="AppIcons/tile/gvm-logo-light.png" width="96" hspace="3" alt="GVM 渐变原版">
+<img src="AppIcons/tile/start-light.png" width="86" hspace="1" alt="快捷启动">
+<img src="AppIcons/tile/tray-light.png" width="86" hspace="1" alt="菜单栏">
+<img src="AppIcons/tile/gvm-light.png" width="86" hspace="1" alt="GVM 矢量字标">
+<img src="AppIcons/tile/gvm-wordmark-color-light.png" width="86" hspace="1" alt="GVM 彩色字标">
+<img src="AppIcons/tile/gvm-wordmark-solid-light.png" width="86" hspace="1" alt="GVM 单色字标">
+<img src="AppIcons/tile/gvm-logo-light.png" width="86" hspace="1" alt="GVM 渐变原版">
 <p><strong>深色主题 · 白色图标</strong></p>
-<img src="AppIcons/tile/nginx-dark.png" width="96" hspace="3" alt="Nginx">
-<img src="AppIcons/tile/mysql-dark.png" width="96" hspace="3" alt="MySQL">
-<img src="AppIcons/tile/mariadb-dark.png" width="96" hspace="3" alt="MariaDB">
-<img src="AppIcons/tile/redis-dark.png" width="96" hspace="3" alt="Redis">
-<img src="AppIcons/tile/php-dark.png" width="96" hspace="3" alt="PHP">
-<img src="AppIcons/tile/go-dark.png" width="96" hspace="3" alt="Go">
-<img src="AppIcons/tile/java-dark.png" width="96" hspace="3" alt="Java">
-<img src="AppIcons/tile/maven-dark.png" width="96" hspace="3" alt="Maven">
+<img src="AppIcons/tile/nginx-dark.png" width="86" hspace="1" alt="Nginx">
+<img src="AppIcons/tile/mysql-dark.png" width="86" hspace="1" alt="MySQL">
+<img src="AppIcons/tile/mariadb-dark.png" width="86" hspace="1" alt="MariaDB">
+<img src="AppIcons/tile/redis-dark.png" width="86" hspace="1" alt="Redis">
+<img src="AppIcons/tile/php-dark.png" width="86" hspace="1" alt="PHP">
+<img src="AppIcons/tile/go-dark.png" width="86" hspace="1" alt="Go">
+<img src="AppIcons/tile/java-dark.png" width="86" hspace="1" alt="Java">
+<img src="AppIcons/tile/maven-dark.png" width="86" hspace="1" alt="Maven">
 <br>
-<img src="AppIcons/tile/gradle-dark.png" width="96" hspace="3" alt="Gradle">
-<img src="AppIcons/tile/homebrew-dark.png" width="96" hspace="3" alt="Homebrew">
-<img src="AppIcons/tile/macports-dark.png" width="96" hspace="3" alt="MacPorts">
-<img src="AppIcons/tile/sdkman-dark.png" width="96" hspace="3" alt="SDKMAN">
-<img src="AppIcons/tile/composer-dark.png" width="96" hspace="3" alt="Composer">
-<img src="AppIcons/tile/swoole-dark.png" width="96" hspace="3" alt="Swoole CLI">
-<img src="AppIcons/tile/tools-dark.png" width="96" hspace="3" alt="环境工具">
-<img src="AppIcons/tile/ssl-dark.png" width="96" hspace="3" alt="SSL 证书">
+<img src="AppIcons/tile/gradle-dark.png" width="86" hspace="1" alt="Gradle">
+<img src="AppIcons/tile/homebrew-dark.png" width="86" hspace="1" alt="Homebrew">
+<img src="AppIcons/tile/macports-dark.png" width="86" hspace="1" alt="MacPorts">
+<img src="AppIcons/tile/sdkman-dark.png" width="86" hspace="1" alt="SDKMAN">
+<img src="AppIcons/tile/composer-dark.png" width="86" hspace="1" alt="Composer">
+<img src="AppIcons/tile/swoole-dark.png" width="86" hspace="1" alt="Swoole CLI">
+<img src="AppIcons/tile/tools-dark.png" width="86" hspace="1" alt="环境工具">
+<img src="AppIcons/tile/ssl-dark.png" width="86" hspace="1" alt="SSL 证书">
 <br>
-<img src="AppIcons/tile/start-dark.png" width="96" hspace="3" alt="快捷启动">
-<img src="AppIcons/tile/tray-dark.png" width="96" hspace="3" alt="菜单栏">
-<img src="AppIcons/tile/gvm-dark.png" width="96" hspace="3" alt="GVM 矢量字标">
-<img src="AppIcons/tile/gvm-wordmark-color-dark.png" width="96" hspace="3" alt="GVM 彩色字标">
-<img src="AppIcons/tile/gvm-wordmark-solid-dark.png" width="96" hspace="3" alt="GVM 单色字标">
-<img src="AppIcons/tile/gvm-logo-dark.png" width="96" hspace="3" alt="GVM 渐变原版">
+<img src="AppIcons/tile/start-dark.png" width="86" hspace="1" alt="快捷启动">
+<img src="AppIcons/tile/tray-dark.png" width="86" hspace="1" alt="菜单栏">
+<img src="AppIcons/tile/gvm-dark.png" width="86" hspace="1" alt="GVM 矢量字标">
+<img src="AppIcons/tile/gvm-wordmark-color-dark.png" width="86" hspace="1" alt="GVM 彩色字标">
+<img src="AppIcons/tile/gvm-wordmark-solid-dark.png" width="86" hspace="1" alt="GVM 单色字标">
+<img src="AppIcons/tile/gvm-logo-dark.png" width="86" hspace="1" alt="GVM 渐变原版">
 </div>
 
 源 SVG 与 128 × 128 渲染图在 [`AppIcons/`](AppIcons/)，逐个图标的完整清单和渲染说明见那边的 README。
