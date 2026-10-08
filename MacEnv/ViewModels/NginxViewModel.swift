@@ -46,14 +46,17 @@ final class NginxViewModel: ObservableObject, PortListHost {
 
     func refresh() async {
         do {
+            try await services.paths.refresh()
             try services.nginx.prepare()
-            versions = try await services.nginx.installedVersions(customDirectories: customDirectories)
+            versions = try await services.nginx.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             await services.nginx.adopt(versions)
             if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
-            try await services.paths.refresh()
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "nginx", directory: $0.directory)) })
             // brew 丢后台慢慢填，别拖住 refresh 返回（同 PhpViewModel）。
-            Task { formula = (try? await services.nginx.brewFormula()) ?? formula }
+            Task {
+                do { formula = try await services.nginx.brewFormula() }
+                catch { state.message = error.localizedDescription }
+            }
         } catch {
             state.message = error.localizedDescription
         }
@@ -62,6 +65,7 @@ final class NginxViewModel: ObservableObject, PortListHost {
 
     func operate(_ operation: String, _ version: NginxVersion) async {
         guard !state.busy else { return }
+        guard !state.isChanging(version.directory) else { state.message = L("message.taskInProgress"); return }
         selectedID = version.id
         state.busy = true
         defer {
@@ -89,6 +93,7 @@ final class NginxViewModel: ObservableObject, PortListHost {
     }
 
     func start(_ version: NginxVersion) async throws {
+        guard !state.isChanging(version.directory) else { throw CommandError(message: L("message.taskInProgress")) }
         try await services.nginx.start(version, environment: services.paths.processEnvironment())
     }
 
@@ -98,18 +103,11 @@ final class NginxViewModel: ObservableObject, PortListHost {
     }
 
     func togglePath(_ version: NginxVersion) {
-        guard !state.busy else { return }
-        state.busy = true
-        Task {
-            defer { state.busy = false }
-            do {
-                try services.paths.toggle(kind: "nginx", directory: version.directory)
-                try await services.paths.refresh(force: true)
-                pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "nginx", directory: $0.directory)) })
-                state.message = services.paths.membership(kind: "nginx", directory: version.directory) == .app ? L("message.pathEnabled") : L("message.pathDisabled")
-            } catch {
-                state.message = error.localizedDescription
-            }
+        state.run { [self] in
+            try services.paths.toggle(kind: "nginx", directory: version.directory)
+            try await services.paths.refresh(force: true)
+            pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "nginx", directory: $0.directory)) })
+            state.message = services.paths.membership(kind: "nginx", directory: version.directory) == .app ? L("message.pathEnabled") : L("message.pathDisabled")
         }
     }
 
@@ -140,7 +138,9 @@ final class NginxViewModel: ObservableObject, PortListHost {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.runStreaming(String(format: L("message.installingFor"), "Nginx \(version.version)")) { report, attach in
+        let target = services.root.appendingPathComponent("server/nginx/versions").appendingPathComponent("nginx-\(version.version)")
+        guard !(versions.contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && running($0) }) else { state.message = L("message.stopFirst"); return }
+        state.runStreaming(String(format: L("message.installingFor"), "Nginx \(version.version)"), packageDirectory: target) { report, attach in
             try await self.services.catalog("nginx").install(version, report: report, onStart: attach)
             self.staticVersions = try await self.services.catalog("nginx").fetch(customEndpoint: self.state.catalogURL)
             self.versions = try await self.services.nginx.installedVersions(customDirectories: self.customDirectories)
@@ -148,11 +148,10 @@ final class NginxViewModel: ObservableObject, PortListHost {
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        if let installed = versions.first(where: { $0.version == version.version }), services.nginx.running(installed) {
-            state.message = L("message.stopFirst")
-            return
-        }
-        state.runStreaming(String(format: L("message.uninstallingFor"), "Nginx \(version.version)")) { _, _ in
+        let target = services.root.appendingPathComponent("server/nginx/versions").appendingPathComponent("nginx-\(version.version)")
+        guard !(versions.contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && running($0) }) else { state.message = L("message.stopFirst"); return }
+
+        state.runStreaming(String(format: L("message.uninstallingFor"), "Nginx \(version.version)"), packageDirectory: target) { _, _ in
             try self.services.catalog("nginx").uninstall(version)
             self.staticVersions = try await self.services.catalog("nginx").fetch(customEndpoint: self.state.catalogURL)
             self.versions = try await self.services.nginx.installedVersions(customDirectories: self.customDirectories)
@@ -173,10 +172,17 @@ final class NginxViewModel: ObservableObject, PortListHost {
     }
 
     func saveConfig() {
-        do {
-            try configText.write(to: services.nginx.config, atomically: true, encoding: .utf8)
-            state.message = L("message.configSaved")
-        } catch { state.message = error.localizedDescription }
+        state.run {
+            let previous = try String(contentsOf: self.services.nginx.config, encoding: .utf8)
+            do {
+                try self.configText.write(to: self.services.nginx.config, atomically: true, encoding: .utf8)
+                try await self.services.nginx.reloadIfRunning()
+            } catch {
+                try previous.write(to: self.services.nginx.config, atomically: true, encoding: .utf8)
+                throw error
+            }
+            self.state.message = L("message.configSaved")
+        }
     }
 
     func loadLog(_ kind: String) { logText = services.nginx.log(kind) }
@@ -209,6 +215,8 @@ final class NginxViewModel: ObservableObject, PortListHost {
 // 统一服务注册表条目：Nginx。
 extension NginxViewModel: ServiceManageable {
     var kind: String { "nginx" }
+    // 每个版本独立监听端口，允许多版本同时跑。
+    var singleInstance: Bool { false }
     var targets: [LaunchTarget] { versions.map { LaunchTarget(key: "nginx:" + $0.id, kind: "nginx", versionID: $0.id, title: "Nginx " + $0.version) } }
     func isRunning(_ versionID: String) -> Bool { versions.first { $0.id == versionID }.map { services.nginx.running($0) } ?? false }
     func port(_ versionID: String) -> String? { versions.contains { $0.id == versionID } ? services.nginx.port() : nil }
@@ -218,6 +226,7 @@ extension NginxViewModel: ServiceManageable {
     }
     func perform(_ action: String, _ versionID: String) async throws {
         guard let version = versions.first(where: { $0.id == versionID }) else { return }
+        guard !state.isChanging(version.directory) else { throw CommandError(message: L("message.taskInProgress")) }
         if action == "stop" { try await stop(version) } else { try await start(version) }
     }
     func stopAll() async {

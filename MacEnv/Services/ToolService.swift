@@ -243,6 +243,12 @@ final class ToolService {
             descriptions: ["Redis is an open source, advanced key-value store."],
             installed: { name in FileManager.default.isExecutableFile(atPath: "/opt/local/bin/\(name)-server") },
             companions: { _ in [] }),
+        // postgresql82 这种上古 port 的描述不带句号，所以描述片段不能含结尾的标点。
+        "postgresql": PortCatalog(
+            regex: "^postgresql\\d*$",
+            descriptions: ["The most advanced open-source database available anywhere"],
+            installed: { name in FileManager.default.isExecutableFile(atPath: "/opt/local/lib/\(name)/bin/postgres") },
+            companions: { _ in [] }),
         // Go 的 port 名就叫 go（1.27 起才有版本化的 go1.x 老写法早废弃），落点 /opt/local/lib/go。
         "golang": PortCatalog(
             regex: "^go$",
@@ -256,6 +262,16 @@ final class ToolService {
                 ["/opt/local/Library/Java/JavaVirtualMachines", "/Library/Java/JavaVirtualMachines"].contains {
                     FileManager.default.isExecutableFile(atPath: "\($0)/\(name)/Contents/Home/bin/java")
                 }
+            },
+            companions: { _ in [] }),
+        // MacPorts 的 python port 名不带点（python312），落点是 framework 里的版本目录 3.12。
+        // 描述那栏只给一个宽松片段：MacPorts 几个版本的措辞不完全一致，写死整句会静默空表。
+        "python": PortCatalog(
+            regex: "^python\\d*$",
+            descriptions: ["programming language"],
+            installed: { name in
+                guard let version = PythonService.macPortsVersion(name) else { return false }
+                return FileManager.default.isExecutableFile(atPath: "/opt/local/Library/Frameworks/Python.framework/Versions/\(version)/bin/python\(version)")
             },
             companions: { _ in [] }),
         "maven": PortCatalog(
@@ -274,6 +290,13 @@ final class ToolService {
             regex: "^mkcert$",
             descriptions: ["locally trusted development certificates"],
             installed: { _ in FileManager.default.isExecutableFile(atPath: "/opt/local/bin/mkcert") },
+            companions: { _ in [] }),
+        // consul 是 Go 编的单文件，MacPorts 直接落在 /opt/local/bin（同 redis / mkcert）。
+        // 裸名就叫 consul，没有版本化的 consul1xx 写法。
+        "consul": PortCatalog(
+            regex: "^consul$",
+            descriptions: ["Consul is a distributed service mesh"],
+            installed: { _ in FileManager.default.isExecutableFile(atPath: "/opt/local/bin/consul") },
             companions: { _ in [] })
     ]
 

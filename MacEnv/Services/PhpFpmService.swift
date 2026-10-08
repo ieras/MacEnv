@@ -29,7 +29,7 @@ final class PhpFpmService {
         return item
     }
 
-    func running(_ version: PhpVersion) -> Bool { supervisor(version).isRunning }
+    func running(_ version: PhpVersion) -> Bool { supervisor(version).target?.executable == version.fpm.resolvingSymlinksInPath().path }
     var anyRunning: Bool { supervisors.values.contains { $0.isRunning } }
 
     func configURL(_ version: PhpVersion) -> URL { versionDirectory(version).appendingPathComponent("php-fpm.conf") }
@@ -64,14 +64,13 @@ final class PhpFpmService {
                 try? FileManager.default.removeItem(at: item)
             }
         }
-        // worker 进程的命令行是 setproctitle 过的「php-fpm: pool www」，不含配置路径，天然匹配不上；
-        // 只有 master 带着 -y <配置路径>，所以每个 master 恰好认领回它自己的版本。
-        guard let output = try? await Command.run("/bin/ps", ["-axo", "pid=,command="]) else { return }
-        for line in output.stdout.split(whereSeparator: \.isNewline) {
-            let parts = line.trimmingCharacters(in: .whitespacesAndNewlines).split(maxSplits: 1, whereSeparator: \.isWhitespace)
-            guard parts.count == 2, let pid = Int32(parts[0]), parts[1].contains("php-fpm") else { continue }
-            guard let version = versions.first(where: { parts[1].contains(configURL($0).path) }) else { continue }
-            supervisor(version).adopt(ManagedProcess(pid: pid, command: String(parts[1])))
+        for version in versions {
+            let item = supervisor(version)
+            guard !item.isRunning else { continue }
+            let existing = try? await item.find("php-fpm")
+            guard let target = existing,
+                  target.executable == version.fpm.resolvingSymlinksInPath().path else { continue }
+            item.adopt(target)
         }
     }
 
@@ -79,7 +78,8 @@ final class PhpFpmService {
         guard FileManager.default.isExecutableFile(atPath: version.fpm.path) else { throw CommandError(message: L("error.phpFpmMissing")) }
         try prepare(version)
         let item = supervisor(version)
-        guard !item.isRunning else { return }
+        if running(version) { return }
+        if let target = item.target { try await item.terminate(target) }
         let base = versionDirectory(version)
         let startupLog = base.appendingPathComponent("log/start-error.log")
         // -p 定相对路径的基准，-y 指定池配置，-F 强制前台让 ProcessSupervisor 直接拿住 master。
@@ -89,18 +89,26 @@ final class PhpFpmService {
                                       directory: version.directory,
                                       environment: ProcessInfo.processInfo.environment,
                                       errorLog: startupLog)
-        for _ in 0..<100 where process.isRunning && !FileManager.default.fileExists(atPath: socketPath(version)) {
-            try await Task.sleep(nanoseconds: 100_000_000)
+        do {
+            for _ in 0..<100 where process.isRunning && !FileManager.default.fileExists(atPath: socketPath(version)) {
+                try await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard process.isRunning && FileManager.default.fileExists(atPath: socketPath(version)) else {
+                throw CommandError(message: ((try? String(contentsOf: startupLog, encoding: .utf8)) ?? "") + "\n" + L("error.serviceStartTimeout"))
+            }
+        } catch {
+            try await Task { @MainActor in
+                if let target = item.target { try await item.terminate(target, force: true) }
+            }.value
+            throw error
         }
-        guard process.isRunning else {
-            item.forget()
-            throw CommandError(message: (try? String(contentsOf: startupLog, encoding: .utf8)) ?? L("error.phpFpmStartFailed"))
-        }
+
     }
 
     func stop(_ version: PhpVersion) async throws {
         let item = supervisor(version)
-        guard let target = try await item.find("php-fpm") else {
+        guard running(version) else { return }
+        guard let target = item.target else {
             item.forget()
             return
         }

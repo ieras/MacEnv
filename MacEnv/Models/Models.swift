@@ -7,7 +7,7 @@ struct CommandOutput {
     var text: String { (stdout + stderr).trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
-// 单元测试会以宿主进程方式加载本 app。这种情况下不要建菜单栏、不要拦截退出，
+// 单元测试会以宿主进程方式加载本 app。这种情况下不要拦截退出，
 // 也不要做真实的系统扫描 —— 否则测试会去跑 brew、zsh，既慢又跟测试无关。
 var isTesting: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
 
@@ -29,14 +29,6 @@ func expandTilde(_ path: String) -> String {
     return path.hasPrefix("~/") ? home + String(path.dropFirst(1)) : path
 }
 
-// 写进 shell 配置文件（.zshrc / config.fish / 别名脚本）的路径：家目录那一段换成 $HOME。
-// 跟 tilde 的区别：~ 在引号里**不会展开** —— `export PATH="~/x:$PATH"` 里的 ~ 是字面量，
-// shell 按 PATH 找命令时也不认，结果就是这条 PATH 直接失效。$HOME 才是会展开的那个。
-func shellPath(_ path: String) -> String {
-    let home = FileManager.default.homeDirectoryForCurrentUser.path
-    return path.hasPrefix(home + "/") ? "$HOME" + String(path.dropFirst(home.count)) : path
-}
-
 // MacEnv 的数据根目录：~/Library/Application Support/MacEnv。服务和设置都落在这里。
 let macEnvDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
     .appendingPathComponent("MacEnv", isDirectory: true)
@@ -46,8 +38,7 @@ let macEnvDirectory = FileManager.default.urls(for: .applicationSupportDirectory
 let loginKeychainPath = FileManager.default.homeDirectoryForCurrentUser
     .appendingPathComponent("Library/Keychains/login.keychain-db").path
 
-// 双引号字符串里要转义的只有反斜杠和双引号。osascript 的 do shell script、别名脚本、
-// nginx 配置里的带空格路径都要用，写法一模一样，所以只留这一条。
+// AppleScript 和配置文件的双引号字符串；shell 命令的字面量要用 singleQuoted。
 func doubleQuoted(_ value: String) -> String {
     "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
 }
@@ -83,6 +74,8 @@ protocol ServiceVersion: Identifiable {
 extension NginxVersion: ServiceVersion {}
 extension DatabaseVersion: ServiceVersion {}
 extension RedisVersion: ServiceVersion {}
+extension PostgresVersion: ServiceVersion {}
+extension ClickHouseVersion: ServiceVersion {}
 extension MkCertVersion: ServiceVersion {}
 extension PhpVersion: ServiceVersion {}
 extension SwooleVersion: ServiceVersion {}
@@ -156,6 +149,81 @@ struct RedisVersion: Identifiable, Hashable {
     var id: String { executable.path }
     var majorMinor: String { version.split(separator: ".").prefix(2).joined(separator: ".") }
 }
+
+struct PostgresVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    let formula: String?
+
+    var id: String { executable.path }
+    // PG 的数据目录按主版本分：小版本升级官方承诺数据兼容，不必像 MySQL 那样每小版本一套。
+    var major: String { String(version.split(separator: ".").first ?? Substring(version)) }
+}
+
+// ClickHouse 没有 Homebrew 公式（官方只有 cask）、MacPorts 也没有 port，
+// 所以来源只有静态包一条路，形不上 formula 那个字段。
+struct ClickHouseVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+// Qdrant 跟 ClickHouse 一样：官方没发 brew 公式（brew 公式接口查不到 qdrant）、MacPorts
+// 也没有 port（FlyEnv 的 brewinfo / portinfo 都返回空），来源只有静态包一条路，没有 formula。
+struct QdrantVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+extension QdrantVersion: ServiceVersion {}
+
+// Consul 是服务治理组件（服务发现 + 健康检查 + KV + 自带的 Web UI），不是数据库。
+// 官方包是**单个平铺的裸二进制**（zip 里只有 consul 一个条目，解压后 182MB），
+// Homebrew 只有 cask / hashicorp tap（本机那个 tap 未信任，加载直接报错）、
+// homebrew/core 里根本没有 consul 公式，所以来源只有 Static（one-env 的 zip）和 MacPorts 两条路。
+struct ConsulVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+    // 配置、数据目录、日志都按主版本分：Consul 的 raft 存储格式跨大版本不保证兼容，
+    // 1.x 的数据目录直接给 2.x 起会起不来（跟 PG 按主版本分数据目录是同一个道理）。
+    var major: String { String(version.split(separator: ".").first ?? Substring(version)) }
+}
+
+extension ConsulVersion: ServiceVersion {}
+
+// etcd 也是服务治理组件（分布式 KV + watch + 租约，K8s 的配置底座），跟 Consul 同一个分类。
+// 跟 Consul 的两处不同：
+//   · 来源多了 Homebrew —— homebrew/core 里有正式公式（3.7.2 bottled），MacPorts 反而没有 port；
+//   · 官方包是 zip 且**二进制直接摆在包目录顶层**（etcd-v3.7.2-darwin-arm64/{etcd,etcdctl,etcdutl}），
+//     没有 bin/ 那一层，所以 StaticCatalogService 里多了一条「顶层二进制补 bin/」的分支。
+// 有 formula 字段是因为 Homebrew 那一栏要拿公式名去装/卸。
+struct EtcdVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    let formula: String?
+
+    var id: String { executable.path }
+    // 按主版本分（3.5/3.6/3.7 共用 etcd-3-data）。注意 etcd 的存储格式是「小版本单向」的：
+    // 3.5→3.6 要跑 etcdutl migrate，3.7 降回 3.5 会直接拒绝启动。用户真降级了得自己清目录。
+    var major: String { String(version.split(separator: ".").first ?? Substring(version)) }
+}
+
+extension EtcdVersion: ServiceVersion {}
 
 // mkcert 是一次性 CLI，没有常驻进程，所以这里没有 pid / 端口 / 配置那套东西，
 // 只有「哪个二进制、什么版本、从哪来」。
@@ -297,6 +365,17 @@ struct GoVersion: Identifiable, Hashable {
     var id: String { executable.path }
 }
 
+// Python 同构于 Go / Java：没有常驻进程，一个版本就是「Python Home + 解释器二进制」。
+// Home 是装着 bin/ 的那一级 —— Homebrew 的 keg 根、framework 的 Versions/3.12 都算。
+struct PythonVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
 // GVM 里的一个版本。name 是 gvm 自己的标识符（go1.24.4），version 是去掉前缀给人看的。
 struct GvmVersion: Identifiable, Hashable {
     let name: String
@@ -398,5 +477,20 @@ enum PathMembership: Equatable {
         case .shell: return "exclamationmark.circle.fill"
         case .none: return "circle"
         }
+    }
+}
+
+// 模板已有双引号；路径里的特殊字符必须保留为字面量，避免变成 nginx 变量或指令。
+func nginxQuotedContent(_ path: String) -> String {
+    path.replacingOccurrences(of: "\\", with: "\\\\")
+        .replacingOccurrences(of: "\"", with: "\\\"")
+        .replacingOccurrences(of: "$", with: "\\$")
+}
+
+// 多种安装器共用同一落位方式：完整新包准备好后才替换，失败时原版本仍在。
+extension FileManager {
+    func replaceDirectory(at target: URL, with source: URL) throws {
+        if fileExists(atPath: target.path) { _ = try replaceItemAt(target, withItemAt: source) }
+        else { try moveItem(at: source, to: target) }
     }
 }

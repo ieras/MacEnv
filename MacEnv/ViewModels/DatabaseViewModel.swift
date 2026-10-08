@@ -42,15 +42,18 @@ final class DatabaseViewModel: ObservableObject {
 
     func refresh(_ kind: DatabaseKind) async {
         do {
+            try await services.paths.refresh()
             let service = services.database(kind)
-            let found = try await service.installedVersions(customDirectories: customDirectories[kind, default: []])
+            let found = try await service.installedVersions(customDirectories: customDirectories[kind, default: []] + services.paths.allPath)
             for version in found { try service.prepare(version) }
             versions[kind] = found
             await service.adopt(found)
-            try await services.paths.refresh()
             pathMembership[kind] = Dictionary(uniqueKeysWithValues: found.map { ($0.id, services.paths.membership(kind: kind.rawValue, directory: $0.directory)) })
             // brew 丢后台慢慢填，别拖住 refresh 返回（同 PhpViewModel）。
-            Task { formulae[kind] = (try? await service.brewFormulae()) ?? formulae[kind] }
+            Task {
+                do { formulae[kind] = try await service.brewFormulae() }
+                catch { state.message = error.localizedDescription }
+            }
             if !found.contains(where: { $0.id == selected[kind] }) { selected[kind] = found.first?.id }
         } catch {
             state.message = error.localizedDescription
@@ -60,6 +63,7 @@ final class DatabaseViewModel: ObservableObject {
 
     func operate(_ operation: String, _ version: DatabaseVersion) async {
         guard !state.busy else { return }
+        guard !state.isChanging(version.directory) else { state.message = L("message.taskInProgress"); return }
         selected[version.kind] = version.id
         let service = services.database(version.kind)
         if operation == "start", service.runningVersion != nil, !service.running(version) {
@@ -82,6 +86,7 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func start(_ kind: DatabaseKind, _ version: DatabaseVersion) async throws {
+        guard !state.isChanging(version.directory) else { throw CommandError(message: L("message.taskInProgress")) }
         try await services.database(kind).start(version)
     }
 
@@ -90,19 +95,12 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func togglePath(_ version: DatabaseVersion) {
-        guard !state.busy else { return }
-        state.busy = true
-        Task {
-            defer { state.busy = false }
-            do {
-                try services.paths.toggle(kind: version.kind.rawValue, directory: version.directory)
-                try await services.paths.refresh(force: true)
-                pathMembership[version.kind] = Dictionary(uniqueKeysWithValues: (versions[version.kind] ?? []).map { ($0.id, services.paths.membership(kind: version.kind.rawValue, directory: $0.directory)) })
-                let enabled = pathMembership[version.kind]?[version.id] == .app
-                state.message = String(format: L(enabled ? "message.pathEnabledFor" : "message.pathDisabledFor"), "\(version.kind.title) \(version.version)")
-            } catch {
-                state.message = error.localizedDescription
-            }
+        state.run { [self] in
+            try services.paths.toggle(kind: version.kind.rawValue, directory: version.directory)
+            try await services.paths.refresh(force: true)
+            pathMembership[version.kind] = Dictionary(uniqueKeysWithValues: (versions[version.kind] ?? []).map { ($0.id, services.paths.membership(kind: version.kind.rawValue, directory: $0.directory)) })
+            let enabled = pathMembership[version.kind]?[version.id] == .app
+            state.message = String(format: L(enabled ? "message.pathEnabledFor" : "message.pathDisabledFor"), "\(version.kind.title) \(version.version)")
         }
     }
 
@@ -138,6 +136,7 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func loadStatic(_ kind: DatabaseKind, force: Bool = false) async {
+        guard kind == .mysql else { staticVersions[kind] = []; return }
         let catalog = services.catalog(kind.rawValue)
         staticVersions[kind] = catalog.cached()
         do { staticVersions[kind] = try await catalog.fetch(customEndpoint: state.catalogURL, force: force) }
@@ -147,7 +146,10 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func installStatic(_ version: StaticVersion, _ kind: DatabaseKind) {
-        state.runStreaming(String(format: L("message.installingFor"), "\(kind.title) \(version.version)")) { report, attach in
+        let target = services.database(kind).versionsDirectory.appendingPathComponent("\(kind.rawValue)-\(version.version)")
+        guard !((versions[kind] ?? []).contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && services.database(kind).running($0) }) else { state.message = L("message.stopFirst"); return }
+        guard kind == .mysql else { return }
+        state.runStreaming(String(format: L("message.installingFor"), "\(kind.title) \(version.version)"), packageDirectory: target) { report, attach in
             try await self.services.catalog(kind.rawValue).install(version, report: report, onStart: attach)
             await self.loadStatic(kind)
             await self.refresh(kind)
@@ -155,7 +157,10 @@ final class DatabaseViewModel: ObservableObject {
     }
 
     func uninstallStatic(_ version: StaticVersion, _ kind: DatabaseKind) {
-        state.runStreaming(String(format: L("message.uninstallingFor"), "\(kind.title) \(version.version)")) { _, _ in
+        let target = services.database(kind).versionsDirectory.appendingPathComponent("\(kind.rawValue)-\(version.version)")
+        guard !((versions[kind] ?? []).contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && services.database(kind).running($0) }) else { state.message = L("message.stopFirst"); return }
+        guard kind == .mysql else { return }
+        state.runStreaming(String(format: L("message.uninstallingFor"), "\(kind.title) \(version.version)"), packageDirectory: target) { _, _ in
             try self.services.catalog(kind.rawValue).uninstall(version)
             await self.loadStatic(kind)
             await self.refresh(kind)

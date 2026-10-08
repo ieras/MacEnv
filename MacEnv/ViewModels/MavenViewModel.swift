@@ -31,7 +31,10 @@ final class MavenViewModel: ObservableObject, PortListHost {
         versions = await services.maven.installedVersions(customDirectories: customDirectories + services.paths.allPath)
         if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
         pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "maven", directory: $0.directory)) })
-        Task { if let items = try? await Brew.formulae("maven") { formulae = items } }
+        Task {
+            do { formulae = try await Brew.formulae("maven") }
+            catch { state.message = error.localizedDescription }
+        }
         objectWillChange.send()
     }
 

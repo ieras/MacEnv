@@ -1,17 +1,18 @@
 # AppIcons
 
-MacEnv 用到的全部图标：**源 SVG** + **128×128 渲染图**。
+MacEnv 用到的全部图标：**源 SVG** + **128×128 渲染图** + **圆角展示图块**，以及 README 使用的界面截图。
 
 ```
 AppIcons/
 ├── README.md
-├── svg/    源文件，从 MacEnv/Assets.xcassets/*.imageset 原样复制，未做任何改动
-├── png/    128×128 渲染图，每个图标两张：亮色版（蓝）+ 暗色版（白）
-└── tile/   96×96 展示图块：圆角方形轮廓 + 图标 + 名字，根目录 README 用
+├── svg/          源文件，从 MacEnv/Assets.xcassets/*.imageset 原样复制，未做任何改动
+├── png/          128×128 渲染图，每个图标两张：亮色版（蓝）+ 暗色版（白）
+├── tile/         96×96 展示图块：圆角方形轮廓 + 图标 + 名字，根目录 README 用
+└── screenshots/  亮色主题两张、暗色主题两张，以及菜单栏图标与托盘菜单截图
 ```
 
 > 下面这张表是**放大看**用的：每个图标 128 px、一屏只放几个。
-> 要一眼看全，看根目录 README 的「图标」一节（引用的是 `tile/` 里的图块，22 个图标 × 明暗两套）。
+> 要一眼看全，看根目录 README 的「图标」一节（引用的是 `tile/` 里的图块，28 个图标 × 明暗两套）。
 > 图块的圆角方形轮廓是**烘焙进 PNG 的**，不是 CSS —— GitHub 的 HTML sanitizer 会剥掉 `style` 属性
 > （`html-pipeline` 的 `SanitizationFilter` 白名单里没有 `style`），`border-radius` 在 README 里用不了。
 
@@ -32,6 +33,9 @@ AppIcons/
   只拿 alpha 当遮罩填主题色。所以**源 SVG 本身是彩色的也没用**，这里渲染出来的就是 app 里的样子。
 - **original（Homebrew、菜单栏）** —— 保留 SVG 自带的硬编码配色，浅色深色各一套文件。
 
+⚠️ **源 SVG 一律原样使用 —— 不要自己收紧 `viewBox`，也不要删 `width` / `height`。**
+上游给的都是方形画布加一份内部留白，那是设计稿的取景。渲染器只拿 SVG 的**固有尺寸定长宽比**、不拿它当缩放系数，所以 `width="32"` 和 `width="1024"` 渲出来一模一样。觉得"图标看起来小了、偏了"就想去裁 viewBox 是错的 —— 按"内容贴边"收紧 viewBox 会把内容裁掉。完整规范见根目录 `AGENTS.md` 第六节。
+
 ---
 
 ## Web 服务
@@ -47,6 +51,16 @@ AppIcons/
 | **MySQL** | <img src="png/mysql-light.png" width="128"> | <img src="png/mysql-dark.png" width="128"> |
 | **MariaDB** | <img src="png/mariadb-light.png" width="128"> | <img src="png/mariadb-dark.png" width="128"> |
 | **Redis** | <img src="png/redis-light.png" width="128"> | <img src="png/redis-dark.png" width="128"> |
+| **PostgreSQL** | <img src="png/postgresql-light.png" width="128"> | <img src="png/postgresql-dark.png" width="128"> |
+| **ClickHouse** | <img src="png/clickhouse-light.png" width="128"> | <img src="png/clickhouse-dark.png" width="128"> |
+| **Qdrant** | <img src="png/qdrant-light.png" width="128"> | <img src="png/qdrant-dark.png" width="128"> |
+
+## 服务治理
+
+| 图标 | 亮色版（蓝） | 暗色版（白） |
+| --- | :-: | :-: |
+| **Consul** | <img src="png/consul-light.png" width="128"> | <img src="png/consul-dark.png" width="128"> |
+| **etcd** | <img src="png/etcd-light.png" width="128"> | <img src="png/etcd-dark.png" width="128"> |
 
 ## 语言运行时
 
@@ -55,6 +69,7 @@ AppIcons/
 | **PHP** | <img src="png/php-light.png" width="128"> | <img src="png/php-dark.png" width="128"> |
 | **Go** | <img src="png/go-light.png" width="128"> | <img src="png/go-dark.png" width="128"> |
 | **Java** | <img src="png/java-light.png" width="128"> | <img src="png/java-dark.png" width="128"> |
+| **Python** | <img src="png/python-light.png" width="128"> | <img src="png/python-dark.png" width="128"> |
 
 ## 构建工具
 

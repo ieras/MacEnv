@@ -112,11 +112,18 @@ final class PhpService {
         try await download(version.url, to: fpmArchive, report: report, onStart: onStart)
 
         let target = versionsDirectory.appendingPathComponent("php-\(version.version)")
-        try? FileManager.default.removeItem(at: target)
-        try FileManager.default.createDirectory(at: target.appendingPathComponent("bin"), withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: target.appendingPathComponent("sbin"), withIntermediateDirectories: true)
-        try await extract(cliArchive, into: target.appendingPathComponent("bin"), report: report)
-        try await extract(fpmArchive, into: target.appendingPathComponent("sbin"), report: report)
+        let staging = versionsDirectory.appendingPathComponent(".staging-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: staging) }
+        try FileManager.default.createDirectory(at: staging.appendingPathComponent("bin"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: staging.appendingPathComponent("sbin"), withIntermediateDirectories: true)
+        try await extract(cliArchive, into: staging.appendingPathComponent("bin"), report: report)
+        try await extract(fpmArchive, into: staging.appendingPathComponent("sbin"), report: report)
+        guard FileManager.default.isExecutableFile(atPath: staging.appendingPathComponent("bin/php").path),
+              FileManager.default.isExecutableFile(atPath: staging.appendingPathComponent("sbin/php-fpm").path) else {
+            throw CommandError(message: L("error.binaryMissing") + "PHP / PHP-FPM")
+        }
+        try Task.checkCancellation()
+        try FileManager.default.replaceDirectory(at: target, with: staging)
     }
 
     // 问 PHP 自己要 ini 在哪。static-php-cli 编译进去的是 /usr/local/etc/php（目录要管理员权限才能建），
@@ -312,7 +319,7 @@ final class PhpService {
         let keg = URL(fileURLWithPath: "\(Self.cellar)/\(name)@\(version.majorMinor)", isDirectory: true)
         var source: URL?
         if let walker = FileManager.default.enumerator(at: keg, includingPropertiesForKeys: nil) {
-            for case let file as URL in walker where file.pathExtension == "so" { source = file; break }
+            source = walker.compactMap { $0 as? URL }.first { $0.pathExtension == "so" }
         }
         // 名字用 keg 里真实找到的那个：tap 里六十多个扩展，映射表兜不住的那几个
         // 猜错了会把一个不存在的 .so 名写进 php.ini，PHP 起来就报 "Unable to load"。
@@ -360,6 +367,9 @@ final class PhpService {
 
     private func extract(_ archive: URL, into directory: URL, report: @escaping (String) -> Void) async throws {
         let status = try await Command.stream("/usr/bin/tar", ["-xzf", archive.path, "-C", directory.path], onOutput: report)
-        guard status == 0 else { throw CommandError(message: L("error.unpackFailed") + "（\(status)）") }
+        guard status == 0 else {
+            try FileManager.default.removeItem(at: archive)
+            throw CommandError(message: L("error.unpackFailed") + "（\(status)）")
+        }
     }
 }

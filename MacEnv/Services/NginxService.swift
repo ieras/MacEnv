@@ -141,7 +141,7 @@ final class NginxService {
         )
     }
 
-    // 认领上一次运行留下的 nginx：先认 pid 文件，拿不到再退回扫 ps。
+    // 先校验 PID 文件，再按实例目录查找进程。
     // pid 文件那条路走 libproc 校验可执行路径 —— 不跑子进程、不受沙箱影响，也不怕 setproctitle。
     private func existing() async -> ManagedProcess? {
         if let owned = supervisor.owned(pidFile: pidFile, binary: "nginx") { return owned }
@@ -150,8 +150,8 @@ final class NginxService {
 
     func adopt(_ versions: [NginxVersion]) async {
         guard !supervisor.isRunning, let target = await existing() else { return }
-        // owned() 给的 command 是可执行路径，find() 给的是完整命令行，两种都得能匹配上。
-        guard let version = versions.first(where: { $0.executable.path == target.command || target.command.contains($0.executable.path) }) else { return }
+        // 用内核记录的可执行路径匹配版本，不从展示标题里猜。
+        guard let version = versions.first(where: { $0.executable.path == target.executable }) else { return }
         runningID = version.id
         supervisor.adopt(target)
         try? String(target.pid).write(to: pidFile, atomically: true, encoding: .utf8)
@@ -180,15 +180,21 @@ final class NginxService {
             environment: environment,
             errorLog: startupLog
         )
-        for _ in 0..<150 where item.isRunning && !FileManager.default.fileExists(atPath: pidFile.path) {
-            try await Task.sleep(nanoseconds: 100_000_000)
+        do {
+            for _ in 0..<150 where item.isRunning && supervisor.owned(pidFile: pidFile, binary: "nginx")?.pid != item.processIdentifier {
+                try await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard item.isRunning, supervisor.owned(pidFile: pidFile, binary: "nginx")?.pid == item.processIdentifier else {
+                throw CommandError(message: ((try? String(contentsOf: startupLog, encoding: .utf8)) ?? "") + "\n" + L("error.serviceStartTimeout"))
+            }
+            runningID = version.id
+            try String(item.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8)
+        } catch {
+            try await Task { @MainActor in
+                if let target = supervisor.target { try await supervisor.terminate(target, force: true) }
+            }.value
+            throw error
         }
-        guard item.isRunning else {
-            supervisor.forget()
-            throw CommandError(message: (try? String(contentsOf: startupLog, encoding: .utf8)) ?? L("error.nginxStartFailed"))
-        }
-        runningID = version.id
-        try String(item.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8)
     }
 
     func stop() async throws {
@@ -196,11 +202,6 @@ final class NginxService {
             supervisor.forget()
             runningID = nil
             return
-        }
-        // owned() 的来源是 pid 文件 + 内核给的可执行路径，已经确认是 nginx；
-        // 只有走 ps 兜底时才需要「命令行里带着我们自己的 nginx.conf」这道校验，防止误杀别人的 nginx。
-        guard target.command.hasSuffix("/nginx") || target.command.contains(config.path) else {
-            throw CommandError(message: L("error.nginxOwnerMismatch"))
         }
         try await supervisor.terminate(target)
         runningID = nil
@@ -218,15 +219,22 @@ final class NginxService {
 
     func reload(_ version: NginxVersion) async throws {
         _ = try await validate(version)
-        guard let process = supervisor.process, process.isRunning else { throw CommandError(message: L("error.nginxNotRunning")) }
-        guard Darwin.kill(process.processIdentifier, SIGHUP) == 0 else { throw CommandError(message: String(cString: strerror(errno))) }
+        guard let target = supervisor.target else { throw CommandError(message: L("error.nginxNotRunning")) }
+        try supervisor.signal(target, SIGHUP)
     }
 
-    // 站点增删改之后调它。没在跑就什么都不做 —— 下次启动自然会读到新 vhost。
-    // 不走 validate：nginx 收到 SIGHUP 后发现新配置有错，会保留旧配置并在 error log 里记一笔，不会崩。
-    func reloadIfRunning() {
-        guard let process = supervisor.process, process.isRunning else { return }
-        _ = Darwin.kill(process.processIdentifier, SIGHUP)
+    // 停止时也校验落盘配置，防止「保存成功」却在下一次启动才发现语法错误。
+    func reloadIfRunning() async throws {
+        let target = supervisor.target
+        let executable: URL
+        if let target { executable = URL(fileURLWithPath: target.executable) }
+        else {
+            guard let version = try await installedVersions(customDirectories: []).first else { return }
+            executable = version.executable
+        }
+        try prepare()
+        _ = try await validate(NginxVersion(version: "", directory: executable.deletingLastPathComponent(), executable: executable, source: ""))
+        if let target { try supervisor.signal(target, SIGHUP) }
     }
 
     func log(_ kind: String) -> String { readLogTail(kind == "error" ? errorLog : accessLog) }

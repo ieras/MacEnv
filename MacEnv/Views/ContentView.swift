@@ -9,6 +9,11 @@ struct ContentView: View {
     @ObservedObject var phpVM: PhpViewModel
     @ObservedObject var hostVM: HostViewModel
     @ObservedObject var goVM: GoViewModel
+    @ObservedObject var postgresVM: PostgresViewModel
+    @ObservedObject var clickhouseVM: ClickHouseViewModel
+    @ObservedObject var qdrantVM: QdrantViewModel
+    @ObservedObject var consulVM: ConsulViewModel
+    @ObservedObject var etcdVM: EtcdViewModel
     @State private var selectedPage = "nginx"
     @State private var toastVisible = false
     @State private var toastDismissTask: Task<Void, Never>?
@@ -45,7 +50,7 @@ struct ContentView: View {
         // 多行/长文案（多半是报错）给点时间看，普通 tips 3 秒就够。
         let seconds: UInt64 = (app.state.message.count > 40 || app.state.message.contains("\n")) ? 6 : 3
         toastDismissTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
+            do { try await Task.sleep(nanoseconds: seconds * 1_000_000_000) } catch { return }
             toastVisible = false
         }
     }
@@ -73,11 +78,28 @@ struct ContentView: View {
             } else if page == "java" {
                 JavaManagementView(app: app, vm: app.javaVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "python" {
+                PythonManagementView(app: app, vm: app.pythonVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "hosts" {
                 HostManagementView(app: app, vm: hostVM, certVM: certVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "redis" {
                 RedisManagementView(app: app, vm: redisVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "postgresql" {
+                PostgresManagementView(app: app, vm: postgresVM)
+            } else if page == "clickhouse" {
+                ClickHouseManagementView(app: app, vm: clickhouseVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "qdrant" {
+                QdrantManagementView(app: app, vm: qdrantVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "consul" {
+                ConsulManagementView(app: app, vm: consulVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "etcd" {
+                EtcdManagementView(app: app, vm: etcdVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if let kind = DatabaseKind(rawValue: page) {
                 DatabaseManagementView(app: app, vm: databaseVM, kind: kind)
@@ -209,10 +231,11 @@ struct ContentView: View {
     @ViewBuilder
     private func moduleTrailing(_ id: String) -> some View {
         switch id {
-        // 站点、Go、Java 都没有常驻进程，只显示数量。
+        // 站点、Go、Java、Python 都没有常驻进程，只显示数量。
         case "hosts": Text(String(hostVM.hosts.count)).foregroundStyle(.secondary)
         case "go": Text(String(goVM.versions.count)).foregroundStyle(.secondary)
         case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(.secondary)
+        case "python": Text(String(app.pythonVM.versions.count)).foregroundStyle(.secondary)
         case "nginx":
             Toggle("", isOn: Binding(get: { nginxVM.isRunning }, set: { _ in
                 if nginxVM.isRunning {
@@ -235,19 +258,21 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || phpVM.versions.isEmpty)
             .help(L("sidebar.phpToggleHint"))
-        // Redis 同数据库：默认 6379，一次只跑一个版本。
-        case "redis":
-            Toggle("", isOn: Binding(get: { app.launchTargets.contains { $0.kind == "redis" && app.targetRunning($0.key) } }, set: { _ in
-                let keys = app.launchTargets.filter { $0.kind == "redis" }.map(\.key)
-                if keys.contains(where: { app.targetRunning($0) }) { app.launch(keys, stop: true) }
-                else {
-                    let version = redisVM.versions.first { app.state.quickStartTargets.contains($0.id) } ?? redisVM.versions.first
-                    if let version { app.launch([version.id]) }
-                }
-            }))
-            .labelsHidden().toggleStyle(ServiceSwitch())
-            .disabled(busy || redisVM.versions.isEmpty)
-            .help(L("sidebar.databaseToggleHint") + "Redis" + L("sidebar.version"))
+        // 端口固定的单实例服务（mysql / mariadb 走下面的 DatabaseKind 分支）：六个 kind 一套开关。
+        // 开关 = 有没有版本在跑；开启优先起勾了快捷启动的版本，没配就起列表第一个（版本号最大）。
+        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant":
+            if let entry = app.entry(id) {
+                Toggle("", isOn: Binding(
+                    get: { entry.targets.contains { app.targetRunning($0.key) } },
+                    set: { _ in
+                        let keys = entry.targets.map(\.key)
+                        if keys.contains(where: { app.targetRunning($0) }) { app.launch(keys, stop: true) }
+                        else if let target = entry.preferredTarget(quickStart: app.state.quickStartTargets) { app.launch([target.key]) }
+                    }))
+                .labelsHidden().toggleStyle(ServiceSwitch())
+                .disabled(busy || entry.targets.isEmpty)
+                .help(L("sidebar.databaseToggleHint") + moduleName(id) + L("sidebar.version"))
+            }
         default:
             if let kind = DatabaseKind(rawValue: id) {
                 Toggle("", isOn: Binding(get: { databaseVM.running(kind) }, set: { _ in

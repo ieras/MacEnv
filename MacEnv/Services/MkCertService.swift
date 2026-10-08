@@ -29,20 +29,8 @@ final class MkCertService {
     func installedVersions(customDirectories: [String] = []) async throws -> [MkCertVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String, String?)] = []
-        if let brew = Brew.executable {
-            for formula in try await Brew.formulae("mkcert") {
-                for version in formula.installedVersions {
-                    for cellar in ["/opt/homebrew/Cellar", "/usr/local/Cellar"] {
-                        let file = URL(fileURLWithPath: cellar).appendingPathComponent(formula.name).appendingPathComponent(version).appendingPathComponent("bin/mkcert")
-                        if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Homebrew", formula.name)) }
-                    }
-                }
-                let prefix = try await Command.run(brew, ["--prefix", formula.name], environment: Command.brewEnvironment)
-                if prefix.status == 0 {
-                    let file = URL(fileURLWithPath: prefix.stdout.trimmingCharacters(in: .whitespacesAndNewlines)).appendingPathComponent("bin/mkcert")
-                    if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Homebrew", formula.name)) }
-                }
-            }
+        for (file, formula) in try await Brew.installedBinaries("mkcert", binary: "mkcert") {
+            candidates.append((file, "Homebrew", formula))
         }
         if let items = try? fm.contentsOfDirectory(at: versionsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) {
             for item in items {

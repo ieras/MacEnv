@@ -54,7 +54,7 @@ struct CertificatePanelView: View {
     private var installedPanel: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                Text("MkCert").font(.title3)
+                SelectableTitle(text: "MkCert")
                 SSLIcon().frame(width: 22, height: 22)
                 // 多版本时给个下拉 —— 「证书」页签发用的就是这里选中的那个。
                 if vm.versions.count > 1 {
@@ -104,7 +104,7 @@ struct CertificatePanelView: View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts"], source: $source,
                                  linkURL: URL(string: "https://github.com/FiloSottile/mkcert/releases")!,
-                                 busy: app.state.busy, refreshing: refreshing, onRefresh: {
+                                 busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
             }, actions: {})
@@ -113,13 +113,13 @@ struct CertificatePanelView: View {
                 if vm.formulae.isEmpty {
                     Text(L("brew.noFormulaList")).foregroundStyle(.secondary).padding(24)
                 } else {
-                    BrewListView(formulae: vm.formulae, busy: app.state.busy) { vm.brewAction($0, $1) }
+                    BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { vm.brewAction($0, $1) }
                 }
             } else if source == "Static" {
-                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
+                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading, busy: app.state.installBusy) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             } else if source == "MacPorts" {
                 if app.toolsVM.macPortsInstalled {
-                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.installBusy,
                                  load: { await vm.loadPortItems() },
                                  install: { vm.portAction("install", $0) },
                                  uninstall: { vm.portAction("uninstall", $0) })

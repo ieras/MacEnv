@@ -33,7 +33,7 @@ struct SwoolePanel: View {
             .panelHeader()
             Divider()
             if showingAvailable {
-                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
+                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading, busy: app.state.installBusy) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             } else {
                 installedTable
             }

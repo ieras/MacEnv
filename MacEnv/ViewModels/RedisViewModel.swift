@@ -43,7 +43,10 @@ final class RedisViewModel: ObservableObject, PortListHost {
             try await services.paths.refresh()
             pathMembership = Dictionary(uniqueKeysWithValues: found.map { ($0.id, services.paths.membership(kind: "redis", directory: $0.directory)) })
             // brew 丢后台慢慢填，别拖住 refresh 返回。
-            Task { formulae = (try? await service.brewFormulae()) ?? formulae }
+            Task {
+                do { formulae = try await service.brewFormulae() }
+                catch { state.message = error.localizedDescription }
+            }
             if !found.contains(where: { $0.id == selected }) { selected = found.first?.id ?? "" }
         } catch {
             state.message = error.localizedDescription
@@ -81,19 +84,12 @@ final class RedisViewModel: ObservableObject, PortListHost {
     }
 
     func togglePath(_ version: RedisVersion) {
-        guard !state.busy else { return }
-        state.busy = true
-        Task {
-            defer { state.busy = false }
-            do {
-                try services.paths.toggle(kind: "redis", directory: version.directory)
-                try await services.paths.refresh(force: true)
-                pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "redis", directory: $0.directory)) })
-                let enabled = pathMembership[version.id] == .app
-                state.message = String(format: L(enabled ? "message.pathEnabledFor" : "message.pathDisabledFor"), "Redis " + version.version)
-            } catch {
-                state.message = error.localizedDescription
-            }
+        state.run { [self] in
+            try services.paths.toggle(kind: "redis", directory: version.directory)
+            try await services.paths.refresh(force: true)
+            pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "redis", directory: $0.directory)) })
+            let enabled = pathMembership[version.id] == .app
+            state.message = String(format: L(enabled ? "message.pathEnabledFor" : "message.pathDisabledFor"), "Redis " + version.version)
         }
     }
 

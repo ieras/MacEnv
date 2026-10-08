@@ -5,6 +5,7 @@
 "sidebar.web" = "Web 服务";
 "sidebar.database" = "数据库";
 "sidebar.cache" = "缓存与队列";
+"sidebar.governance" = "服务治理";
 "sidebar.language" = "语言环境";
 "sidebar.nginxToggleHint" = "启动快捷启动中的 Nginx 版本；关闭时停止当前 Nginx";
 "sidebar.databaseToggleHint" = "启动快捷启动中的 ";
@@ -56,6 +57,7 @@
 "action.enablePath" = "启用环境变量";
 "action.removePath" = "移除环境变量";
 "action.quickStartHint" = "加入快捷启动";
+"action.openWebUI" = "打开 Web UI";
 "action.customPathHint" = "自定义版本路径：会在此路径的 bin 和 sbin 目录查找可执行文件";
 "action.createIni" = "创建 php.ini";
 "action.openFolder" = "打开目录";
@@ -173,10 +175,12 @@
 "error.databaseStartFailed" = "启动失败";
 "error.databaseDataDirIncomplete" = "%@ 数据目录初始化不完整，请清理 %@ 后重试";
 "error.mariadbInstallerMissing" = "未找到 MariaDB 数据目录初始化命令";
+"error.postgresInstallerMissing" = "未找到 initdb，无法初始化 PostgreSQL 数据目录";
 "error.brewMissing" = "未检测到 Homebrew";
 "error.brewFormulaMissing" = "Homebrew 未返回 nginx 版本信息";
 "error.catalogRequestFailed" = "Static 版本服务请求失败";
 "error.downloadFailed" = "Static 下载失败";
+"error.downloadIncomplete" = "下载不完整（文件大小与服务器不一致），请重试";
 "error.binaryMissing" = "Static 包中没有可执行的 ";
 "error.aliasNameInvalid" = "别名只能包含命令名";
 "error.phpIniNotFound" = "无法确定 php.ini 路径";
@@ -193,6 +197,12 @@
 "module.mysql" = "MySQL";
 "module.mariadb" = "MariaDB";
 "module.redis" = "Redis";
+"module.postgresql" = "PostgreSQL";
+"module.qdrant" = "Qdrant";
+"qdrant.openDashboard" = "打开 Dashboard";
+"module.clickhouse" = "ClickHouse";
+"module.consul" = "Consul";
+"module.etcd" = "etcd";
 "module.php" = "PHP";
 "module.go" = "Go";
 "settings.proxy" = "启用代理";
@@ -218,9 +228,9 @@
 
 "menu.startQuickStart" = "启动快捷启动环境";
 "menu.stopQuickStart" = "停止快捷启动环境";
-"menu.open" = "打开 MacEnv";
+"menu.open" = "主界面";
 "menu.settings" = "设置";
-"menu.quit" = "退出 MacEnv";
+"menu.quit" = "退出";
 
 "tab.hosts" = "站点";
 "tab.siteCert" = "站点证书";
@@ -337,6 +347,7 @@
 "message.uninstallingFor" = "正在卸载 %@";
 "message.taskStarting" = "正在准备…";
 "message.taskCancelled" = "已取消";
+"message.taskInProgress" = "已有任务在跑，等它完成再操作";
 "error.brewFailed" = "Homebrew 命令执行失败";
 "error.unpackFailed" = "解包失败";
 
@@ -368,15 +379,19 @@
 "error.macPortsInstallFailed" = "安装结束但没找到 /opt/local/bin/port";
 "error.sdkmanMissing" = "SDKMAN 未安装";
 "module.java" = "Java";
+"module.python" = "Python";
 "column.vendor" = "发行商";
 "java.setDefault" = "设为默认";
 "sdkman.default" = "当前默认";
 "message.noJavaInstalled" = "暂无已安装 Java，请在版本管理中安装或添加本地目录。";
+"message.noPythonInstalled" = "暂无已安装 Python，请在版本管理中安装或添加本地目录。";
 "message.noSdkmanVersions" = "SDKMAN 没给出任何版本，点右上角刷新试试。";
 "message.sdkmanDefaultSet" = "已把 %@ 设为默认 Java";
 "tools.missingSDKMAN" = "未检测到 SDKMAN，请到「环境工具」里安装。";
 "alert.uninstallJavaTitle" = "卸载 Homebrew JDK？";
+"alert.uninstallPythonTitle" = "卸载 Homebrew Python？";
 "alert.uninstallJavaMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
+"alert.uninstallPythonMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
 "alert.uninstallSdkmanJavaTitle" = "卸载这个 JDK？";
 "alert.uninstallSdkmanJavaMessage" = "将执行 sdk uninstall java %@，~/.sdkman 里的这个版本会被删除，无法恢复。";
 "module.maven" = "Maven";
@@ -392,3 +407,7 @@
 "alert.uninstallSdkmanMavenMessage" = "将执行 sdk uninstall maven %@，~/.sdkman 里的这个版本会被删除，无法恢复。";
 "alert.uninstallSdkmanGradleTitle" = "卸载这个 Gradle？";
 "alert.uninstallSdkmanGradleMessage" = "将执行 sdk uninstall gradle %@，~/.sdkman 里的这个版本会被删除，无法恢复。";
+"message.downloading" = "正在下载 %@";
+"message.downloadProgress" = "已下载 %@ MB";
+
+"error.serviceStartTimeout" = "服务未能在启动时限内就绪。";

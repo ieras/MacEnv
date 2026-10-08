@@ -43,7 +43,10 @@ final class MkCertViewModel: ObservableObject, PortListHost {
         await loadCaroot()
         // brew 查不到（没装、或公式被 tap 挡了）不该把上面的扫描结果一起判成失败，
         // 丢后台慢慢填，别拖住 refresh 返回（同 Redis / Go）。
-        Task { formulae = (try? await services.mkcert.brewFormulae()) ?? formulae }
+        Task {
+            do { formulae = try await services.mkcert.brewFormulae() }
+            catch { state.message = error.localizedDescription }
+        }
         objectWillChange.send()
     }
 

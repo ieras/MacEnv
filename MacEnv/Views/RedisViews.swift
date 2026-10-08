@@ -51,7 +51,7 @@ struct RedisManagementView: View {
     private var serviceTable: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Redis").font(.title3)
+                SelectableTitle(text: "Redis")
                 RedisIcon().frame(width: 22, height: 22)
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .buttonStyle(.borderless)
@@ -108,7 +108,7 @@ struct RedisManagementView: View {
             // 没有 Static：one-env 的静态包接口对 redis 返回空数组（redis 官方只发源码，没有 macOS 二进制）。
             VersionManagerHeader(sources: ["Homebrew", "MacPorts"], source: $source,
                                  linkURL: URL(string: "https://redis.io/downloads/")!,
-                                 busy: app.state.busy, refreshing: refreshing, onRefresh: {
+                                 busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task {
                     if source == "MacPorts" { await vm.loadPortItems(force: true) }
@@ -121,11 +121,11 @@ struct RedisManagementView: View {
                 if vm.formulae.isEmpty {
                     Text(L("brew.noFormulaList")).foregroundStyle(.secondary).padding(24)
                 } else {
-                    BrewListView(formulae: vm.formulae, busy: app.state.busy) { vm.brewAction($0, $1) }
+                    BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { vm.brewAction($0, $1) }
                 }
             } else if source == "MacPorts" {
                 if app.toolsVM.macPortsInstalled {
-                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.installBusy,
                                  load: { await vm.loadPortItems() },
                                  install: { vm.portAction("install", $0) },
                                  uninstall: { vm.portAction("uninstall", $0) })

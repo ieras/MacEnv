@@ -37,6 +37,27 @@ enum Brew {
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
+    // 已安装版本只读本地 Cellar，不查询远程公式；第三方 tap 从安装凭据保留。
+    static func installedBinaries(_ app: String, binary: String) async throws -> [(file: URL, formula: String)] {
+        let fm = FileManager.default
+        var result: [(URL, String)] = []
+        for cellar in ["/opt/homebrew/Cellar", "/usr/local/Cellar"] {
+            let formulae = (try? fm.contentsOfDirectory(at: URL(fileURLWithPath: cellar), includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+            for formula in formulae where formula.lastPathComponent == app || formula.lastPathComponent.hasPrefix(app + "@") {
+                for keg in (try? fm.contentsOfDirectory(at: formula, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? [] {
+                    let file = keg.appendingPathComponent("bin/\(binary)")
+                    guard fm.isExecutableFile(atPath: file.path) else { continue }
+                    let receipt = try? Data(contentsOf: keg.appendingPathComponent("INSTALL_RECEIPT.json"))
+                    let json = receipt.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+                    let tap = (json?["source"] as? [String: Any])?["tap"] as? String
+                    let name = tap.map { $0 == "homebrew/core" ? formula.lastPathComponent : $0 + "/" + formula.lastPathComponent } ?? formula.lastPathComponent
+                    result.append((file, name))
+                }
+            }
+        }
+        return result
+    }
+
     // 安装 / 卸载动辄几分钟（下瓶子、编译、装依赖），输出一律实时喂给任务日志 ——
     // 只在结束时把 output.text 一次性抛出来，界面全程是一动不动的转圈，出错了也看不到是哪一步。
     static func run(_ operation: String, formula: String,
@@ -52,5 +73,20 @@ enum Brew {
                                               onStart: onStart, onOutput: report)
         // 失败原因已经在日志里了（brew 把每一步都打出来了），这里只补一句结论。
         guard status == 0 else { throw CommandError(message: L("error.brewFailed") + "（\(status)）") }
+    }
+
+    // brew 列表的展示行：一行 = 公式 + 一个已装版本（没装过的公式给一行空版本）。
+    // 全表按版本号从大到小 —— 最新版本永远在最上面（跟 MacPorts 可装清单同一个口径）。
+    // 表达式拆开写：整条链塞给类型检查器会「unable to type-check in reasonable time」。
+    static func listRows(_ formulae: [BrewFormulaItem]) -> [(formula: BrewFormulaItem, version: String?)] {
+        let rows: [(formula: BrewFormulaItem, version: String?)] = formulae.flatMap { formula -> [(formula: BrewFormulaItem, version: String?)] in
+            if formula.installedVersions.isEmpty { return [(formula, nil as String?)] }
+            return formula.installedVersions.map { (formula, $0) }
+        }
+        return rows.sorted { lhs, rhs in
+            let left = lhs.version ?? lhs.formula.stable
+            let right = rhs.version ?? rhs.formula.stable
+            return left.compare(right, options: .numeric) == .orderedDescending
+        }
     }
 }

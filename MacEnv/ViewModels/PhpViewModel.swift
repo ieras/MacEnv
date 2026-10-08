@@ -62,7 +62,10 @@ final class PhpViewModel: ObservableObject, PortListHost {
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "php", directory: $0.directory)) })
             // brew 一次要 search + info 两个子进程，好几秒 —— 丢后台慢慢填，
             // 版本列表（侧栏按钮亮不亮靠它）不该被公式列表拖住。
-            Task { formulae = (try? await Brew.formulae("php")) ?? formulae }
+            Task {
+                do { formulae = try await Brew.formulae("php") }
+                catch { state.message = error.localizedDescription }
+            }
             await services.phpFpm.adopt(versions)
         } catch {
             state.message = error.localizedDescription
@@ -73,6 +76,7 @@ final class PhpViewModel: ObservableObject, PortListHost {
     // 每版本一个 master：stop 只停这个版本，restart 就是先停后起，都不影响别的版本。
     func operate(_ action: String, _ version: PhpVersion) async {
         guard !state.busy else { return }
+        guard !state.isChanging(version.directory) else { state.message = L("message.taskInProgress"); return }
         state.busy = true
         defer {
             state.busy = false
@@ -90,7 +94,9 @@ final class PhpViewModel: ObservableObject, PortListHost {
     // 全部版本一起拉。已在跑的跳过；单个失败报错继续，不断批。不管 busy ——
     // 侧栏开关直接调它，launch() 联动调它时 busy 已经是 true。
     func startAll() async {
-        for version in versions where !services.phpFpm.running(version) {
+        var started = Set<String>()
+        let runningMinors = Set(versions.filter { services.phpFpm.running($0) }.map(\.majorMinor))
+        for version in versions where !state.isChanging(version.directory) && !runningMinors.contains(version.majorMinor) && started.insert(version.majorMinor).inserted {
             do { try await services.phpFpm.start(version) }
             catch { state.message = error.localizedDescription }
         }
@@ -98,18 +104,11 @@ final class PhpViewModel: ObservableObject, PortListHost {
     }
 
     func togglePath(_ version: PhpVersion) {
-        guard !state.busy else { return }
-        state.busy = true
-        Task {
-            defer { state.busy = false }
-            do {
-                try services.paths.toggle(kind: "php", directory: version.directory)
-                try await services.paths.refresh(force: true)
-                pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "php", directory: $0.directory)) })
-                state.message = String(format: L(services.paths.membership(kind: "php", directory: version.directory) == .app ? "message.pathEnabledFor" : "message.pathDisabledFor"), "PHP \(version.version)")
-            } catch {
-                state.message = error.localizedDescription
-            }
+        state.run { [self] in
+            try services.paths.toggle(kind: "php", directory: version.directory)
+            try await services.paths.refresh(force: true)
+            pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "php", directory: $0.directory)) })
+            state.message = String(format: L(services.paths.membership(kind: "php", directory: version.directory) == .app ? "message.pathEnabledFor" : "message.pathDisabledFor"), "PHP \(version.version)")
         }
     }
 
@@ -140,7 +139,9 @@ final class PhpViewModel: ObservableObject, PortListHost {
     }
 
     func installStatic(_ version: StaticVersion) {
-        state.runStreaming(String(format: L("message.installingFor"), "PHP \(version.version)")) { report, attach in
+        let target = services.php.versionsDirectory.appendingPathComponent("php-\(version.version)")
+        guard !(versions.contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && services.phpFpm.running($0) }) else { state.message = L("message.stopFirst"); return }
+        state.runStreaming(String(format: L("message.installingFor"), "PHP \(version.version)"), packageDirectory: target) { report, attach in
             try await self.services.php.install(version, report: report, onStart: attach)
             self.staticVersions = try await self.services.catalog("php").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
@@ -148,7 +149,9 @@ final class PhpViewModel: ObservableObject, PortListHost {
     }
 
     func uninstallStatic(_ version: StaticVersion) {
-        state.runStreaming(String(format: L("message.uninstallingFor"), "PHP \(version.version)")) { _, _ in
+        let target = services.php.versionsDirectory.appendingPathComponent("php-\(version.version)")
+        guard !(versions.contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && services.phpFpm.running($0) }) else { state.message = L("message.stopFirst"); return }
+        state.runStreaming(String(format: L("message.uninstallingFor"), "PHP \(version.version)"), packageDirectory: target) { _, _ in
             try self.services.catalog("php").uninstall(version)
             self.staticVersions = try await self.services.catalog("php").fetch(customEndpoint: self.state.catalogURL)
             await self.refresh()
@@ -357,6 +360,8 @@ final class PhpViewModel: ObservableObject, PortListHost {
 // 统一服务注册表条目：PHP-FPM。
 extension PhpViewModel: ServiceManageable {
     var kind: String { "php" }
+    // 每个版本独立 master / 端口，允许多版本同时跑。
+    var singleInstance: Bool { false }
     var targets: [LaunchTarget] { versions.map { LaunchTarget(key: "php:" + $0.id, kind: "php", versionID: $0.id, title: "PHP-FPM " + $0.version) } }
     func isRunning(_ versionID: String) -> Bool { versions.first { $0.id == versionID }.map { services.phpFpm.running($0) } ?? false }
     // php-fpm 只有 unix socket，无 TCP 端口。
@@ -367,6 +372,7 @@ extension PhpViewModel: ServiceManageable {
     }
     func perform(_ action: String, _ versionID: String) async throws {
         guard let version = versions.first(where: { $0.id == versionID }) else { return }
+        guard !state.isChanging(version.directory) else { throw CommandError(message: L("message.taskInProgress")) }
         if action == "stop" { try await services.phpFpm.stop(version) } else { try await services.phpFpm.start(version) }
     }
     func stopAll() async {

@@ -64,20 +64,8 @@ final class DatabaseService {
     func installedVersions(customDirectories: [String] = []) async throws -> [DatabaseVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String, String?)] = []
-        if let brew = Brew.executable {
-            for formula in try await Brew.formulae(kind.rawValue) {
-                for version in formula.installedVersions {
-                    for cellar in ["/opt/homebrew/Cellar", "/usr/local/Cellar"] {
-                        let file = URL(fileURLWithPath: cellar).appendingPathComponent(formula.name).appendingPathComponent(version).appendingPathComponent("bin/\(kind.binaryName)")
-                        if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Homebrew", formula.name)) }
-                    }
-                }
-                let prefix = try await Command.run(brew, ["--prefix", formula.name], environment: Command.brewEnvironment)
-                if prefix.status == 0 {
-                    let file = URL(fileURLWithPath: prefix.stdout.trimmingCharacters(in: .whitespacesAndNewlines)).appendingPathComponent("bin/\(kind.binaryName)")
-                    if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Homebrew", formula.name)) }
-                }
-            }
+        for (file, formula) in try await Brew.installedBinaries(kind.rawValue, binary: kind.binaryName) {
+            candidates.append((file, "Homebrew", formula))
         }
         if let items = try? fm.contentsOfDirectory(at: versionsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) {
             for item in items {
@@ -127,13 +115,13 @@ final class DatabaseService {
             try await supervisor.terminate(existing, graceful: { try? await self.shutdown(version) }, force: true)
         }
         let data = dataURL(for: version)
-        var initialized = false
+        let passwordPending = data.appendingPathComponent(".macenv-password-pending")
         if !FileManager.default.fileExists(atPath: data.appendingPathComponent("mysql").path) {
             if let contents = try? FileManager.default.contentsOfDirectory(at: data, includingPropertiesForKeys: nil), !contents.isEmpty {
                 throw CommandError(message: String(format: L("error.databaseDataDirIncomplete"), kind.title, data.lastPathComponent))
             }
             try await initialize(version, config: configURL(for: version), data: data)
-            initialized = true
+            try Data().write(to: passwordPending)
         }
         let startupLog = directory.appendingPathComponent("\(kind.rawValue)-\(version.version)-start-error.log")
         let item = try supervisor.launch(at: version.executable,
@@ -141,16 +129,26 @@ final class DatabaseService {
                                          directory: version.directory,
                                          environment: ProcessInfo.processInfo.environment,
                                          errorLog: startupLog)
-        for _ in 0..<150 where item.isRunning && !FileManager.default.fileExists(atPath: kind.socketPath) {
-            try await Task.sleep(nanoseconds: 100_000_000)
+        do {
+            for _ in 0..<150 where item.isRunning && !FileManager.default.fileExists(atPath: kind.socketPath) {
+                try await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard item.isRunning && FileManager.default.fileExists(atPath: kind.socketPath) else {
+                throw CommandError(message: ((try? String(contentsOf: startupLog, encoding: .utf8)) ?? "") + "\n" + L("error.serviceStartTimeout"))
+            }
+            runningVersion = version
+            try String(item.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8)
+            if FileManager.default.fileExists(atPath: passwordPending.path) {
+                try await setRootPassword(version)
+                try FileManager.default.removeItem(at: passwordPending)
+            }
+        } catch {
+            try await Task { @MainActor in
+                if let target = supervisor.target { try await supervisor.terminate(target, force: true) }
+            }.value
+            runningVersion = nil
+            throw error
         }
-        guard item.isRunning else {
-            supervisor.forget()
-            throw CommandError(message: (try? String(contentsOf: startupLog, encoding: .utf8)) ?? L("error.databaseStartFailed"))
-        }
-        runningVersion = version
-        try String(item.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8)
-        if initialized { try? await setRootPassword(version) }
     }
 
     func stop() async throws {
@@ -175,8 +173,9 @@ final class DatabaseService {
 
     private func setRootPassword(_ version: DatabaseVersion) async throws {
         let names = kind == .mysql ? [kind.adminBinaryName] : [kind.adminBinaryName, "mysqladmin"]
-        guard let admin = names.map({ version.directory.appendingPathComponent("bin/\($0)") }).first(where: { FileManager.default.isExecutableFile(atPath: $0.path) }) else { return }
-        _ = try await Command.run(admin.path, ["--socket=\(kind.socketPath)", "-uroot", "password", "root"])
+        guard let admin = names.map({ version.directory.appendingPathComponent("bin/\($0)") }).first(where: { FileManager.default.isExecutableFile(atPath: $0.path) }) else { throw CommandError(message: L("error.binaryMissing") + kind.adminBinaryName) }
+        let output = try await Command.run(admin.path, ["--socket=\(kind.socketPath)", "-uroot", "password", "root"])
+        guard output.status == 0 else { throw CommandError(message: output.text) }
     }
 
     private func initialize(_ version: DatabaseVersion, config: URL, data: URL) async throws {

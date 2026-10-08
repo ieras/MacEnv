@@ -31,14 +31,16 @@ final class MavenService {
             candidates.append((home.appendingPathComponent("bin/mvn"), source))
         }
         for item in customDirectories.map({ URL(fileURLWithPath: $0, isDirectory: true) }) {
-            candidates.append((item.appendingPathComponent("bin/mvn"), L("source.custom")))
+            candidates += ["mvn", "bin/mvn"].map { (item.appendingPathComponent($0), L("source.custom")) }
         }
         var seen = Set<String>()
         var result: [MavenVersion] = []
         for (file, source) in candidates {
             let executable = file.resolvingSymlinksInPath()
             guard fm.isExecutableFile(atPath: executable.path), seen.insert(executable.path).inserted else { continue }
-            guard let version = await probe(executable) ?? versionFromDirectory(executable) else { continue }
+            var found = versionFromDirectory(executable)
+            if found == nil { found = await probe(executable) }
+            guard let version = found else { continue }
             result.append(MavenVersion(version: version,
                                        directory: executable.deletingLastPathComponent().deletingLastPathComponent(),
                                        executable: executable,
@@ -56,7 +58,7 @@ final class MavenService {
     }
 
     private var defaultHomes: [(URL, String)] {
-        [ (URL(fileURLWithPath: "/opt/homebrew/opt/maven", isDirectory: true), "Homebrew") ]
+        ["/opt/homebrew/opt/maven", "/usr/local/opt/maven"].map { (URL(fileURLWithPath: $0, isDirectory: true), "Homebrew") }
     }
 
     // 跑 `mvn -v` 最准，但没 JDK 时脚本会提前退出、连版本都不打印，所以目录名能抠出版本就先抠，

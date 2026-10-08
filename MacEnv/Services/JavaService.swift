@@ -80,13 +80,14 @@ final class JavaService {
     // 每个 keg 根**本身就是 JDK Home**（java 在 bin/ 和 libexec/openjdk.jdk/Contents/Home/bin/ 下），
     // 不能再往下枚举一层。目录名带版本号只能前缀挑 —— 整个 opt 目录不能扫，那底下全是别的公式。
     private var defaultHomes: [(URL, String)] {
-        let brew = URL(fileURLWithPath: "/opt/homebrew/opt", isDirectory: true)
-        let entries = (try? FileManager.default.contentsOfDirectory(at: brew, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+        let entries = ["/opt/homebrew/opt", "/usr/local/opt"].flatMap {
+            (try? FileManager.default.contentsOfDirectory(at: URL(fileURLWithPath: $0), includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+        }
         return entries.filter { $0.lastPathComponent.hasPrefix("openjdk") }.map { ($0, "Homebrew") }
     }
 
     // JDK 的落点就这几种：官方 .pkg（Contents/Home）、裸 Home、Homebrew 的 keg（libexec 下再嵌一层）。
-    private static let javaPaths = ["Contents/Home/bin/java", "bin/java", "libexec/openjdk.jdk/Contents/Home/bin/java"]
+    private static let javaPaths = ["java", "Contents/Home/bin/java", "bin/java", "libexec/openjdk.jdk/Contents/Home/bin/java"]
 
     private static func findJava(in directory: URL) -> URL? {
         for path in javaPaths {

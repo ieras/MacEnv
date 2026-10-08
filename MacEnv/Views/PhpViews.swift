@@ -101,7 +101,7 @@ struct PhpManagementView: View {
     private var serviceTable: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("PHP-FPM").font(.title3)
+                SelectableTitle(text: "PHP-FPM")
                 PhpIcon().frame(width: 22, height: 22)
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
@@ -153,7 +153,7 @@ struct PhpManagementView: View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts"], source: $source,
                                  linkURL: URL(string: "https://www.php.net/downloads.php")!,
-                                 busy: app.state.busy, refreshing: refreshing, onRefresh: {
+                                 busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
             }, actions: {})
@@ -163,7 +163,7 @@ struct PhpManagementView: View {
                     Text(L("brew.missing")).padding(24)
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
-                    BrewListView(formulae: vm.formulae, busy: app.state.busy) { action, formula in
+                    BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
                         // 卸载要过确认弹窗，记住点的是哪个公式 —— alert 里不能写死公式名。
                         if action == "uninstall" {
                             uninstallFormula = formula
@@ -175,7 +175,7 @@ struct PhpManagementView: View {
                 }
             } else if source == "MacPorts" {
                 if app.toolsVM.macPortsInstalled {
-                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.installBusy,
                                  load: { await vm.loadPortItems() },
                                  install: { vm.portAction("install", $0) },
                                  uninstall: { vm.portAction("uninstall", $0) })
@@ -183,7 +183,7 @@ struct PhpManagementView: View {
                     Text(L("tools.missingMacPorts")).padding(24)
                 }
             } else {
-                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
+                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading, busy: app.state.installBusy) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             }
             Spacer()
         }

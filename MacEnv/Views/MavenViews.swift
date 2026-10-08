@@ -54,7 +54,7 @@ struct MavenManagementView: View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts", "SDKMAN"], source: $source,
                                  linkURL: URL(string: "https://maven.apache.org/")!,
-                                 busy: app.state.busy, refreshing: refreshing, onRefresh: {
+                                 busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(source, force: true); refreshing = false }
             }, actions: {})
@@ -64,7 +64,7 @@ struct MavenManagementView: View {
                     Text(L("brew.missing")).padding(24)
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
-                    BrewListView(formulae: vm.formulae, busy: app.state.busy) { action, formula in
+                    BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
                         if action == "uninstall" {
                             uninstallFormula = formula
                             confirmUninstall = true
@@ -75,7 +75,7 @@ struct MavenManagementView: View {
                 }
             } else if source == "MacPorts" {
                 if app.toolsVM.macPortsInstalled {
-                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.busy,
+                    PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.installBusy,
                                  load: { await vm.loadPortItems() },
                                  install: { vm.portAction("install", $0) },
                                  uninstall: { vm.portAction("uninstall", $0) })
@@ -89,7 +89,7 @@ struct MavenManagementView: View {
                     VStack(alignment: .leading, spacing: 12) { Text(L("tools.missingSDKMAN")) }.padding(24)
                 }
             } else {
-                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
+                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading, busy: app.state.installBusy) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             }
             Spacer()
         }
@@ -152,7 +152,7 @@ struct MavenManagementView: View {
     private var installedTable: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Text("Maven").font(.title3)
+                SelectableTitle(text: "Maven")
                 AssetIcon(name: "MavenIcon").frame(width: 22, height: 22)
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))

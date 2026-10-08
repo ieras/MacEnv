@@ -58,16 +58,36 @@
 		100000000000000000000080 /* JavaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000080 /* JavaService.swift */; };
 		100000000000000000000081 /* JavaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000081 /* JavaViewModel.swift */; };
 		100000000000000000000082 /* JavaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000082 /* JavaViews.swift */; };
+		1000000000000000000000A0 /* PythonService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000A0 /* PythonService.swift */; };
+		1000000000000000000000B0 /* PythonViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000B0 /* PythonViewModel.swift */; };
+		1000000000000000000000C0 /* PythonViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000C0 /* PythonViews.swift */; };
 		100000000000000000000057 /* GoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000057 /* GoService.swift */; };
 		100000000000000000000058 /* GoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000058 /* GoViewModel.swift */; };
 		100000000000000000000059 /* GoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000059 /* GoViews.swift */; };
-		100000000000000000000060 /* GoServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000060 /* GoServiceTests.swift */; };
+		1000000000000000000000D0 /* PythonServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000D0 /* PythonServiceTests.swift */; };
+		100000000000000000000111 /* StaticCatalogInstallTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000111 /* StaticCatalogInstallTests.swift */; };
 		100000000000000000000090 /* MavenService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000090 /* MavenService.swift */; };
 		100000000000000000000091 /* MavenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000091 /* MavenViewModel.swift */; };
 		100000000000000000000092 /* MavenViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000092 /* MavenViews.swift */; };
 		100000000000000000000093 /* GradleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000093 /* GradleService.swift */; };
 		100000000000000000000094 /* GradleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000094 /* GradleViewModel.swift */; };
 		100000000000000000000095 /* GradleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000095 /* GradleViews.swift */; };
+		100000000000000000000096 /* PostgresService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000096 /* PostgresService.swift */; };
+		100000000000000000000097 /* PostgresViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000097 /* PostgresViewModel.swift */; };
+		100000000000000000000098 /* PostgresViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000098 /* PostgresViews.swift */; };
+		100000000000000000000099 /* ClickHouseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000099 /* ClickHouseService.swift */; };
+		1000000000000000000000E0 /* TrayMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000E0 /* TrayMenuView.swift */; };
+		100000000000000000000100 /* ClickHouseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000100 /* ClickHouseViewModel.swift */; };
+		100000000000000000000101 /* ClickHouseViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000101 /* ClickHouseViews.swift */; };
+		100000000000000000000102 /* QdrantService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000102 /* QdrantService.swift */; };
+		100000000000000000000103 /* QdrantViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000103 /* QdrantViewModel.swift */; };
+		100000000000000000000104 /* QdrantViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000104 /* QdrantViews.swift */; };
+		100000000000000000000105 /* ConsulService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000105 /* ConsulService.swift */; };
+		100000000000000000000106 /* ConsulViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000106 /* ConsulViewModel.swift */; };
+		100000000000000000000107 /* ConsulViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000107 /* ConsulViews.swift */; };
+		100000000000000000000108 /* EtcdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000108 /* EtcdService.swift */; };
+		100000000000000000000109 /* EtcdViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000109 /* EtcdViewModel.swift */; };
+		100000000000000000000110 /* EtcdViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000110 /* EtcdViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,16 +158,36 @@
 		200000000000000000000080 /* JavaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaService.swift; sourceTree = "<group>"; };
 		200000000000000000000081 /* JavaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000082 /* JavaViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaViews.swift; sourceTree = "<group>"; };
+		2000000000000000000000A0 /* PythonService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonService.swift; sourceTree = "<group>"; };
+		2000000000000000000000B0 /* PythonViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonViewModel.swift; sourceTree = "<group>"; };
+		2000000000000000000000C0 /* PythonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonViews.swift; sourceTree = "<group>"; };
 		200000000000000000000057 /* GoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoService.swift; sourceTree = "<group>"; };
 		200000000000000000000058 /* GoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000059 /* GoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViews.swift; sourceTree = "<group>"; };
-		200000000000000000000060 /* GoServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoServiceTests.swift; sourceTree = "<group>"; };
+		2000000000000000000000D0 /* PythonServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonServiceTests.swift; sourceTree = "<group>"; };
+		200000000000000000000111 /* StaticCatalogInstallTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticCatalogInstallTests.swift; sourceTree = "<group>"; };
 		200000000000000000000090 /* MavenService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MavenService.swift; sourceTree = "<group>"; };
 		200000000000000000000091 /* MavenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MavenViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000092 /* MavenViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MavenViews.swift; sourceTree = "<group>"; };
 		200000000000000000000093 /* GradleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradleService.swift; sourceTree = "<group>"; };
 		200000000000000000000094 /* GradleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradleViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000095 /* GradleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradleViews.swift; sourceTree = "<group>"; };
+		200000000000000000000096 /* PostgresService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostgresService.swift; sourceTree = "<group>"; };
+		200000000000000000000097 /* PostgresViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostgresViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000098 /* PostgresViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostgresViews.swift; sourceTree = "<group>"; };
+		200000000000000000000099 /* ClickHouseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickHouseService.swift; sourceTree = "<group>"; };
+		2000000000000000000000E0 /* TrayMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrayMenuView.swift; sourceTree = "<group>"; };
+		200000000000000000000100 /* ClickHouseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickHouseViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000101 /* ClickHouseViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickHouseViews.swift; sourceTree = "<group>"; };
+		200000000000000000000102 /* QdrantService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QdrantService.swift; sourceTree = "<group>"; };
+		200000000000000000000103 /* QdrantViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QdrantViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000104 /* QdrantViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QdrantViews.swift; sourceTree = "<group>"; };
+		200000000000000000000105 /* ConsulService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsulService.swift; sourceTree = "<group>"; };
+		200000000000000000000106 /* ConsulViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsulViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000107 /* ConsulViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsulViews.swift; sourceTree = "<group>"; };
+		200000000000000000000108 /* EtcdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtcdService.swift; sourceTree = "<group>"; };
+		200000000000000000000109 /* EtcdViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtcdViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000110 /* EtcdViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtcdViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -218,6 +258,11 @@
 				200000000000000000000023 /* NginxService.swift */,
 				200000000000000000000024 /* DatabaseService.swift */,
 				200000000000000000000071 /* RedisService.swift */,
+				200000000000000000000096 /* PostgresService.swift */,
+				200000000000000000000099 /* ClickHouseService.swift */,
+				200000000000000000000102 /* QdrantService.swift */,
+				200000000000000000000105 /* ConsulService.swift */,
+				200000000000000000000108 /* EtcdService.swift */,
 				200000000000000000000074 /* MkCertService.swift */,
 				200000000000000000000025 /* StaticCatalogService.swift */,
 				200000000000000000000026 /* PathService.swift */,
@@ -232,6 +277,7 @@
 				200000000000000000000090 /* MavenService.swift */,
 				200000000000000000000093 /* GradleService.swift */,
 				200000000000000000000080 /* JavaService.swift */,
+				2000000000000000000000A0 /* PythonService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -243,6 +289,11 @@
 				200000000000000000000029 /* NginxViewModel.swift */,
 				200000000000000000000030 /* DatabaseViewModel.swift */,
 				200000000000000000000072 /* RedisViewModel.swift */,
+				200000000000000000000097 /* PostgresViewModel.swift */,
+				200000000000000000000100 /* ClickHouseViewModel.swift */,
+				200000000000000000000103 /* QdrantViewModel.swift */,
+				200000000000000000000106 /* ConsulViewModel.swift */,
+				200000000000000000000109 /* EtcdViewModel.swift */,
 				200000000000000000000075 /* MkCertViewModel.swift */,
 				200000000000000000000040 /* PhpViewModel.swift */,
 				200000000000000000000044 /* SwooleViewModel.swift */,
@@ -253,6 +304,7 @@
 				200000000000000000000091 /* MavenViewModel.swift */,
 				200000000000000000000094 /* GradleViewModel.swift */,
 				200000000000000000000081 /* JavaViewModel.swift */,
+				2000000000000000000000B0 /* PythonViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -264,6 +316,11 @@
 				200000000000000000000032 /* NginxViews.swift */,
 				200000000000000000000033 /* DatabaseViews.swift */,
 				200000000000000000000073 /* RedisViews.swift */,
+				200000000000000000000098 /* PostgresViews.swift */,
+				200000000000000000000101 /* ClickHouseViews.swift */,
+				200000000000000000000104 /* QdrantViews.swift */,
+				200000000000000000000107 /* ConsulViews.swift */,
+				200000000000000000000110 /* EtcdViews.swift */,
 				200000000000000000000076 /* CertViews.swift */,
 				200000000000000000000034 /* Components.swift */,
 				200000000000000000000035 /* SettingsView.swift */,
@@ -275,7 +332,9 @@
 				200000000000000000000079 /* ToolsViews.swift */,
 				200000000000000000000092 /* MavenViews.swift */,
 				200000000000000000000095 /* GradleViews.swift */,
+				2000000000000000000000E0 /* TrayMenuView.swift */,
 				200000000000000000000082 /* JavaViews.swift */,
+				2000000000000000000000C0 /* PythonViews.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -305,6 +364,8 @@
 			children = (
 				200000000000000000000051 /* MacEnvTests.swift */,
 				200000000000000000000060 /* GoServiceTests.swift */,
+				2000000000000000000000D0 /* PythonServiceTests.swift */,
+				200000000000000000000111 /* StaticCatalogInstallTests.swift */,
 			);
 			path = MacEnvTests;
 			sourceTree = "<group>";
@@ -434,6 +495,21 @@
 				100000000000000000000071 /* RedisService.swift in Sources */,
 				100000000000000000000072 /* RedisViewModel.swift in Sources */,
 				100000000000000000000073 /* RedisViews.swift in Sources */,
+				100000000000000000000096 /* PostgresService.swift in Sources */,
+				100000000000000000000097 /* PostgresViewModel.swift in Sources */,
+				100000000000000000000098 /* PostgresViews.swift in Sources */,
+				100000000000000000000099 /* ClickHouseService.swift in Sources */,
+				100000000000000000000100 /* ClickHouseViewModel.swift in Sources */,
+				100000000000000000000101 /* ClickHouseViews.swift in Sources */,
+				100000000000000000000102 /* QdrantService.swift in Sources */,
+				100000000000000000000103 /* QdrantViewModel.swift in Sources */,
+				100000000000000000000104 /* QdrantViews.swift in Sources */,
+				100000000000000000000105 /* ConsulService.swift in Sources */,
+				100000000000000000000106 /* ConsulViewModel.swift in Sources */,
+				100000000000000000000107 /* ConsulViews.swift in Sources */,
+				100000000000000000000108 /* EtcdService.swift in Sources */,
+				100000000000000000000109 /* EtcdViewModel.swift in Sources */,
+				100000000000000000000110 /* EtcdViews.swift in Sources */,
 				100000000000000000000074 /* MkCertService.swift in Sources */,
 				100000000000000000000075 /* MkCertViewModel.swift in Sources */,
 				100000000000000000000076 /* CertViews.swift in Sources */,
@@ -468,7 +544,11 @@
 				100000000000000000000093 /* GradleService.swift in Sources */,
 				100000000000000000000094 /* GradleViewModel.swift in Sources */,
 				100000000000000000000095 /* GradleViews.swift in Sources */,
+				1000000000000000000000E0 /* TrayMenuView.swift in Sources */,
 				100000000000000000000082 /* JavaViews.swift in Sources */,
+				1000000000000000000000A0 /* PythonService.swift in Sources */,
+				1000000000000000000000B0 /* PythonViewModel.swift in Sources */,
+				1000000000000000000000C0 /* PythonViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,6 +558,8 @@
 			files = (
 				100000000000000000000050 /* MacEnvTests.swift in Sources */,
 				100000000000000000000060 /* GoServiceTests.swift in Sources */,
+				1000000000000000000000D0 /* PythonServiceTests.swift in Sources */,
+				100000000000000000000111 /* StaticCatalogInstallTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -497,6 +579,7 @@
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				SDKROOT = macosx;
+                ALWAYS_SEARCH_USER_PATHS = NO;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -506,6 +589,7 @@
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				SDKROOT = macosx;
+                ALWAYS_SEARCH_USER_PATHS = NO;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -562,6 +646,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = local.macenv.app.tests;
 				PRODUCT_NAME = MacEnvTests;
 				SDKROOT = macosx;
+                ALWAYS_SEARCH_USER_PATHS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacEnv.app/Contents/MacOS/MacEnv";
@@ -585,6 +670,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = local.macenv.app.tests;
 				PRODUCT_NAME = MacEnvTests;
 				SDKROOT = macosx;
+                ALWAYS_SEARCH_USER_PATHS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacEnv.app/Contents/MacOS/MacEnv";

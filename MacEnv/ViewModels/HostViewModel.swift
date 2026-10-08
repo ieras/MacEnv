@@ -44,7 +44,7 @@ final class HostViewModel: ObservableObject {
     func refresh() async {
         do {
             try service.prepare()
-            hosts = service.load()
+            hosts = try service.load()
             if !hosts.contains(where: { $0.id == selectedID }) { selectedID = hosts.first?.id }
             hostsSynced = synced()
             rootCAExists = FileManager.default.fileExists(atPath: service.rootCertificate.path)
@@ -61,45 +61,84 @@ final class HostViewModel: ObservableObject {
     func apply(_ host: Host) {
         state.run {
             var item = host
-            self.service.autoFillRewrite(&item)
-            if item.useSSL && item.autoSSL {
-                // 装了 mkcert 就走它（根 CA 由 mkcert -install 装进系统钥匙串），
-                // 没装回落内置 openssl 自签。两条路的证书落地路径完全相同。
-                if let mkcert = self.services.mkcert.defaultVersion {
-                    try await self.service.issue(&item, withMkcert: mkcert)
-                } else {
-                    try await self.service.issue(&item)
+            var next = self.hosts
+            try await self.commit {
+                self.service.autoFillRewrite(&item)
+                if item.useSSL && item.autoSSL {
+                    if let mkcert = self.services.mkcert.defaultVersion { try await self.service.issue(&item, withMkcert: mkcert) }
+                    else { try await self.service.issue(&item) }
                 }
+                if !item.useSSL { item.sslCert = ""; item.sslKey = "" }
+                try self.service.write(item)
+                if let index = next.firstIndex(where: { $0.id == item.id }) { next[index] = item }
+                else { next.insert(item, at: item.isTop ? next.filter(\.isTop).count : next.count) }
+                try self.service.save(next)
             }
-            if !item.useSSL { item.sslCert = ""; item.sslKey = "" }
-            try self.service.write(item)
-            if let index = self.hosts.firstIndex(where: { $0.id == item.id }) {
-                self.hosts[index] = item
-            } else {
-                self.hosts.insert(item, at: item.isTop ? self.hosts.filter(\.isTop).count : self.hosts.count)
-            }
+            self.hosts = next
             self.selectedID = item.id
-            try self.service.save(self.hosts)
-            self.services.nginx.reloadIfRunning()
             self.state.message = L("message.hostSaved") + item.name
             if let note = await self.writeHosts() { self.state.message += " · " + note }
         }
     }
 
-    // 用 mkcert 给一个站点签证书。对应 FlyEnv MkCertStore.generateCert + taskConfirm：
-    // 签完自动开 HTTPS 并重写 vhost，不用用户再回表单勾一次。
     func sign(_ host: Host, using version: MkCertVersion?) {
         guard let version else { state.message = L("mkcert.noVersion"); return }
         state.run {
             var item = host
-            try await self.service.issue(&item, withMkcert: version)
-            try self.service.write(item)
-            if let index = self.hosts.firstIndex(where: { $0.id == item.id }) { self.hosts[index] = item }
-            try self.service.save(self.hosts)
-            self.services.nginx.reloadIfRunning()
+            var next = self.hosts
+            try await self.commit {
+                try await self.service.issue(&item, withMkcert: version)
+                try self.service.write(item)
+                if let index = next.firstIndex(where: { $0.id == item.id }) { next[index] = item }
+                try self.service.save(next)
+            }
+            self.hosts = next
             await self.loadCertificates()
             self.state.message = L("mkcert.signedDone") + item.name
             if let note = await self.writeHosts() { self.state.message += " · " + note }
+        }
+    }
+
+    // 多个写入口共用这份回滚：语法或磁盘写入失败时，vhost、证书和 JSON 一起恢复。
+    private func commit(_ write: () async throws -> Void) async throws {
+        _ = try service.load()
+        let fm = FileManager.default
+        let backup = fm.temporaryDirectory.appendingPathComponent("macenv-host-save-" + UUID().uuidString)
+        try fm.createDirectory(at: backup, withIntermediateDirectories: true)
+        var keepBackup = false
+        defer { if !keepBackup { try? fm.removeItem(at: backup) } }
+        let files = [service.nginxDirectory, service.rewriteDirectory, service.caDirectory, service.file]
+        for (index, file) in files.enumerated() where fm.fileExists(atPath: file.path) {
+            try fm.copyItem(at: file, to: backup.appendingPathComponent(String(index)))
+        }
+        do {
+            try await write()
+            try await services.nginx.reloadIfRunning()
+        } catch {
+            let original = error
+            do {
+                for (index, file) in files.enumerated() {
+                    let saved = backup.appendingPathComponent(String(index))
+                    if file == service.caDirectory, fm.fileExists(atPath: file.path) {
+                        // 根 CA 可能已经写入钥匙串，回滚站点不能删除它的私钥或换掉信任身份。
+                        for entry in try fm.contentsOfDirectory(at: file, includingPropertiesForKeys: nil)
+                        where !entry.lastPathComponent.hasPrefix("MacEnv-Root-CA") { try fm.removeItem(at: entry) }
+                        if fm.fileExists(atPath: saved.path) {
+                            for entry in try fm.contentsOfDirectory(at: saved, includingPropertiesForKeys: nil)
+                            where !entry.lastPathComponent.hasPrefix("MacEnv-Root-CA") {
+                                try fm.copyItem(at: entry, to: file.appendingPathComponent(entry.lastPathComponent))
+                            }
+                        }
+                    } else {
+                        if fm.fileExists(atPath: file.path) { try fm.removeItem(at: file) }
+                        if fm.fileExists(atPath: saved.path) { try fm.copyItem(at: saved, to: file) }
+                    }
+                }
+            } catch {
+                keepBackup = true
+                throw CommandError(message: original.localizedDescription + "\n" + error.localizedDescription + "\n" + backup.path)
+            }
+            throw original
         }
     }
 
@@ -114,24 +153,30 @@ final class HostViewModel: ObservableObject {
 
     func delete(_ host: Host) {
         state.run {
+            let next = self.hosts.filter { $0.id != host.id }
+            try await self.commit {
+                let file = self.service.nginxDirectory.appendingPathComponent("\(host.id).conf")
+                if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
+                try self.service.save(next)
+            }
             self.service.delete(host)
-            self.hosts.removeAll { $0.id == host.id }
-            if self.selectedID == host.id { self.selectedID = self.hosts.first?.id }
-            try self.service.save(self.hosts)
-            self.services.nginx.reloadIfRunning()
+            self.hosts = next
+            if self.selectedID == host.id { self.selectedID = next.first?.id }
             self.state.message = L("message.hostDeleted") + host.name
-            // 强制同步一次：站点都没了，hosts 里那条 127.0.0.1 必然是死记录（访问会落到 nginx
-            // 默认站点），留着就是垃圾。块内容没变时 syncHosts 直接返回 false，不会白弹授权框。
             if let note = await self.writeHosts(forced: true) { self.state.message += " · " + note }
         }
     }
 
     func toggleTop(_ host: Host) {
-        guard let index = hosts.firstIndex(where: { $0.id == host.id }) else { return }
-        var item = hosts.remove(at: index)
-        item.isTop.toggle()
-        hosts.insert(item, at: item.isTop ? hosts.filter(\.isTop).count : hosts.count)
-        persist()
+        state.run {
+            var next = self.hosts
+            guard let index = next.firstIndex(where: { $0.id == host.id }) else { return }
+            var item = next.remove(at: index)
+            item.isTop.toggle()
+            next.insert(item, at: item.isTop ? next.filter(\.isTop).count : next.count)
+            try self.service.save(next)
+            self.hosts = next
+        }
     }
 
     // Park：选一个目录，它下面每个子目录自动展开成一个站点（<子目录名>.<站点名>）。
@@ -139,19 +184,27 @@ final class HostViewModel: ObservableObject {
     func park(_ host: Host) {
         state.run {
             let root = URL(fileURLWithPath: host.root, isDirectory: true)
-            let children = ((try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey])) ?? [])
+            let children = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles)
                 .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
                 .map(\.lastPathComponent).sorted()
             var added = 0
-            for name in children {
-                let item = self.parked(host, name: name)
-                guard !self.hosts.contains(where: { $0.name == item.name }) else { continue }
-                try self.service.write(item)
-                self.hosts.append(item)
-                added += 1
+            var next = self.hosts
+            try await self.commit {
+                for name in children {
+                    var item = self.parked(host, name: name)
+                    guard !next.contains(where: { $0.name == item.name }) else { continue }
+                    self.service.autoFillRewrite(&item)
+                    if item.useSSL && item.autoSSL {
+                        if let mkcert = self.services.mkcert.defaultVersion { try await self.service.issue(&item, withMkcert: mkcert) }
+                        else { try await self.service.issue(&item) }
+                    }
+                    try self.service.write(item)
+                    next.append(item)
+                    added += 1
+                }
+                try self.service.save(next)
             }
-            try self.service.save(self.hosts)
-            self.services.nginx.reloadIfRunning()
+            self.hosts = next
             self.state.message = added == 0 ? L("message.parkNothing") : L("message.parkDone") + "\(added)"
             if added > 0, let note = await self.writeHosts() { self.state.message += " · " + note }
         }
@@ -215,10 +268,6 @@ final class HostViewModel: ObservableObject {
         return ((try? String(contentsOfFile: "/etc/hosts", encoding: .utf8)) ?? "").contains(block)
     }
 
-    private func persist() {
-        do { try service.save(hosts) } catch { state.message = error.localizedDescription }
-    }
-
     // MARK: - 站点配置文件
 
     // 每个 site 一份 nginx vhost：vhost/nginx/<id>.conf，文件名用 id（FlyEnv #700）。
@@ -227,12 +276,11 @@ final class HostViewModel: ObservableObject {
     }
 
     func saveConfig(_ host: Host, _ text: String) {
-        do {
-            try text.write(to: service.nginxDirectory.appendingPathComponent("\(host.id).conf"), atomically: true, encoding: .utf8)
-            services.nginx.reloadIfRunning()
-            state.message = L("message.configSavedReloaded")
-        } catch {
-            state.message = error.localizedDescription
+        state.run {
+            try await self.commit {
+                try text.write(to: self.service.nginxDirectory.appendingPathComponent("\(host.id).conf"), atomically: true, encoding: .utf8)
+            }
+            self.state.message = L("message.configSavedReloaded")
         }
     }
 }

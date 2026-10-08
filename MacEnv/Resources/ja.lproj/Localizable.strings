@@ -5,6 +5,7 @@
 "sidebar.web" = "Web サーバー";
 "sidebar.database" = "データベース";
 "sidebar.cache" = "キャッシュとキュー";
+"sidebar.governance" = "サービスガバナンス";
 "sidebar.language" = "言語環境";
 "sidebar.nginxToggleHint" = "クイック起動の Nginx を起動します。オフにすると現在の Nginx を停止します";
 "sidebar.databaseToggleHint" = "クイック起動の ";
@@ -56,6 +57,7 @@
 "action.enablePath" = "環境変数を有効化";
 "action.removePath" = "環境変数を解除";
 "action.quickStartHint" = "クイック起動に追加";
+"action.openWebUI" = "Web UI を開く";
 "action.customPathHint" = "カスタムバージョンパス：このパス配下の bin と sbin で実行ファイルを検索します";
 "action.createIni" = "php.ini を作成";
 "action.openFolder" = "フォルダを開く";
@@ -173,10 +175,12 @@
 "error.databaseStartFailed" = "起動に失敗しました";
 "error.databaseDataDirIncomplete" = "%@ のデータディレクトリの初期化が不完全です。%@ を削除して再試行してください";
 "error.mariadbInstallerMissing" = "MariaDB のデータディレクトリ初期化コマンドが見つかりません";
+"error.postgresInstallerMissing" = "initdb が見つからず、PostgreSQL のデータディレクトリを初期化できません";
 "error.brewMissing" = "Homebrew が見つかりません";
 "error.brewFormulaMissing" = "Homebrew が nginx のバージョン情報を返しませんでした";
 "error.catalogRequestFailed" = "Static バージョンサービスのリクエストに失敗しました";
 "error.downloadFailed" = "Static のダウンロードに失敗しました";
+"error.downloadIncomplete" = "ダウンロードが不完全です（ファイルサイズが一致しません）。再試行してください";
 "error.binaryMissing" = "Static パッケージに実行可能な がありません";
 "error.aliasNameInvalid" = "エイリアスにはコマンド名のみ使用できます";
 "error.phpIniNotFound" = "php.ini のパスを特定できません";
@@ -193,6 +197,12 @@
 "module.mysql" = "MySQL";
 "module.mariadb" = "MariaDB";
 "module.redis" = "Redis";
+"module.postgresql" = "PostgreSQL";
+"module.qdrant" = "Qdrant";
+"qdrant.openDashboard" = "Dashboardを開く";
+"module.clickhouse" = "ClickHouse";
+"module.consul" = "Consul";
+"module.etcd" = "etcd";
 "module.php" = "PHP";
 "module.go" = "Go";
 "settings.proxy" = "プロキシを有効にする";
@@ -218,9 +228,9 @@
 
 "menu.startQuickStart" = "クイック起動環境を起動";
 "menu.stopQuickStart" = "クイック起動環境を停止";
-"menu.open" = "MacEnv を開く";
+"menu.open" = "メイン画面";
 "menu.settings" = "設定";
-"menu.quit" = "MacEnv を終了";
+"menu.quit" = "終了";
 
 "tab.hosts" = "サイト";
 "tab.siteCert" = "サイト証明書";
@@ -337,6 +347,7 @@
 "message.uninstallingFor" = "%@ をアンインストール中";
 "message.taskStarting" = "準備中…";
 "message.taskCancelled" = "キャンセルしました";
+"message.taskInProgress" = "別のタスクが実行中です。完了までお待ちください";
 "error.brewFailed" = "Homebrew コマンドが失敗しました";
 "error.unpackFailed" = "展開に失敗しました";
 
@@ -368,15 +379,19 @@
 "error.macPortsInstallFailed" = "インストールは終了しましたが /opt/local/bin/port が見つかりません";
 "error.sdkmanMissing" = "SDKMAN がインストールされていません";
 "module.java" = "Java";
+"module.python" = "Python";
 "column.vendor" = "ベンダー";
 "java.setDefault" = "既定に設定";
 "sdkman.default" = "現在の既定";
 "message.noJavaInstalled" = "インストール済みの Java がありません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"message.noPythonInstalled" = "インストール済みの Python がありません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
 "message.noSdkmanVersions" = "SDKMAN がバージョンを返しませんでした。右上の更新を試してください。";
 "message.sdkmanDefaultSet" = "%@ を既定の Java に設定しました";
 "tools.missingSDKMAN" = "SDKMAN が見つかりません。「環境ツール」からインストールしてください。";
 "alert.uninstallJavaTitle" = "Homebrew JDK をアンインストールしますか？";
+"alert.uninstallPythonTitle" = "Homebrew Python をアンインストールしますか？";
 "alert.uninstallJavaMessage" = "brew uninstall %@ を実行します。他のバージョンの扱いは Homebrew に任せます。";
+"alert.uninstallPythonMessage" = "brew uninstall %@ を実行します。他のバージョンの扱いは Homebrew に任せます。";
 "alert.uninstallSdkmanJavaTitle" = "この JDK をアンインストールしますか？";
 "alert.uninstallSdkmanJavaMessage" = "sdk uninstall java %@ を実行します。~/.sdkman 内のこのバージョンは削除され、復元できません。";
 "module.maven" = "Maven";
@@ -392,3 +407,7 @@
 "alert.uninstallSdkmanMavenMessage" = "sdk uninstall maven %@ を実行します。~/.sdkman 内のこのバージョンは削除され、復元できません。";
 "alert.uninstallSdkmanGradleTitle" = "この Gradle をアンインストールしますか？";
 "alert.uninstallSdkmanGradleMessage" = "sdk uninstall gradle %@ を実行します。~/.sdkman 内のこのバージョンは削除され、復元できません。";
+"message.downloading" = "%@ をダウンロード中";
+"message.downloadProgress" = "%@ MB ダウンロード済み";
+
+"error.serviceStartTimeout" = "起動期限内にサービスの準備が完了しませんでした。";

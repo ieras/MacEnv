@@ -10,9 +10,12 @@ import ServiceManagement
 // （设置页不把它当模块开关）。留一个空组会在设置页画出「标题 + 点了没反应的开关 + 空白网格」。
 let moduleGroups: [(String, [String])] = [
     ("sidebar.web", ["hosts", "nginx"]),
-    ("sidebar.database", ["mysql", "mariadb"]),
+    ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant"]),
     ("sidebar.cache", ["redis"]),
-    ("sidebar.language", ["php", "go", "java"]),
+    // 服务治理：服务发现 / 配置中心这一类组件，不是数据库也不是缓存。
+    // 顺序跟 FlyEnv 的 serviceGovernance 组一致（consul 在 etcd 前面）。
+    ("sidebar.governance", ["consul", "etcd"]),
+    ("sidebar.language", ["php", "go", "java", "python"]),
 ]
 
 // 控制台组的内容。它跟 moduleGroups 一样要同时喂给侧栏和设置页，
@@ -24,10 +27,12 @@ func moduleName(_ id: String) -> String { L("module." + id) }
 // 长任务（装 / 卸 / 下载 / 解包）的进度。日志浮层显示它；跑完留在原地等用户关 ——
 // 失败原因就在最后几行，自动关掉等于让用户没法看。
 struct TaskProgress {
+    let id = UUID()
     let title: String
+    let packageDirectory: String?
     var log = ""
     var running = true
-    // 子进程句柄，取消按钮靠它真杀掉任务。提权任务交不上来（osascript 拿不到 pid），就杀不到。
+    // 普通命令持有 Process；提权命令由 Command 按独立进程组清理。
     var process: Process?
 }
 
@@ -36,6 +41,13 @@ struct TaskProgress {
 final class AppState: ObservableObject {
     @Published var busy = false
     @Published var task: TaskProgress?
+    private var streamingTask: Task<Void, Never>?
+
+    // 服务启停看 busy；装 / 卸 / 下载是长任务（task），两码事。安装按钮、版本页刷新按钮
+    // 要看 installBusy —— 不然安装跑着按钮还能再点，第二次点击被 runStreaming 静默丢掉。
+    var taskRunning: Bool { task?.running == true }
+    var installBusy: Bool { busy || taskRunning }
+    var runningTaskTitle: String? { task?.running == true ? task?.title : nil }
     // 提示可能跟上一条一模一样（同一个开关连点两次），光靠 message 的值没法让视图知道「又来了一条」，
     // 所以每次赋值都换一个 token，浮层靠 token 变化重新计时。
     @Published var message = "" {
@@ -136,7 +148,7 @@ extension AppState {
         Task {
             defer { busy = false }
             do { try await work() }
-            catch { message = error.localizedDescription }
+            catch { if !error.isCancelled { message = error.localizedDescription } }
             pruneQuickStart?()
         }
     }
@@ -146,27 +158,46 @@ extension AppState {
     // 右下角浮层实时刷。
     //
     // report 追加日志；attach 把子进程交上来，取消按钮才能真杀掉它。
-    func runStreaming(_ title: String,
+    func runStreaming(_ title: String, packageDirectory: URL? = nil,
                       _ work: @escaping (_ report: @escaping (String) -> Void, _ attach: @escaping (Process) -> Void) async throws -> Void) {
-        guard task == nil else { return }
-        task = TaskProgress(title: title)
-        Task {
-            do { try await work({ self.appendTaskLog($0) }, { self.task?.process = $0 }) }
-            catch { self.appendTaskLog("\n" + error.localizedDescription + "\n") }
+        guard !busy, task == nil else {
+            // 同一时间只跑一个长任务。 silently 丢掉点击用户会以为「点了没反应」，明说。
+            message = L("message.taskInProgress")
+            return
+        }
+        task = TaskProgress(title: title, packageDirectory: packageDirectory?.resolvingSymlinksInPath().path)
+        let id = task?.id
+        streamingTask = Task {
+            do {
+                try await work({
+                    guard self.task?.id == id, !Task.isCancelled else { return }
+                    self.appendTaskLog($0)
+                }, {
+                    guard self.task?.id == id else { return }
+                    self.task?.process = $0
+                })
+            } catch {
+                if !error.isCancelled, self.task?.id == id { self.appendTaskLog("\n" + error.localizedDescription + "\n") }
+            }
+            guard self.task?.id == id else { return }
             self.task?.running = false
             self.task?.process = nil
+            self.streamingTask = nil
             self.pruneQuickStart?()
         }
     }
 
-    func cancelTask() {
-        task?.process?.terminate()
-        task?.process = nil
-        appendTaskLog("\n" + L("message.taskCancelled") + "\n")
-        task?.running = false
+    // 安装只锁正在替换的包，其他版本与服务仍可使用。
+    func isChanging(_ directory: URL) -> Bool {
+        taskRunning && task?.packageDirectory == directory.resolvingSymlinksInPath().path
     }
 
-    func dismissTask() { task = nil }
+    func cancelTask() {
+        streamingTask?.cancel()
+        appendTaskLog("\n" + L("message.taskCancelled") + "\n")
+    }
+
+    func dismissTask() { if !taskRunning { task = nil } }
 
     // brew / curl 的进度条用 \r 原地刷新同一行，直接拼进日志会糊成一长条，
     // 所以 \r 处理成「丢掉当前行重写」，\n 才是真的换行。只留最后 20000 字。
@@ -195,6 +226,9 @@ extension AppState {
 protocol ServiceManageable {
     var kind: String { get }
     var targets: [LaunchTarget] { get }
+    // 端口固定、一次只能跑一个版本的服务为 true；nginx / php 每版本独立端口（进程），允许多个。
+    // 快捷启动的互斥和侧栏开关都按它走 —— 加新服务默认就有，不用再记着接线。
+    var singleInstance: Bool { get }
     func isRunning(_ versionID: String) -> Bool
     func port(_ versionID: String) -> String?
     func operate(_ action: String, _ versionID: String) async
@@ -202,6 +236,17 @@ protocol ServiceManageable {
     func stopAll() async
     func membership(_ versionID: String) -> PathMembership
     func togglePath(_ versionID: String)
+}
+
+@MainActor
+extension ServiceManageable {
+    // 数据库 / redis / postgresql / clickhouse / qdrant / consul / etcd 全是端口固定一实例。
+    var singleInstance: Bool { true }
+
+    // 侧栏开关用：优先起勾了快捷启动的版本，没配就用列表第一个（各服务扫描结果已按版本从大到小排）。
+    func preferredTarget(quickStart: [String]) -> LaunchTarget? {
+        targets.first { quickStart.contains($0.key) } ?? targets.first
+    }
 }
 
 @MainActor
@@ -213,12 +258,18 @@ final class AppViewModel: ObservableObject {
     let nginxVM: NginxViewModel
     let databaseVM: DatabaseViewModel
     let redisVM: RedisViewModel
+    let postgresVM: PostgresViewModel
+    let clickhouseVM: ClickHouseViewModel
+    let qdrantVM: QdrantViewModel
+    let consulVM: ConsulViewModel
+    let etcdVM: EtcdViewModel
     let certVM: MkCertViewModel
     let phpVM: PhpViewModel
     let swooleVM: SwooleViewModel
     let composerVM: ComposerViewModel
     let goVM: GoViewModel
     let javaVM: JavaViewModel
+    let pythonVM: PythonViewModel
     let mavenVM: MavenViewModel
     let gradleVM: GradleViewModel
     let hostVM: HostViewModel
@@ -229,17 +280,23 @@ final class AppViewModel: ObservableObject {
         nginxVM = NginxViewModel(state: state, services: services)
         databaseVM = DatabaseViewModel(state: state, services: services)
         redisVM = RedisViewModel(state: state, services: services)
+        postgresVM = PostgresViewModel(state: state, services: services)
+        clickhouseVM = ClickHouseViewModel(state: state, services: services)
+        qdrantVM = QdrantViewModel(state: state, services: services)
+        consulVM = ConsulViewModel(state: state, services: services)
+        etcdVM = EtcdViewModel(state: state, services: services)
         certVM = MkCertViewModel(state: state, services: services)
         phpVM = PhpViewModel(state: state, services: services)
         swooleVM = SwooleViewModel(state: state, services: services)
         composerVM = ComposerViewModel(state: state, services: services)
         goVM = GoViewModel(state: state, services: services)
         javaVM = JavaViewModel(state: state, services: services)
+        pythonVM = PythonViewModel(state: state, services: services)
         mavenVM = MavenViewModel(state: state, services: services)
         gradleVM = GradleViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
         toolsVM = ToolsViewModel(state: state, services: services)
-        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM]
+        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, consulVM, etcdVM]
         // 卸掉 Homebrew 会把 nginx / php / mysql / redis / go 一起带走，工具页看不到那些 VM，
         // 所以由这里注入一个「刷全部」的回调 —— 反过来让工具页依赖 AppViewModel 是转圈依赖。
         toolsVM.onRefreshAll = { [weak self] in await self?.refreshAll() }
@@ -248,6 +305,11 @@ final class AppViewModel: ObservableObject {
         services.mysql.onExit = { [weak self] in self?.databaseVM.objectWillChange.send() }
         services.mariadb.onExit = { [weak self] in self?.databaseVM.objectWillChange.send() }
         services.redis.onExit = { [weak self] in self?.redisVM.objectWillChange.send() }
+        services.postgres.onExit = { [weak self] in self?.postgresVM.objectWillChange.send() }
+        services.qdrant.onExit = { [weak self] in self?.qdrantVM.objectWillChange.send() }
+        services.clickhouse.onExit = { [weak self] in self?.clickhouseVM.objectWillChange.send() }
+        services.consul.onExit = { [weak self] in self?.consulVM.objectWillChange.send() }
+        services.etcd.onExit = { [weak self] in self?.etcdVM.objectWillChange.send() }
         // state 是独立的 ObservableObject，转发后观察本类的视图才会随它重绘。
         state.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         // 任何装/卸跑完都清洗一遍快捷启动：指向已不存在版本的 key 当场删掉，
@@ -276,14 +338,49 @@ final class AppViewModel: ObservableObject {
     func setQuickStart(_ key: String, enabled: Bool) {
         state.quickStartTargets.removeAll { $0 == key }
         guard enabled, let target = launchTargets.first(where: { $0.key == key }) else { return }
-        // 数据库同端口一次只能跑一个，快捷启动也只认一个；PHP-FPM 每版本独立 master，允许勾多个。
-        // Redis 同理 —— 默认都是 6379，勾两个版本必然撞端口。
-        if let kind = DatabaseKind(rawValue: target.kind) {
-            state.quickStartTargets.removeAll { (databaseVM.versions[kind] ?? []).map(\.id).contains($0) }
-        } else if target.kind == "redis" {
-            state.quickStartTargets.removeAll { redisVM.versions.map(\.id).contains($0) }
+        // 端口固定的服务一次只能跑一个版本，快捷启动也只认一个；
+        // nginx / php 每版本独立端口（进程），允许勾多个。
+        if let entry = entry(target.kind), entry.singleInstance {
+            state.quickStartTargets.removeAll { entry.targets.map(\.key).contains($0) }
         }
         state.quickStartTargets.append(key)
+    }
+
+    // 一个 kind 的聚合运行态：nginx / php / 数据库各有自己的判定，其余按「任一版本在跑」。
+    // 侧栏开关的 get 与托盘开关共用这里，保证两边显示一致。
+    func kindRunning(_ kind: String) -> Bool {
+        if kind == "nginx" { return nginxVM.isRunning }
+        if kind == "php" { return phpVM.fpmRunningAny }
+        if let dbKind = DatabaseKind(rawValue: kind) { return databaseVM.running(dbKind) }
+        return launchTargets.contains { $0.kind == kind && targetRunning($0.key) }
+    }
+
+    // 一个 kind 的整档启停，逻辑与侧栏 ServiceSwitch 的各 case 完全一致（托盘复用同一份）。
+    // 关 = 停掉该 kind 全部版本；开 = 优先起勾了快捷启动的版本，没配就起版本号最大的（redis 家族用首版，versions 已按版本号降序）。
+    func toggleKind(_ kind: String) {
+        guard !state.busy else { return }
+        if kind == "php" {
+            state.run { if self.phpVM.fpmRunningAny { await self.phpVM.stopAll() } else { await self.phpVM.startAll() } }
+            return
+        }
+        if kindRunning(kind) {
+            launch(launchTargets.filter { $0.kind == kind }.map(\.key), stop: true)
+            return
+        }
+        if kind == "nginx" {
+            let version = nginxVM.versions.first { state.quickStartTargets.contains("nginx:" + $0.id) }
+                ?? nginxVM.versions.max { $0.version.compare($1.version, options: .numeric) == .orderedAscending }
+            if let version { nginxVM.selectedID = version.id; launch(["nginx:" + version.id]) }
+        } else if let dbKind = DatabaseKind(rawValue: kind) {
+            let all = databaseVM.versions[dbKind] ?? []
+            let version = all.first { state.quickStartTargets.contains($0.id) }
+                ?? all.max { $0.version.compare($1.version, options: .numeric) == .orderedAscending }
+            if let version { databaseVM.selected[dbKind] = version.id; launch([version.id]) }
+        } else {
+            let target = launchTargets.first { $0.kind == kind && state.quickStartTargets.contains($0.key) }
+                ?? launchTargets.first { $0.kind == kind }
+            if let target { launch([target.key]) }
+        }
     }
 
     func launch(_ keys: [String], stop: Bool = false) {
@@ -333,14 +430,20 @@ final class AppViewModel: ObservableObject {
         async let composer: Void = composerVM.refresh()
         async let go: Void = goVM.refresh()
         async let java: Void = javaVM.refresh()
+        async let python: Void = pythonVM.refresh()
         async let maven: Void = mavenVM.refresh()
         async let gradle: Void = gradleVM.refresh()
         async let nginx: Void = nginxVM.refresh()
         async let mysql: Void = databaseVM.refresh(.mysql)
         async let mariadb: Void = databaseVM.refresh(.mariadb)
         async let redis: Void = redisVM.refresh()
+        async let postgres: Void = postgresVM.refresh()
+        async let clickhouse: Void = clickhouseVM.refresh()
+        async let qdrant: Void = qdrantVM.refresh()
+        async let consul: Void = consulVM.refresh()
+        async let etcd: Void = etcdVM.refresh()
         async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, java, maven, gradle, nginx, mysql, mariadb, redis, cert, hosts)
+        _ = await (swoole, composer, go, java, python, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, consul, etcd, cert, hosts)
     }
 }

@@ -8,117 +8,46 @@ func copyText(_ text: String) {
 }
 
 struct NginxIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image("NginxIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: "NginxIcon") }
 }
 
 struct DatabaseIcon: View {
     let kind: DatabaseKind
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image(kind == .mysql ? "MySQLIcon" : "MariaDBIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: kind == .mysql ? "MySQLIcon" : "MariaDBIcon") }
 }
 
 struct RedisIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
+    var body: some View { AssetIcon(name: "RedisIcon") }
+}
 
-    var body: some View {
-        Image("RedisIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+struct QdrantIcon: View {
+    var body: some View { AssetIcon(name: "QdrantIcon") }
 }
 
 // 站点 / 站点证书共用。mkcert 那个盾牌 + SSL 字样的图标，跟 FlyEnv 用的是同一份。
 struct SSLIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image("SSLIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: "SSLIcon") }
 }
 
 struct PhpIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image("PhpIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: "PhpIcon") }
 }
 
 struct SwooleIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image("SwooleIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: "SwooleIcon") }
 }
 
 // Go 官方 logo 的原始 viewBox 是 2586×1024（横向长条），这里套一层 1024×1024 的画布
 // 把它等比缩放居中，侧栏里跟 Nginx / PHP 那些方形图标站一排才不会显得忽大忽小。
 struct GoIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image("GoIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: "GoIcon") }
 }
 
 struct ComposerIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Image("ComposerIcon")
-            .renderingMode(.template)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFit()
-            .foregroundStyle(colorScheme == .dark ? .white : .blue)
-    }
+    var body: some View { AssetIcon(name: "ComposerIcon") }
 }
 
-// 按资源名取图标。上面那八个每个抄了一遍同样的五行情，从环境工具页开始不再这么写：
-// 资源名和调用处的 id 一一对应（MacPorts / SDKMAN / GVM / Java / Tools），
-// 一个 view 全包了。上面那批是历史遗留，没动它们。
-// Homebrew 不在这儿 —— 它是硬编码双色，要走 original，见下面的 HomebrewIcon。
+// 单色资源统一跟随主题；Homebrew 的双色资源保留 original 渲染。
 struct AssetIcon: View {
     let name: String
     @Environment(\.colorScheme) private var colorScheme
@@ -254,13 +183,9 @@ struct BrewListView: View {
     let busy: Bool
     let action: (_ brewAction: String, _ formula: String) -> Void
 
-    // 摊平成「公式 + 已装版本」行，没装过的公式给一行空版本。
+    // 摊平成「公式 + 已装版本」行，没装过的公式给一行空版本；排序统一走 Brew.listRows（版本从大到小）。
     private var rows: [(formula: BrewFormulaItem, version: String?)] {
-        formulae.flatMap { formula in
-            formula.installedVersions.isEmpty
-                ? [(formula, nil)]
-                : formula.installedVersions.sorted { $0.compare($1, options: .numeric) == .orderedDescending }.map { (formula, $0) }
-        }
+        Brew.listRows(formulae)
     }
 
     var body: some View {
@@ -356,11 +281,18 @@ struct VersionManagerHeader<Actions: View>: View {
 struct StaticVersionListView: View {
     let versions: [StaticVersion]
     var loading = false
+    // 装/卸走长任务（state.task），安装中要禁按钮 —— 光看 state.busy 挡不住重复点击。
+    var busy = false
     let install: (StaticVersion) -> Void
     let uninstall: (StaticVersion) -> Void
 
+    // 跟 brew / macports 清单同一个口径：版本从大到小，最新的在最上面。
+    private var rows: [StaticVersion] {
+        versions.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
+    }
+
     var body: some View {
-        DataTable(columns: versionTableColumns, rows: versions,
+        DataTable(columns: versionTableColumns, rows: rows,
                   loading: loading, loadingText: L("message.loadingVersions"),
                   empty: L("message.noStaticVersions")) { version in
             Link(destination: version.url) { Label(version.name, systemImage: "link") }.buttonStyle(.borderless)
@@ -373,6 +305,7 @@ struct StaticVersionListView: View {
                 if version.installed { uninstall(version) } else { install(version) }
             }
             .buttonStyle(.borderless)
+            .disabled(busy)
         }
     }
 }
@@ -386,6 +319,13 @@ struct ServiceIcon: View {
         case "nginx": NginxIcon()
         case "php": PhpIcon()
         case "redis": RedisIcon()
+        case "qdrant": QdrantIcon()
+        case "postgresql": AssetIcon(name: "PostgresIcon")
+        // clickhouse / consul / etcd 是后来加的模块，别漏 —— 漏了会静默落到下面的 default，
+        // 快捷启动列表里显示成 MySQL 的图标。
+        case "clickhouse": AssetIcon(name: "ClickHouseIcon")
+        case "consul": AssetIcon(name: "ConsulIcon")
+        case "etcd": AssetIcon(name: "EtcdIcon")
         default: DatabaseIcon(kind: DatabaseKind(rawValue: kind) ?? .mysql)
         }
     }
@@ -440,6 +380,7 @@ struct SegmentedTabs<Value: Hashable>: View {
 // 所有模块页面共用的外壳：顶部分段控件等分可用宽度（不会撑破窗口、切换也不抖），
 // 下面是统一底色的内容面板。页面只要给 tabs 和 content 两段。
 struct ModulePage<Tabs: View, Content: View>: View {
+    @EnvironmentObject private var state: AppState
     @ViewBuilder var tabs: () -> Tabs
     @ViewBuilder var content: () -> Content
 
@@ -448,7 +389,17 @@ struct ModulePage<Tabs: View, Content: View>: View {
             tabs()
                 .frame(maxWidth: .infinity)
                 .padding(.top, 12)
+            // 全局任务指示：装 / 卸 / 下载跑着的时候每个页面都有（进度浮层被关掉也不至于两眼一抹黑）。
+            if let title = state.runningTaskTitle {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text(title).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                    Spacer()
+                }
+            }
             content()
+                // 表格里的服务名 / 版本号 / 路径全都能拖选复制 —— 全部模块页共用这个外壳，一处加全局生效。
+                .textSelection(.enabled)
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
                 .background(AppTheme.panelBackground, in: RoundedRectangle(cornerRadius: AppTheme.radiusPanel))
                 .overlay(RoundedRectangle(cornerRadius: AppTheme.radiusPanel).stroke(AppTheme.stroke))
@@ -474,6 +425,32 @@ extension View {
     func panelHeader() -> some View { modifier(PanelHeader()) }
 }
 
+// SwiftUI 的 textSelection 在带按钮样式的面板标题 HStack 里没有实际启用拖选（多次实测）。
+// 用真正可选中的 NSTextField label，系统负责鼠标拖选和 ⌘C；只替换需要复制的标题，不影响整行按钮点击。
+struct SelectableTitle: NSViewRepresentable {
+    let text: String
+
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField(labelWithString: text)
+        field.isSelectable = true
+        field.isEditable = false
+        field.isBezeled = false
+        field.drawsBackground = false
+        field.backgroundColor = .clear
+        field.textColor = .labelColor
+        field.font = .systemFont(ofSize: 20)
+        field.lineBreakMode = .byClipping
+        field.maximumNumberOfLines = 1
+        field.setContentHuggingPriority(.required, for: .horizontal)
+        field.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return field
+    }
+
+    func updateNSView(_ field: NSTextField, context: Context) {
+        if field.stringValue != text { field.stringValue = text }
+    }
+}
+
 // 按模块 id 取图标：站点用 SSL 盾牌，nginx/php/go 有专属 icon，其余按数据库 kind 取。
 struct ModuleIcon: View {
     let id: String
@@ -485,8 +462,14 @@ struct ModuleIcon: View {
         case "php": PhpIcon()
         case "go": GoIcon()
         case "java": AssetIcon(name: "JavaIcon")
+        case "python": AssetIcon(name: "PythonIcon")
         case "tools": AssetIcon(name: "ToolsIcon")
         case "redis": RedisIcon()
+        case "qdrant": QdrantIcon()
+        case "postgresql": AssetIcon(name: "PostgresIcon")
+        case "clickhouse": AssetIcon(name: "ClickHouseIcon")
+        case "consul": AssetIcon(name: "ConsulIcon")
+        case "etcd": AssetIcon(name: "EtcdIcon")
         default: DatabaseIcon(kind: DatabaseKind(rawValue: id) ?? .mysql)
         }
     }

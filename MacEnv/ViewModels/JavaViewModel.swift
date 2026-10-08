@@ -33,7 +33,10 @@ final class JavaViewModel: ObservableObject, PortListHost {
         if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
         pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "java", directory: $0.directory)) })
         // brew 查不到（没装、或公式被 tap 挡了）不该把上面的扫描结果一起判成失败，丢后台慢慢填。
-        Task { if let items = try? await Brew.formulae("openjdk") { formulae = items } }
+        Task {
+            do { formulae = try await Brew.formulae("openjdk") }
+            catch { state.message = error.localizedDescription }
+        }
         objectWillChange.send()
     }
 

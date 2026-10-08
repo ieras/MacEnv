@@ -30,14 +30,16 @@ final class GradleService {
             candidates.append((home.appendingPathComponent("bin/gradle"), source))
         }
         for item in customDirectories.map({ URL(fileURLWithPath: $0, isDirectory: true) }) {
-            candidates.append((item.appendingPathComponent("bin/gradle"), L("source.custom")))
+            candidates += ["gradle", "bin/gradle"].map { (item.appendingPathComponent($0), L("source.custom")) }
         }
         var seen = Set<String>()
         var result: [GradleVersion] = []
         for (file, source) in candidates {
             let executable = file.resolvingSymlinksInPath()
             guard fm.isExecutableFile(atPath: executable.path), seen.insert(executable.path).inserted else { continue }
-            guard let version = await probe(executable) ?? versionFromDirectory(executable) else { continue }
+            var found = versionFromDirectory(executable)
+            if found == nil { found = await probe(executable) }
+            guard let version = found else { continue }
             result.append(GradleVersion(version: version,
                                          directory: executable.deletingLastPathComponent().deletingLastPathComponent(),
                                          executable: executable,
@@ -56,7 +58,7 @@ final class GradleService {
     }
 
     private var defaultHomes: [(URL, String)] {
-        [ (URL(fileURLWithPath: "/opt/homebrew/opt/gradle", isDirectory: true), "Homebrew") ]
+        ["/opt/homebrew/opt/gradle", "/usr/local/opt/gradle"].map { (URL(fileURLWithPath: $0, isDirectory: true), "Homebrew") }
     }
 
     // 跑 `gradle -v` 打印首行「Gradle 9.8.0」，没 JDK 时 gradle 起不来，所以目录名能抠出色版本就先抠

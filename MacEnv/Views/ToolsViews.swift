@@ -162,7 +162,7 @@ struct ToolHeader<Icon: View, Actions: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                Text(name).font(.title3)
+                SelectableTitle(text: name)
                 icon().frame(width: 22, height: 22)
                 if !status.isEmpty {
                     Text(status)

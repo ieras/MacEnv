@@ -28,7 +28,10 @@ final class ComposerViewModel: ObservableObject {
             versions = try services.composer.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "composer", directory: $0.directory)) })
             // brew 丢后台慢慢填，别拖住 refresh 返回（同 PhpViewModel）。
-            Task { formulae = (try? await Brew.formulae("composer")) ?? formulae }
+            Task {
+                do { formulae = try await Brew.formulae("composer") }
+                catch { state.message = error.localizedDescription }
+            }
         } catch {
             state.message = error.localizedDescription
         }

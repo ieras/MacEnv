@@ -69,20 +69,8 @@ final class RedisService {
     func installedVersions(customDirectories: [String] = []) async throws -> [RedisVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String, String?)] = []
-        if let brew = Brew.executable {
-            for formula in try await Brew.formulae("redis") {
-                for version in formula.installedVersions {
-                    for cellar in ["/opt/homebrew/Cellar", "/usr/local/Cellar"] {
-                        let file = URL(fileURLWithPath: cellar).appendingPathComponent(formula.name).appendingPathComponent(version).appendingPathComponent("bin/redis-server")
-                        if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Homebrew", formula.name)) }
-                    }
-                }
-                let prefix = try await Command.run(brew, ["--prefix", formula.name], environment: Command.brewEnvironment)
-                if prefix.status == 0 {
-                    let file = URL(fileURLWithPath: prefix.stdout.trimmingCharacters(in: .whitespacesAndNewlines)).appendingPathComponent("bin/redis-server")
-                    if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Homebrew", formula.name)) }
-                }
-            }
+        for (file, formula) in try await Brew.installedBinaries("redis", binary: "redis-server") {
+            candidates.append((file, "Homebrew", formula))
         }
         if let items = try? fm.contentsOfDirectory(at: versionsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) {
             for item in items {
@@ -118,11 +106,9 @@ final class RedisService {
 
     func adopt(_ versions: [RedisVersion]) async {
         guard !supervisor.isRunning else { return }
-        // redis 用 setproctitle 把 argv 改写成 "redis-server 127.0.0.1:6379"，
-        // MacEnv 的路径标记和 conf 路径全没了，supervisor.find 按命令行匹配永远找不到它。
-        // 走 pidfile + proc_pidpath，认的是内核里的真实可执行路径。
+        // 服务会改写 argv；由启动记录与内核身份一起确认归属。
         guard let existing = supervisor.owned(pidFile: pidFile, binary: "redis-server"),
-              let version = versions.first(where: { $0.executable.path == existing.command }) else { return }
+              let version = versions.first(where: { $0.executable.path == existing.executable }) else { return }
         runningVersion = version
         supervisor.adopt(existing)
     }
@@ -149,7 +135,7 @@ final class RedisService {
     }
 
     func stop() async throws {
-        guard let target = supervisor.owned(pidFile: pidFile, binary: "redis-server") else {
+        guard let target = supervisor.target ?? supervisor.owned(pidFile: pidFile, binary: "redis-server") else {
             supervisor.forget()
             runningVersion = nil
             try? FileManager.default.removeItem(at: pidFile)

@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 24 92 80" width="92" height="80" role="img" aria-label="MacEnv tray light appearance">
-  <!-- 浅色菜单栏变体：整体反色 —— 横条换深色，槽换浅色，绿灯在深条上依旧醒目。 -->
-  <rect x="25" y="31" width="78" height="13" rx="6.5" fill="#303A52"/>
-  <rect x="25" y="57.5" width="78" height="13" rx="6.5" fill="#303A52"/>
-  <rect x="25" y="84" width="78" height="13" rx="6.5" fill="#303A52"/>
-  <rect x="34" y="33" width="16" height="9" rx="4.5" fill="#F1F5F8"/>
-  <rect x="34" y="59.5" width="16" height="9" rx="4.5" fill="#F1F5F8"/>
-  <rect x="34" y="86" width="16" height="9" rx="4.5" fill="#F1F5F8"/>
-  <circle cx="56.5" cy="37.5" r="4.2" fill="#32D74B"/>
-  <circle cx="56.5" cy="64" r="4.2" fill="#32D74B"/>
-  <circle cx="56.5" cy="90.5" r="4.2" fill="#32D74B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="MacEnv tray light appearance">
+  <!-- 浅色菜单栏变体：整体反色 —— 横条换深色，槽换浅色，绿灯在深条上依旧醒目。
+       画布必须是正方形 —— 菜单栏图标按方形布局，横长画布会被撑成长条。 -->
+  <rect x="9" y="15" width="78" height="13" rx="6.5" fill="#303A52"/>
+  <rect x="9" y="41.5" width="78" height="13" rx="6.5" fill="#303A52"/>
+  <rect x="9" y="68" width="78" height="13" rx="6.5" fill="#303A52"/>
+  <rect x="18" y="17" width="16" height="9" rx="4.5" fill="#F1F5F8"/>
+  <rect x="18" y="43.5" width="16" height="9" rx="4.5" fill="#F1F5F8"/>
+  <rect x="18" y="70" width="16" height="9" rx="4.5" fill="#F1F5F8"/>
+  <circle cx="40.5" cy="21.5" r="4.2" fill="#32D74B"/>
+  <circle cx="40.5" cy="48" r="4.2" fill="#32D74B"/>
+  <circle cx="40.5" cy="74.5" r="4.2" fill="#32D74B"/>
 </svg>

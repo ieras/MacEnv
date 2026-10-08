@@ -1,6 +1,34 @@
 # MacEnv
 
-macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗口与菜单栏、Foundation 的 `Process` 托管服务进程，一个窗口把本机的 Nginx、MySQL、MariaDB、PHP、Go 管起来。
+macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗口与菜单栏、Foundation 的 `Process` 托管服务进程，一个窗口把本机的 Nginx、MySQL、MariaDB、PostgreSQL、Redis、ClickHouse、Qdrant、Consul、etcd、PHP、Go、Java、Python 管起来。
+
+## 界面预览
+
+### 浅色主题
+
+环境工具与 Go 版本管理，安装来源、版本与运行状态一目了然。
+
+<div align="center">
+<img src="AppIcons/screenshots/tools-light.png" width="46%" alt="浅色主题 · Homebrew 环境工具">
+<img src="AppIcons/screenshots/go-light.png" width="46%" alt="浅色主题 · Go GVM 版本管理">
+</div>
+
+### 深色主题
+
+快捷启动与 PHP-FPM 管理，常用服务一键启停，多版本独立运行。
+
+<div align="center">
+<img src="AppIcons/screenshots/quick-start-dark.png" width="46%" alt="深色主题 · 快捷启动">
+<img src="AppIcons/screenshots/php-dark.png" width="46%" alt="深色主题 · PHP-FPM 服务管理">
+</div>
+
+### 菜单栏
+
+从菜单栏查看服务状态、一键启停，并快速回到主界面。
+
+<div align="center">
+<img src="AppIcons/screenshots/tray-menu.png" width="283" alt="MacEnv 菜单栏图标与托盘菜单">
+</div>
 
 ## 功能
 
@@ -26,11 +54,35 @@ macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗�
 
 服务、版本、配置、错误日志、慢日志五个页签。首次启动自动初始化数据目录并设置 root 密码，两个服务的默认端口错开，可以同时运行。
 
+### PostgreSQL
+
+服务、版本、配置、日志四个页签。配置、数据、日志和密码口令全在 `initdb` 生成的数据目录里，MacEnv 不另外写一份配置文件 —— 这是 PostgreSQL 生态认的布局。版本来源覆盖 Homebrew、MacPorts 与自定义目录，默认端口 5432。
+
+### Redis
+
+服务、版本、配置、日志四个页签。版本来源覆盖 Homebrew、MacPorts 与自定义目录。`redis-server` 会把自己的进程标题改写成 `redis-server *:6379`，认领进程时不能只看可执行文件名，MacEnv 用 PID、内核记录的可执行路径和启动时间核对进程归属，并保留启动记录。
+
+### ClickHouse
+
+服务、版本、配置、日志四个页签。配置页在 `config.xml` 与 `users.xml` 之间切换，首次启动自动生成这两份配置并建好 `root` 超级用户。版本来源只有静态包与自定义目录 —— 官方只发 cask，Homebrew 的公式接口查不到，MacPorts 也没有 port。默认端口 8123（HTTP）与 9000（TCP）。
+
+### Qdrant
+
+服务、版本、配置、日志四个页签。跟 ClickHouse 一样只有静态包与自定义目录两条来源。配置、数据、快照与日志保存在 MacEnv 的服务目录内，独立于安装包。
+
+### Consul
+
+服务、版本、配置、日志四个页签。配置按主版本分文件（raft 存储格式跨大版本不兼容），端口、数据目录、日志路径全部写在 JSON 里，界面读它显示。版本来源覆盖静态包、MacPorts 与自定义目录，默认端口 8500（HTTP API）与 8600（DNS）。
+
+### etcd
+
+服务、版本、配置、日志四个页签。配置按主版本分 YAML 文件，`listen-client-urls` / `listen-peer-urls` 里写的端口就是界面上显示的端口。版本来源覆盖 Homebrew、静态包与自定义目录 —— MacPorts 没有 `etcd` 这个 port。默认端口 2379（客户端）与 2380（节点间通信）。
+
 ### PHP
 
 服务、版本、php.ini、禁用函数、扩展、日志、Swoole CLI、Composer 八个页签。
 
-- PHP-FPM 每个版本一个独立 master 进程和 socket，可以同时运行多个版本，站点按需选用
+- PHP-FPM 每个大版本与小版本组合（如 8.4、8.5）各用一个独立 master 和 socket；同组切换补丁版本时先停止旧实例，不同组可以同时运行，站点按需选用
 - 扩展管理支持 Homebrew 的 `shivammathur/extensions` tap 与 MacPorts 两种来源，能区分「已安装未启用」和「已启用」
 - 禁用函数列表 = 内置清单 ∪ 自定义 ∪ php.ini 里已写着的，勾选后直接写回 php.ini
 - Swoole CLI 与 Composer 作为自包含运行时一起管理，装好即可用
@@ -38,6 +90,22 @@ macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗�
 ### Go
 
 已安装、版本、GVM 三个页签。版本来源覆盖静态包、自定义目录、系统常见落点（`/usr/local/go`、Homebrew、MacPorts、`~/sdk/go*`、`~/go/go*`）以及 GVM 装的版本。
+
+### Java / Maven / Gradle
+
+Java 是「已安装 + 版本管理 + Maven + Gradle」四个页签，后两个与 Java 同构。
+
+- JDK 的版本与发行商直接读 `<Home>/release`，不起进程；来源覆盖静态包、Homebrew、MacPorts、SDKMAN 与自定义目录
+- 环境变量开关会顺带 `export JAVA_HOME` —— mvn / gradlew 启动先读它，只改 PATH 的话它们用的还是系统里版本最高的那个 JDK
+- Maven / Gradle 的版本来源是静态包、Homebrew、MacPorts、SDKMAN 四条渠道
+
+### Python
+
+已安装、版本管理两个页签，跟 Go 一样属于「不需要启动服务」的模块。版本来源覆盖静态包（python-build-standalone）、Homebrew、MacPorts、python.org 官方安装器，以及系统自带的 `/usr/bin/python3`。
+
+- 启用某个版本时写入 PATH 的是 MacEnv 自己造的 shim 目录，不是 Python Home —— Homebrew 的 keg 里 `bin/` 只有 `python3`、`libexec/bin/` 只有 `python`，MacPorts 更是直接在打包时删掉了 `bin/python3`，没有任何一个目录能同时提供这两个名字
+- shim 按版本隔离（目录名带版本与路径摘要），切换版本时软链目标跟着变，界面才能判出当前启用的是哪一个
+- 版本号跑一次 `--version` 读出来，Python 2 把结果写到 stderr 也能解析
 
 ### 版本与 PATH
 
@@ -64,20 +132,26 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/mysql-light.png" width="86" hspace="1" alt="MySQL">
 <img src="AppIcons/tile/mariadb-light.png" width="86" hspace="1" alt="MariaDB">
 <img src="AppIcons/tile/redis-light.png" width="86" hspace="1" alt="Redis">
+<img src="AppIcons/tile/postgresql-light.png" width="86" hspace="1" alt="PostgreSQL">
+<img src="AppIcons/tile/clickhouse-light.png" width="86" hspace="1" alt="ClickHouse">
+<img src="AppIcons/tile/qdrant-light.png" width="86" hspace="1" alt="Qdrant">
+<img src="AppIcons/tile/consul-light.png" width="86" hspace="1" alt="Consul">
+<img src="AppIcons/tile/etcd-light.png" width="86" hspace="1" alt="etcd">
 <img src="AppIcons/tile/php-light.png" width="86" hspace="1" alt="PHP">
+<br>
 <img src="AppIcons/tile/go-light.png" width="86" hspace="1" alt="Go">
 <img src="AppIcons/tile/java-light.png" width="86" hspace="1" alt="Java">
+<img src="AppIcons/tile/python-light.png" width="86" hspace="1" alt="Python">
 <img src="AppIcons/tile/maven-light.png" width="86" hspace="1" alt="Maven">
-<br>
 <img src="AppIcons/tile/gradle-light.png" width="86" hspace="1" alt="Gradle">
 <img src="AppIcons/tile/homebrew-light.png" width="86" hspace="1" alt="Homebrew">
 <img src="AppIcons/tile/macports-light.png" width="86" hspace="1" alt="MacPorts">
 <img src="AppIcons/tile/sdkman-light.png" width="86" hspace="1" alt="SDKMAN">
 <img src="AppIcons/tile/composer-light.png" width="86" hspace="1" alt="Composer">
+<br>
 <img src="AppIcons/tile/swoole-light.png" width="86" hspace="1" alt="Swoole CLI">
 <img src="AppIcons/tile/tools-light.png" width="86" hspace="1" alt="环境工具">
 <img src="AppIcons/tile/ssl-light.png" width="86" hspace="1" alt="SSL 证书">
-<br>
 <img src="AppIcons/tile/start-light.png" width="86" hspace="1" alt="快捷启动">
 <img src="AppIcons/tile/tray-light.png" width="86" hspace="1" alt="菜单栏">
 <img src="AppIcons/tile/gvm-light.png" width="86" hspace="1" alt="GVM 矢量字标">
@@ -89,20 +163,26 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/mysql-dark.png" width="86" hspace="1" alt="MySQL">
 <img src="AppIcons/tile/mariadb-dark.png" width="86" hspace="1" alt="MariaDB">
 <img src="AppIcons/tile/redis-dark.png" width="86" hspace="1" alt="Redis">
+<img src="AppIcons/tile/postgresql-dark.png" width="86" hspace="1" alt="PostgreSQL">
+<img src="AppIcons/tile/clickhouse-dark.png" width="86" hspace="1" alt="ClickHouse">
+<img src="AppIcons/tile/qdrant-dark.png" width="86" hspace="1" alt="Qdrant">
+<img src="AppIcons/tile/consul-dark.png" width="86" hspace="1" alt="Consul">
+<img src="AppIcons/tile/etcd-dark.png" width="86" hspace="1" alt="etcd">
 <img src="AppIcons/tile/php-dark.png" width="86" hspace="1" alt="PHP">
+<br>
 <img src="AppIcons/tile/go-dark.png" width="86" hspace="1" alt="Go">
 <img src="AppIcons/tile/java-dark.png" width="86" hspace="1" alt="Java">
+<img src="AppIcons/tile/python-dark.png" width="86" hspace="1" alt="Python">
 <img src="AppIcons/tile/maven-dark.png" width="86" hspace="1" alt="Maven">
-<br>
 <img src="AppIcons/tile/gradle-dark.png" width="86" hspace="1" alt="Gradle">
 <img src="AppIcons/tile/homebrew-dark.png" width="86" hspace="1" alt="Homebrew">
 <img src="AppIcons/tile/macports-dark.png" width="86" hspace="1" alt="MacPorts">
 <img src="AppIcons/tile/sdkman-dark.png" width="86" hspace="1" alt="SDKMAN">
 <img src="AppIcons/tile/composer-dark.png" width="86" hspace="1" alt="Composer">
+<br>
 <img src="AppIcons/tile/swoole-dark.png" width="86" hspace="1" alt="Swoole CLI">
 <img src="AppIcons/tile/tools-dark.png" width="86" hspace="1" alt="环境工具">
 <img src="AppIcons/tile/ssl-dark.png" width="86" hspace="1" alt="SSL 证书">
-<br>
 <img src="AppIcons/tile/start-dark.png" width="86" hspace="1" alt="快捷启动">
 <img src="AppIcons/tile/tray-dark.png" width="86" hspace="1" alt="菜单栏">
 <img src="AppIcons/tile/gvm-dark.png" width="86" hspace="1" alt="GVM 矢量字标">
@@ -177,13 +257,13 @@ xcodebuild -project MacEnv.xcodeproj -scheme MacEnv -configuration Release \
 
 ## 发布
 
-推一个 `v*` 的 tag 就会触发 `.github/workflows/release.yml`：在 macOS runner 上按 `arm64`、`x86_64` 各构建一次，校验产物资源和可执行文件架构，分别打包成 `MacEnv-arm64.zip` 与 `MacEnv-x86_64.zip`，算出各自的 SHA-256，然后挂到对应的 Release 上。
+推一个 `v*` 的 tag 就会触发 `.github/workflows/release.yml`：在 macOS runner 上按 `arm64`、`x86_64` 各构建一次，校验产物资源和可执行文件架构，分别打包成 `MacEnv-arm64.zip` 与 `MacEnv-x86_64.zip`，算出各自的 SHA-256，然后挂到对应的 Release 上。发布前同步 `MacEnv/Info.plist` 的版本号，tag 的注解消息就是 Release 的更新说明。
 
 runner 是 arm64 机器，x86_64 那一份是交叉编译出来的。只编译、不跑测试，所以不需要再开一台 Intel runner。
 
 ```sh
-git tag v1.0.0
-git push --tags
+git tag -a v1.1.2
+git push origin main v1.1.2
 ```
 
 workflow 也支持手动触发，手动跑只编译不发布，用来验证流程本身。
@@ -204,7 +284,7 @@ MacEnv/
 │   └── Info.plist
 ├── Tests/MacEnvTests/     # 单元测试
 ├── Design/                # 应用图标的设计稿与源文件
-├── AppIcons/              # 图标源 SVG、128 × 128 渲染图与展示用圆角图块
+├── AppIcons/              # 图标源 SVG、渲染图、圆角图块与 screenshots/ 界面截图
 ├── scripts/               # 构建、测试与检查脚本
 └── .github/workflows/     # 自动发布流程
 ```
@@ -222,13 +302,21 @@ MacEnv/
 ├── server/nginx/versions/        # 静态包安装的 Nginx
 ├── server/mysql/                 # MySQL 配置、数据目录、日志
 ├── server/mariadb/
+├── server/postgresql/            # PostgreSQL 的 postgresql.pid、data-<主版本>/（initdb 生成配置、数据、日志）、versions/
+├── server/clickhouse/            # ClickHouse 的 config.xml / users.xml、数据目录、日志
+├── server/qdrant/                # Qdrant 的配置、数据、快照、日志与 versions/
+├── server/redis/                 # Redis 的 redis-<主版本>.conf、db-<主版本>/、日志
+├── server/consul/                # Consul 的 JSON 配置、数据目录、日志、PID
 ├── server/php-fpm/<两位版本>/     # 每个 PHP 版本的 FPM 配置、日志、运行目录
 ├── server/golang/versions/       # 静态包安装的 Go
+├── server/java/versions/         # 静态包安装的 JDK
+├── server/python/versions/       # 静态包安装的 Python
 ├── server/swoole-cli/versions/
 ├── server/composer/versions/
 ├── vhost/                        # 站点 vhost、伪静态、日志
 ├── CA/                           # 自签根 CA 与站点证书
 ├── env/                          # MacEnv 管理的 PATH 软链接
+├── shims/python/                 # Python 的 python / python3 / python3.x 名字补全
 ├── alias/                        # 命令别名脚本
 ├── backup/                       # 用户 shell 配置的备份
 ├── cache/                        # 下载的安装包

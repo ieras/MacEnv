@@ -98,7 +98,7 @@ final class ToolsViewModel: ObservableObject {
             // 摘 MacEnv 自己写的 PATH 软链，再清 shell 配置里那几行 —— 软链和 PATH 都指向
             // /opt/local，目录删了它们就是悬空的，留着下次开 shell 会报一行错。
             try self.services.paths.removeLinks(pointingInside: URL(fileURLWithPath: "/opt/local", isDirectory: true))
-            try self.services.paths.removeLines(containing: "/opt/local", from: [".zprofile", ".zshrc", ".profile", ".bash_profile", ".bash_login"].map { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent($0) })
+            _ = try self.services.paths.removeLines(containing: "/opt/local", from: [".zprofile", ".zshrc", ".profile", ".bash_profile", ".bash_login"].map { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent($0) })
             await self.finish()
         }
     }
@@ -124,7 +124,7 @@ final class ToolsViewModel: ObservableObject {
             _ = report
             try self.services.paths.removeLinks(pointingInside: self.services.tools.sdkmanRoot)
             try self.services.tools.uninstallSDKMAN()
-            try self.services.paths.removeLines(containing: "sdkman", from: self.services.tools.sdkmanProfileFiles)
+            _ = try self.services.paths.removeLines(containing: "sdkman", from: self.services.tools.sdkmanProfileFiles)
             await self.finish()
         }
     }

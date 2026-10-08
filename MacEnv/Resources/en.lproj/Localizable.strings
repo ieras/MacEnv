@@ -5,6 +5,7 @@
 "sidebar.web" = "Web server";
 "sidebar.database" = "Database";
 "sidebar.cache" = "Cache & Queue";
+"sidebar.governance" = "Service Governance";
 "sidebar.language" = "Languages";
 "sidebar.nginxToggleHint" = "Starts the Nginx version in quick start; turning it off stops the current Nginx";
 "sidebar.databaseToggleHint" = "Starts the ";
@@ -56,6 +57,7 @@
 "action.enablePath" = "Enable PATH entry";
 "action.removePath" = "Remove PATH entry";
 "action.quickStartHint" = "Add to quick start";
+"action.openWebUI" = "Open Web UI";
 "action.customPathHint" = "Custom version path: executables are looked up in the bin and sbin of this path";
 "action.createIni" = "Create php.ini";
 "action.openFolder" = "Open folder";
@@ -173,10 +175,12 @@
 "error.databaseStartFailed" = "Failed to start";
 "error.databaseDataDirIncomplete" = "%@ data directory is incomplete, remove %@ and retry";
 "error.mariadbInstallerMissing" = "MariaDB data directory initialiser not found";
+"error.postgresInstallerMissing" = "initdb not found; cannot initialise the PostgreSQL data directory";
 "error.brewMissing" = "Homebrew not detected";
 "error.brewFormulaMissing" = "Homebrew returned no nginx version info";
 "error.catalogRequestFailed" = "Static version service request failed";
 "error.downloadFailed" = "Static download failed";
+"error.downloadIncomplete" = "Download incomplete (file size differs from server). Please retry";
 "error.binaryMissing" = "Static archive contains no executable ";
 "error.aliasNameInvalid" = "Alias must be a plain command name";
 "error.phpIniNotFound" = "Could not determine the php.ini path";
@@ -193,6 +197,12 @@
 "module.mysql" = "MySQL";
 "module.mariadb" = "MariaDB";
 "module.redis" = "Redis";
+"module.postgresql" = "PostgreSQL";
+"module.qdrant" = "Qdrant";
+"qdrant.openDashboard" = "Open Dashboard";
+"module.clickhouse" = "ClickHouse";
+"module.consul" = "Consul";
+"module.etcd" = "etcd";
 "module.php" = "PHP";
 "module.go" = "Go";
 "settings.proxy" = "Enable proxy";
@@ -218,9 +228,9 @@
 
 "menu.startQuickStart" = "Start quick start environment";
 "menu.stopQuickStart" = "Stop quick start environment";
-"menu.open" = "Open MacEnv";
+"menu.open" = "Main Window";
 "menu.settings" = "Settings";
-"menu.quit" = "Quit MacEnv";
+"menu.quit" = "Quit";
 
 "tab.hosts" = "Sites";
 "tab.siteCert" = "Site Certificates";
@@ -337,6 +347,7 @@
 "message.uninstallingFor" = "Uninstalling %@";
 "message.taskStarting" = "Preparing…";
 "message.taskCancelled" = "Cancelled";
+"message.taskInProgress" = "A task is already running. Wait for it to finish";
 "error.brewFailed" = "Homebrew command failed";
 "error.unpackFailed" = "Failed to unpack the archive";
 
@@ -368,15 +379,19 @@
 "error.macPortsInstallFailed" = "Install finished but /opt/local/bin/port is missing";
 "error.sdkmanMissing" = "SDKMAN is not installed";
 "module.java" = "Java";
+"module.python" = "Python";
 "column.vendor" = "Vendor";
 "java.setDefault" = "Set default";
 "sdkman.default" = "Default";
 "message.noJavaInstalled" = "No Java installed yet. Install one from Version Manager or add a local directory.";
+"message.noPythonInstalled" = "No Python installed yet. Install one from Version Manager or add a local directory.";
 "message.noSdkmanVersions" = "SDKMAN returned no versions — try refreshing from the top right.";
 "message.sdkmanDefaultSet" = "Set %@ as the default Java";
 "tools.missingSDKMAN" = "SDKMAN not found — install it from Environment Tools.";
 "alert.uninstallJavaTitle" = "Uninstall Homebrew JDK?";
+"alert.uninstallPythonTitle" = "Uninstall Homebrew Python?";
 "alert.uninstallJavaMessage" = "This runs brew uninstall %@. Other versions are left to Homebrew.";
+"alert.uninstallPythonMessage" = "This runs brew uninstall %@. Other versions are left to Homebrew.";
 "alert.uninstallSdkmanJavaTitle" = "Uninstall this JDK?";
 "alert.uninstallSdkmanJavaMessage" = "This runs sdk uninstall java %@. That version is removed from ~/.sdkman and cannot be recovered.";
 "module.maven" = "Maven";
@@ -392,3 +407,7 @@
 "alert.uninstallSdkmanMavenMessage" = "This runs sdk uninstall maven %@. That version is removed from ~/.sdkman and cannot be recovered.";
 "alert.uninstallSdkmanGradleTitle" = "Uninstall this Gradle?";
 "alert.uninstallSdkmanGradleMessage" = "This runs sdk uninstall gradle %@. That version is removed from ~/.sdkman and cannot be recovered.";
+"message.downloading" = "Downloading %@";
+"message.downloadProgress" = "Downloaded %@ MB";
+
+"error.serviceStartTimeout" = "Service did not become ready before the startup deadline.";

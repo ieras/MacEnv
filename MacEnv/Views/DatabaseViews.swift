@@ -60,7 +60,7 @@ struct DatabaseManagementView: View {
     private var serviceTable: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(kind.title).font(.title3)
+                SelectableTitle(text: kind.title)
                 DatabaseIcon(kind: kind).frame(width: 22, height: 22)
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .buttonStyle(.borderless)
@@ -119,7 +119,7 @@ struct DatabaseManagementView: View {
         return VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: sources, source: $source,
                                  linkURL: URL(string: kind == .mysql ? "https://dev.mysql.com/downloads/" : "https://mariadb.org/download/")!,
-                                 busy: app.state.busy, refreshing: refreshing, onRefresh: {
+                                 busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
                 refreshing = true
                 Task { await vm.refreshVersionManager(kind, source, force: true); refreshing = false }
             }, actions: {})
@@ -128,13 +128,13 @@ struct DatabaseManagementView: View {
                 if vm.formulae[kind, default: []].isEmpty {
                     Text(L("brew.noFormulaList")).foregroundStyle(.secondary).padding(24)
                 } else {
-                    BrewListView(formulae: vm.formulae[kind, default: []], busy: app.state.busy) { vm.brewAction($0, kind, $1) }
+                    BrewListView(formulae: vm.formulae[kind, default: []], busy: app.state.installBusy) { vm.brewAction($0, kind, $1) }
                 }
             } else if source == "Static" {
-                StaticVersionListView(versions: vm.staticVersions[kind, default: []]) { vm.installStatic($0, kind) } uninstall: { vm.uninstallStatic($0, kind) }
+                StaticVersionListView(versions: vm.staticVersions[kind, default: []], busy: app.state.installBusy) { vm.installStatic($0, kind) } uninstall: { vm.uninstallStatic($0, kind) }
             } else if source == "MacPorts" {
                 if app.toolsVM.macPortsInstalled {
-                    PortListView(items: vm.portItems[kind, default: []], loading: vm.portLoading, busy: app.state.busy,
+                    PortListView(items: vm.portItems[kind, default: []], loading: vm.portLoading, busy: app.state.installBusy,
                                  load: { await vm.loadPortItems(kind) },
                                  install: { vm.portAction("install", kind, $0) },
                                  uninstall: { vm.portAction("uninstall", kind, $0) })

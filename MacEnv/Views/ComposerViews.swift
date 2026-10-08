@@ -34,13 +34,13 @@ struct ComposerPanel: View {
             Divider()
             switch source {
             case "static":
-                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
+                StaticVersionListView(versions: vm.staticVersions, loading: vm.staticLoading, busy: app.state.installBusy) { vm.installStatic($0) } uninstall: { vm.uninstallStatic($0) }
             case "brew":
                 if vm.formulae.isEmpty {
                     Text(L("brew.missing")).padding(24)
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
-                    BrewListView(formulae: vm.formulae, busy: app.state.busy) { vm.brewAction($0, formula: $1) }
+                    BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { vm.brewAction($0, formula: $1) }
                 }
             default:
                 installedTable

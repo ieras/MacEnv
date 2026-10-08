@@ -77,7 +77,7 @@ final class PathService {
     func removeLines(containing needle: String, from files: [URL]) throws -> Int {
         var changed = 0
         for file in files where FileManager.default.fileExists(atPath: file.path) {
-            guard let original = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            let original = try String(contentsOf: file, encoding: .utf8)
             // omittingEmptySubsequences: false —— 空行也是用户格式的一部分，别顺手并掉。
             let next = original.split(separator: "\n", omittingEmptySubsequences: false)
                 .filter { !String($0).localizedCaseInsensitiveContains(needle) }
@@ -116,8 +116,8 @@ final class PathService {
         guard !name.isEmpty, !name.contains("/"), !name.contains("\\") else { throw CommandError(message: L("error.aliasNameInvalid")) }
         try FileManager.default.createDirectory(at: aliasDirectory, withIntermediateDirectories: true)
         let file = aliasDirectory.appendingPathComponent(name)
-        // 别名脚本要用用户自己的 shell 跑；fish 里 $@ 得写成 $argv。
-        try "#!\(shell)\n\(doubleQuoted(shellPath(executable.path))) \(shellName == "fish" ? "$argv" : "$@")\n".write(to: file, atomically: true, encoding: .utf8)
+        // 可执行脚本由内核按 shebang 启动，与用户的交互 shell 无关；引号保留空参数与空格。
+        try "#!/bin/sh\nexec \(singleQuoted(executable.path)) \"$@\"\n".write(to: file, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: file.path)
         try rewriteShellPath()
     }
@@ -154,12 +154,14 @@ final class PathService {
     static func shellBlock(paths: [String], exports: [(String, String)], fish: Bool) -> String {
         let begin = "# >>> MacEnv PATH >>>"
         let end = "# <<< MacEnv PATH <<<"
-        // fish 的 PATH 是数组，得一个一个塞，不能用 export PATH="a:b:c" 那套。
+        let quote: (String) -> String = { value in
+            fish ? "'" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'") + "'" : singleQuoted(value)
+        }
         let pathLine = fish
-            ? "set -gx PATH \(paths.map { "\"\($0)\"" }.joined(separator: " ")) $PATH\n"
-            : "export PATH=\"\(paths.joined(separator: ":")):$PATH\"\n"
+            ? "set -gx PATH \(paths.map(quote).joined(separator: " ")) $PATH\n"
+            : "export PATH=\(quote(paths.joined(separator: ":"))):\"$PATH\"\n"
         let homeLines = exports.map { name, value in
-            fish ? "set -gx \(name) \"\(value)\"\n" : "export \(name)=\"\(value)\"\n"
+            fish ? "set -gx \(name) \(quote(value))\n" : "export \(name)=\(quote(value))\n"
         }.joined()
         return "\(begin)\n\(pathLine)\(homeLines)\(end)\n"
     }
@@ -171,15 +173,15 @@ final class PathService {
         try fm.createDirectory(at: shellFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         let begin = "# >>> MacEnv PATH >>>"
         let end = "# <<< MacEnv PATH <<<"
-        let original = (try? String(contentsOf: shellFile, encoding: .utf8)) ?? ""
+        let original = fm.fileExists(atPath: shellFile.path) ? try String(contentsOf: shellFile, encoding: .utf8) : ""
         var content = original
         if let start = content.range(of: begin), let finish = content.range(of: end, range: start.lowerBound..<content.endIndex) {
             content.removeSubrange(start.lowerBound..<finish.upperBound)
         }
-        // 写进 shell 配置的那一版把家目录换成 $HOME（`~` 在引号里不展开，会直接让这条 PATH 失效）。
+        // 绝对路径按字面量引用，目录里的 $、反引号和引号不会被 shell 执行。
         // JAVA_HOME 这一行与 PATH 同生死：软链没了，下次重写它自然就不在里面了，不用另外清。
-        let block = Self.shellBlock(paths: managedPaths().map(shellPath),
-                                    exports: managedExports().map { ($0.0, shellPath($0.1.path)) },
+        let block = Self.shellBlock(paths: managedPaths(),
+                                    exports: managedExports().map { ($0.0, $0.1.path) },
                                     fish: shellName == "fish")
         if !content.isEmpty && !content.hasSuffix("\n") { content.append("\n") }
         let next = content + block

@@ -41,15 +41,18 @@ final class HostService {
 
     // MARK: - host.json
 
-    func load() -> [Host] {
-        guard let data = try? Data(contentsOf: file), !data.isEmpty else { return [] }
-        if let list = try? JSONDecoder().decode([Host].self, from: data) { return list }
-        // 解不出来就别装作没事：留一份原文，用户还能自己捞。
-        try? data.write(to: file.appendingPathExtension("bak"), options: .atomic)
-        return []
+    func load() throws -> [Host] {
+        guard FileManager.default.fileExists(atPath: file.path) else { return [] }
+        let data = try Data(contentsOf: file)
+        do { return try JSONDecoder().decode([Host].self, from: data) }
+        catch {
+            try? data.write(to: file.appendingPathExtension("bak"), options: .atomic)
+            throw error
+        }
     }
 
     func save(_ hosts: [Host]) throws {
+        _ = try load()
         try prepare()
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
@@ -115,12 +118,12 @@ final class HostService {
 
         content = content
             .replacingOccurrences(of: "#Server_Alias#", with: host.aliases.joined(separator: " "))
-            .replacingOccurrences(of: "#Server_Root#", with: host.root)
-            .replacingOccurrences(of: "#Rewrite_Path#", with: rewriteDirectory.path)
+            .replacingOccurrences(of: "#Server_Root#", with: nginxQuotedContent(host.root))
+            .replacingOccurrences(of: "#Rewrite_Path#", with: nginxQuotedContent(rewriteDirectory.path))
             .replacingOccurrences(of: "#Server_Name#", with: host.id)
-            .replacingOccurrences(of: "#Log_Path#", with: logsDirectory.path)
-            .replacingOccurrences(of: "#Server_Cert#", with: host.sslCert)
-            .replacingOccurrences(of: "#Server_CertKey#", with: host.sslKey)
+            .replacingOccurrences(of: "#Log_Path#", with: nginxQuotedContent(logsDirectory.path))
+            .replacingOccurrences(of: "#Server_Cert#", with: nginxQuotedContent(host.sslCert))
+            .replacingOccurrences(of: "#Server_CertKey#", with: nginxQuotedContent(host.sslKey))
             .replacingOccurrences(of: "#Port_Nginx#", with: "\(host.port)")
             .replacingOccurrences(of: "#Port_Nginx_SSL#", with: "\(host.sslPort)")
         // 有 PHP 版本就 include 那一份 enable-php-<两位版本>.conf（NginxService.prepare 铺的），
@@ -164,8 +167,7 @@ final class HostService {
 
     func delete(_ host: Host) {
         let fm = FileManager.default
-        // 顺带清掉按 name 命名的历史文件：那些文件会让 nginx 加载到重复的 server 块。
-        for base in [host.id, host.name] where !base.isEmpty {
+        for base in [host.id] {
             for url in [nginxDirectory.appendingPathComponent("\(base).conf"),
                         rewriteDirectory.appendingPathComponent("\(base).conf"),
                         logsDirectory.appendingPathComponent("\(base).log"),
@@ -200,15 +202,16 @@ final class HostService {
         let block = hostsBlock(hosts)
         try block.write(to: hostsFile, atomically: true, encoding: .utf8)
         let path = "/etc/hosts"
-        let current = (try? String(contentsOfFile: path, encoding: .utf8)) ?? ""
+        let current = try String(contentsOfFile: path, encoding: .utf8)
         // 块外的内容一个字节都不动，只把标记块整段换掉。
         let outside = current.replacingOccurrences(of: "(?s)#X-HOSTS-BEGIN#.*?#X-HOSTS-END#\\n?", with: "", options: .regularExpression)
         let next = block.isEmpty ? outside : outside + (outside.isEmpty || outside.hasSuffix("\n") ? "" : "\n") + block
         guard next != current else { return false }
         let temporary = root.appendingPathComponent("hosts.tmp")
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        defer { try? FileManager.default.removeItem(at: temporary) }
         try next.write(to: temporary, atomically: true, encoding: .utf8)
-        try await privileged("cat '\(temporary.path)' > \(path) || exit 1; dscacheutil -flushcache; killall -HUP mDNSResponder 2>/dev/null; exit 0")
-        try? FileManager.default.removeItem(at: temporary)
+        try await privileged("cat \(singleQuoted(temporary.path)) > \(path) || exit 1; dscacheutil -flushcache; killall -HUP mDNSResponder 2>/dev/null; exit 0")
         return true
     }
 
