@@ -56,6 +56,8 @@
 "action.refreshLog" = "刷新日志";
 "action.enablePath" = "启用环境变量";
 "action.removePath" = "移除环境变量";
+"path.external" = "非本软件设置的环境变量";
+"path.externalAt" = "非本软件设置的环境变量:%@";
 "action.quickStartHint" = "加入快捷启动";
 "action.openWebUI" = "打开 Web UI";
 "action.customPathHint" = "自定义版本路径：会在此路径的 bin 和 sbin 目录查找可执行文件";

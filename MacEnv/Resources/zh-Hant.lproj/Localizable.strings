@@ -56,6 +56,8 @@
 "action.refreshLog" = "重新整理日誌";
 "action.enablePath" = "啟用環境變數";
 "action.removePath" = "移除環境變數";
+"path.external" = "非本軟體設定的環境變數";
+"path.externalAt" = "非本軟體設定的環境變數:%@";
 "action.quickStartHint" = "加入快速啟動";
 "action.openWebUI" = "開啟 Web UI";
 "action.customPathHint" = "自訂版本路徑：會在此路徑的 bin 與 sbin 目錄中搜尋執行檔";

@@ -56,6 +56,8 @@
 "action.refreshLog" = "ログを更新";
 "action.enablePath" = "環境変数を有効化";
 "action.removePath" = "環境変数を解除";
+"path.external" = "本ソフトウェア以外で設定された環境変数";
+"path.externalAt" = "本ソフトウェア以外で設定された環境変数:%@";
 "action.quickStartHint" = "クイック起動に追加";
 "action.openWebUI" = "Web UI を開く";
 "action.customPathHint" = "カスタムバージョンパス：このパス配下の bin と sbin で実行ファイルを検索します";

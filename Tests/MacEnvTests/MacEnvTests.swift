@@ -145,6 +145,10 @@ final class PathMembershipTests: XCTestCase {
         XCTAssertEqual(PathMembership.shell.icon, "exclamationmark.circle.fill")
         XCTAssertEqual(PathMembership.none.icon, "circle")
     }
+
+    func testShellSourceDoesNotChangeState() {
+        XCTAssertEqual(PathMembership(state: .shell, source: "~/.zshrc:12"), .shell)
+    }
 }
 
 // MARK: - 写进 shell 配置的那一段

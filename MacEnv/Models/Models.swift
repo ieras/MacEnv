@@ -468,11 +468,26 @@ struct LaunchTarget: Hashable, Identifiable {
     var id: String { key }
 }
 
-enum PathMembership: Equatable {
-    case app, shell, none
+struct PathMembership: Equatable {
+    enum State: Equatable { case app, shell, none }
+
+    let state: State
+    let source: String?
+
+    static let app = Self(state: .app)
+    static let shell = Self(state: .shell)
+    static let none = Self(state: .none)
+
+    init(state: State, source: String? = nil) {
+        self.state = state
+        self.source = source
+    }
+
+    // 来源只用于提示，不改变 PATH 的三态判断。
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.state == rhs.state }
 
     var icon: String {
-        switch self {
+        switch state {
         case .app: return "checkmark.circle.fill"
         case .shell: return "exclamationmark.circle.fill"
         case .none: return "circle"

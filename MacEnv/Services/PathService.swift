@@ -5,6 +5,7 @@ import Foundation
 final class PathService {
     let root: URL
     private(set) var allPath: [String] = []
+    private var pathSources: [String: String] = [:]
     private var loaded = false
 
     var envDirectory: URL { root.appendingPathComponent("env", isDirectory: true) }
@@ -29,6 +30,26 @@ final class PathService {
         }
     }
 
+    private var sourceFiles: [URL] {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        var files: [URL]
+        switch shellName {
+        case "fish": files = [home.appendingPathComponent(".config/fish/config.fish")]
+        case "bash": files = [home.appendingPathComponent(".bash_profile"), home.appendingPathComponent(".bashrc"), home.appendingPathComponent(".profile")]
+        case "zsh": files = [home.appendingPathComponent(".zshenv"), home.appendingPathComponent(".zprofile"), home.appendingPathComponent(".zshrc"), home.appendingPathComponent(".zlogin")]
+        default: files = [home.appendingPathComponent(".profile")]
+        }
+        files += [URL(fileURLWithPath: "/etc/paths"), URL(fileURLWithPath: "/etc/profile")]
+        if shellName == "zsh" {
+            files += ["/etc/zshenv", "/etc/zprofile", "/etc/zshrc", "/etc/zlogin"].map { URL(fileURLWithPath: $0) }
+        } else if shellName == "fish" {
+            files.append(URL(fileURLWithPath: "/etc/fish/config.fish"))
+        }
+        let pathsDirectory = URL(fileURLWithPath: "/etc/paths.d", isDirectory: true)
+        files += (try? FileManager.default.contentsOfDirectory(at: pathsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+        return files
+    }
+
     init(root: URL) { self.root = root }
 
     // 问 PATH 要跑一次交互式登录 shell（用户的整个 rc 都得执行），非常贵 —— 所以缓存住，
@@ -45,6 +66,9 @@ final class PathService {
         guard output.status == 0 else { throw CommandError(message: output.text) }
         let parts = output.stdout.components(separatedBy: marker)
         allPath = parts.count >= 3 ? parts[1].split(separator: ":").map(String.init) : []
+        pathSources = allPath.reduce(into: [:]) { result, path in
+            if let source = sourceLocation(for: path) { result[path] = source }
+        }
         loaded = true
     }
 
@@ -54,8 +78,22 @@ final class PathService {
         // PATH 里写的有可能是软链接（FlyEnv 的 env/php/bin 这类），两边都解析一次再比，
         // 否则二进制明明在 PATH 里能跑，界面上却显示成没启用。
         let resolved = paths.map { URL(fileURLWithPath: $0).resolvingSymlinksInPath().path }
-        if allPath.contains(where: { resolved.contains(URL(fileURLWithPath: $0).resolvingSymlinksInPath().path) }) { return .shell }
+        if let path = allPath.first(where: { resolved.contains(URL(fileURLWithPath: $0).resolvingSymlinksInPath().path) }) {
+            return PathMembership(state: .shell, source: pathSources[path])
+        }
         return .none
+    }
+
+    private func sourceLocation(for path: String) -> String? {
+        let candidates = [path, URL(fileURLWithPath: path).resolvingSymlinksInPath().path]
+        for file in sourceFiles {
+            guard let content = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            for (index, line) in content.components(separatedBy: .newlines).enumerated()
+                where !line.trimmingCharacters(in: .whitespaces).hasPrefix("#") && candidates.contains(where: { line.contains($0) }) {
+                return "\(tilde(file.path)):\(index + 1)"
+            }
+        }
+        return nil
     }
 
     // 删掉 env/ 里指向 directory 内部的软链，再重写 PATH 块。

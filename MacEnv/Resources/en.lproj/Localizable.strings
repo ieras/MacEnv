@@ -56,6 +56,8 @@
 "action.refreshLog" = "Refresh log";
 "action.enablePath" = "Enable PATH entry";
 "action.removePath" = "Remove PATH entry";
+"path.external" = "Environment variable set outside MacEnv";
+"path.externalAt" = "Environment variable set outside MacEnv:%@";
 "action.quickStartHint" = "Add to quick start";
 "action.openWebUI" = "Open Web UI";
 "action.customPathHint" = "Custom version path: executables are looked up in the bin and sbin of this path";

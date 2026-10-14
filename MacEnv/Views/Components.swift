@@ -575,7 +575,9 @@ struct EnvironmentVariableButton: View {
                 .foregroundStyle(membership == .app ? .blue : membership == .shell ? .orange : .secondary)
         }
         .buttonStyle(.borderless)
-        .help(membership == .app ? L("action.removePath") : L("action.enablePath"))
+        .help(membership == .shell
+              ? membership.source.map { String(format: L("path.externalAt"), $0) } ?? L("path.external")
+              : membership == .app ? L("action.removePath") : L("action.enablePath"))
     }
 }
 
