@@ -84,6 +84,9 @@ struct ContentView: View {
             } else if page == "node" {
                 NodeManagementView(app: app, vm: app.nodeVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "rust" {
+                RustManagementView(app: app, vm: app.rustVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "hosts" {
                 HostManagementView(app: app, vm: hostVM, certVM: certVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -250,6 +253,7 @@ struct ContentView: View {
         case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(.secondary)
         case "python": Text(String(app.pythonVM.versions.count)).foregroundStyle(.secondary)
         case "node": Text(String(app.nodeVM.versions.count)).foregroundStyle(.secondary)
+        case "rust": Text(String(app.rustVM.versions.count)).foregroundStyle(.secondary)
         case "nginx":
             Toggle("", isOn: Binding(get: { nginxVM.isRunning }, set: { _ in
                 if nginxVM.isRunning {

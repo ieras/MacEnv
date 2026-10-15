@@ -1,6 +1,6 @@
 import SwiftUI
 
-// 环境工具页：Homebrew / MacPorts / SDKMAN / GVM / nvm / fnm 六个「工具本体」的装、卸、更新。
+// 环境工具页：Homebrew / MacPorts / SDKMAN / GVM / nvm / fnm / rustup 七个「工具本体」的装、卸、更新。
 //
 // 「用这个工具装东西」不在这里 —— 那是各模块版本管理页的来源 tab（Homebrew / MacPorts / …）。
 // 两边各司其职：一个入口管本体，一个入口用本体。
@@ -11,7 +11,7 @@ struct ToolsView: View {
 
     var body: some View {
         ModulePage {
-            SegmentedTabs(titles: ["Homebrew", "MacPorts", "SDKMAN", "GVM", "nvm", "fnm"], selection: $tab)
+            SegmentedTabs(titles: ["Homebrew", "MacPorts", "SDKMAN", "GVM", "nvm", "fnm", "rustup"], selection: $tab)
         } content: {
             switch tab {
             case 1: macPortsPanel
@@ -19,6 +19,7 @@ struct ToolsView: View {
             case 3: GvmPanel(vm: app.goVM)
             case 4: ManagerPanel(vm: app.nodeVM, manager: "nvm")
             case 5: ManagerPanel(vm: app.nodeVM, manager: "fnm")
+            case 6: RustupPanel(vm: app.rustVM)
             default: brewPanel
             }
         }
@@ -333,6 +334,91 @@ struct ManagerPanel: View {
         } else {
             // 环境工具页是管本体的：只列管理器已装的版本，装新版本去 Node 页的对应来源 tab。
             ManagerVersionListView(vm: vm, manager: manager, installedOnly: true) { version in
+                pendingUninstall = version
+            }
+        }
+    }
+}
+
+// MARK: - rustup
+
+// rustup 只管 Rust，本体管理跟 GVM / nvm / fnm 完全同构：本体在这一页（装 / 更新 / 卸 / 路径），
+// 「用 rustup 装 Rust」在 Rust 页的版本管理里当来源 tab。状态和动作留在 RustViewModel
+// （它们本来就是 Rust 的东西），这里只读。
+//
+// 「更新」= 重跑官方安装脚本（rustup 没有可用的自更新命令：`rustup self update` 只对
+// 自编译的 rustup 有效，官方脚本装的是完整版会直接报错），官方脚本幂等，重跑即升级。
+struct RustupPanel: View {
+    @ObservedObject var vm: RustViewModel
+    @State private var confirmManagerUninstall = false
+    @State private var pendingUninstall: RustVersion?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ToolHeader(name: "rustup",
+                       status: vm.rustupInstalled == true ? L("tools.installed") : L("tools.notInstalled"),
+                       path: vm.rustupInstalled == true ? vm.rustupPath : "") {
+                AssetIcon(name: "RustIcon")
+            } actions: {
+                if vm.rustupInstalled == true {
+                    Button(L("action.update")) { vm.rustupSelfAction("update") }
+                    Button { confirmManagerUninstall = true } label: { Image(systemName: "trash") }
+                        .help(String(format: L("tools.uninstallManager"), "rustup"))
+                } else if vm.rustupInstalled == false {
+                    Button(L("action.install")) { vm.rustupSelfAction("install") }
+                }
+                Link(destination: URL(string: "https://rust-lang.github.io/rustup/")!) { Image(systemName: "globe") }
+            }
+            Divider()
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        // 检测责任收在面板自己：onChange(of: tab) 对初始 tab 值不触发（Node 页踩过），
+        // 谁显示这个面板谁负责把 rustup 检测跑一遍 —— 点进来、初始落页都覆盖。
+        .task { vm.checkRustup() }
+        .alert(L("alert.uninstallRustupTitle"), isPresented: $confirmManagerUninstall) {
+            Button(L("action.cancel"), role: .cancel) {}
+            Button(L("action.uninstall"), role: .destructive) { vm.rustupSelfAction("uninstall") }
+        } message: {
+            // ⚠️ message 闭包在 body 每次求值时立即执行，String(format:) 的 %@ 数量必须跟参数
+            // 严格对上 —— 少一个是运行时 SIGSEGV，编译和单测都抓不到（Node 页面崩过）。
+            Text(String(format: L("alert.uninstallRustupMessage"), "rustup", tilde(vm.rustupPath),
+                        vm.versions.filter { $0.source == "rustup" }.count))
+        }
+        .alert(L("alert.uninstallRustTitle"), isPresented: Binding(
+            get: { pendingUninstall != nil },
+            set: { if !$0 { pendingUninstall = nil } })) {
+            Button(L("action.cancel"), role: .cancel) { pendingUninstall = nil }
+            Button(L("action.uninstall"), role: .destructive) {
+                if let version = pendingUninstall { vm.rustupAction("uninstall", version.version) }
+                pendingUninstall = nil
+            }
+        } message: {
+            Text(String(format: L("alert.uninstallRustMessage"), pendingUninstall?.version ?? ""))
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if vm.rustupInstalled == nil {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(L("rust.checkingManager")).foregroundStyle(.secondary)
+            }
+            .font(.callout)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        } else if vm.rustupInstalled == false {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(String(format: L("rust.managerIntro"), "rustup"))
+                    .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(L("action.install")) { vm.rustupSelfAction("install") }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(30)
+        } else {
+            // 环境工具页是管本体的：只列 rustup 已装的工具链，装新版本去 Rust 页的 rustup 来源 tab。
+            RustupVersionListView(vm: vm, installedOnly: true) { version in
                 pendingUninstall = version
             }
         }

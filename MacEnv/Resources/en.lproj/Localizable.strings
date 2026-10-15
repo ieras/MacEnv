@@ -341,6 +341,23 @@
 "node.updatingManager" = "Updating %@…";
 "node.managerIntro" = "%@ is a Node version manager. Once installed, use it on the Node page to install and manage versions.";
 "node.fnmDefault" = "fnm default";
+
+// MARK: - Rust
+"message.noRustInstalled" = "No Rust installed yet — install one from the version manager or add a local directory.";
+"rust.checkingManager" = "Checking rustup…";
+"rust.missingManager" = "%@ not found — install it from Environment Tools.";
+"rust.managerIntro" = "%@ is the official Rust toolchain manager. Once installed, use it to install and manage versions on the Rust page.";
+"rust.setDefault" = "Set as default";
+"rust.setDefaultTitle" = "Setting the rustup default toolchain to %@";
+"rust.installingManager" = "Installing %@…";
+"rust.updatingManager" = "Updating %@…";
+"rust.rustupDefault" = "rustup default";
+"error.rustupMissing" = "rustup is not installed — install rustup first";
+"error.rustupFailed" = "rustup command failed";
+"alert.uninstallRustTitle" = "Uninstall a Rust managed by rustup?";
+"alert.uninstallRustMessage" = "This runs rustup toolchain uninstall %@. rustup owns that version; MacEnv only proxies the command.";
+"alert.uninstallRustupTitle" = "Uninstall rustup?";
+"alert.uninstallRustupMessage" = "This runs rustup self uninstall, deleting %@ (%@) and all %ld Rust toolchains it manages, and removes its init lines from shell config. This cannot be undone. Proceed?";
 "alert.uninstallManagerTitle" = "Uninstall %@?";
 "alert.uninstallManagerMessage" = "This deletes %@ (%@) and the %ld Node versions it manages, and removes its init lines from shell config. This cannot be undone. Proceed?";
 "error.nvmMissing" = "nvm.sh not found in the nvm directory — refusing to delete";
@@ -404,6 +421,7 @@
 "module.java" = "Java";
 "module.python" = "Python";
 "module.node" = "NodeJs";
+"module.rust" = "Rust";
 "column.vendor" = "Vendor";
 "java.setDefault" = "Set default";
 "sdkman.default" = "Default";

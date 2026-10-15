@@ -41,6 +41,7 @@ ICONS=(
   java:JavaIcon:java.svg
   python:PythonIcon:python.svg
   node:NodeIcon:nodejs.svg
+  rust:RustIcon:rust.svg
   maven:MavenIcon:maven.svg
   gradle:GradleIcon:gradle.svg
   macports:MacPortsIcon:macports.svg

@@ -61,7 +61,7 @@ final class StaticCatalogService {
         if let source {
             versions = try await source()
         } else {
-            versions = try await oneEnv(customEndpoint)
+            versions = try await Self.oneEnv(app: app, displayName: displayName, customEndpoint: customEndpoint)
         }
         try FileManager.default.createDirectory(at: cache.deletingLastPathComponent(), withIntermediateDirectories: true)
         try JSONEncoder().encode(versions).write(to: cache, options: .atomic)
@@ -69,7 +69,9 @@ final class StaticCatalogService {
     }
 
     // one-env 的接口：POST 一个 app/os/arch 的 JSON，回一串 url+version。
-    private func oneEnv(_ customEndpoint: String) async throws -> [StaticVersion] {
+    // 做成 static 是为了让「只要 one-env 的版本号、下载地址自己拼」的模块复用 ——
+    // rust 的 one-env 只给 x86_64 包，Apple Silicon 上得把地址换成 aarch64 那份。
+    static func oneEnv(app: String, displayName: String, customEndpoint: String = "") async throws -> [StaticVersion] {
         let url = URL(string: customEndpoint).flatMap { customEndpoint.isEmpty ? nil : $0 } ?? Self.defaultEndpoint
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

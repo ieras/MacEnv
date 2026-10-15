@@ -1,6 +1,6 @@
 # MacEnv
 
-macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗口与菜单栏、Foundation 的 `Process` 托管服务进程，一个窗口把本机的 Nginx、MySQL、MariaDB、PostgreSQL、Redis、ClickHouse、Qdrant、Consul、etcd、PHP、Go、Java、Python、Node 管起来。
+macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗口与菜单栏、Foundation 的 `Process` 托管服务进程，一个窗口把本机的 Nginx、MySQL、MariaDB、PostgreSQL、Redis、ClickHouse、Qdrant、Consul、etcd、PHP、Go、Java、Python、Node、Rust 管起来。
 
 ## 界面预览
 
@@ -115,6 +115,14 @@ Java 是「已安装 + 版本管理 + Maven + Gradle」四个页签，后两个�
 - npm / npx 跟 node 在同一个 `bin/` 里，跟着版本走，不用像 Python 那样补名字
 - 版本列表带 LTS 徽章；nvm 的 default 版本在已安装列表里打标记（纯展示，不接管 nvm 的切换语义）
 
+### Rust
+
+已安装、版本管理两个页签，跟 Go / Node 一样属于「不需要启动服务」的模块。版本来源覆盖静态包（static.rust-lang.org 官方包）、Homebrew 的 `rust` 公式、MacPorts 的 `rust` port，以及机器上 rustup 装着的工具链 —— 最后一路只读地混进列表，装卸走 rustup 自己的命令。
+
+- rustup 装着的工具链同样能一键放进 PATH：四路来源共用一个归属开关，谁启用谁生效，这就是「当前 rustc 版本」的语义
+- 官方包的二进制不在标准 `bin/` 下（躺在 `rustc/bin/`、`cargo/bin/` 里），所以安装时跑包内的 `install.sh` 重排布局，装完才是常规的 `bin/rustc` + `bin/cargo`
+- rustup 的 default 工具链在已安装列表里打标记（纯展示，不接管 rustup 的切换语义）
+
 ### 版本与 PATH
 
 - 版本来源：Homebrew、MacPorts、MacEnv 下载安装的静态包、用户自己加的目录，以及登录 shell 的 `PATH` 里出现过的目录
@@ -144,21 +152,25 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/clickhouse-light.png" width="86" hspace="1" alt="ClickHouse">
 <img src="AppIcons/tile/qdrant-light.png" width="86" hspace="1" alt="Qdrant">
 <img src="AppIcons/tile/consul-light.png" width="86" hspace="1" alt="Consul">
+<br>
 <img src="AppIcons/tile/etcd-light.png" width="86" hspace="1" alt="etcd">
 <img src="AppIcons/tile/php-light.png" width="86" hspace="1" alt="PHP">
-<br>
 <img src="AppIcons/tile/go-light.png" width="86" hspace="1" alt="Go">
 <img src="AppIcons/tile/java-light.png" width="86" hspace="1" alt="Java">
 <img src="AppIcons/tile/python-light.png" width="86" hspace="1" alt="Python">
 <img src="AppIcons/tile/node-light.png" width="86" hspace="1" alt="Node">
+<img src="AppIcons/tile/rust-light.png" width="86" hspace="1" alt="Rust">
 <img src="AppIcons/tile/maven-light.png" width="86" hspace="1" alt="Maven">
+<br>
 <img src="AppIcons/tile/gradle-light.png" width="86" hspace="1" alt="Gradle">
 <img src="AppIcons/tile/homebrew-light.png" width="86" hspace="1" alt="Homebrew">
 <img src="AppIcons/tile/macports-light.png" width="86" hspace="1" alt="MacPorts">
 <img src="AppIcons/tile/sdkman-light.png" width="86" hspace="1" alt="SDKMAN">
+<img src="AppIcons/tile/nvm-light.png" width="86" hspace="1" alt="nvm">
+<img src="AppIcons/tile/fnm-light.png" width="86" hspace="1" alt="fnm">
 <img src="AppIcons/tile/composer-light.png" width="86" hspace="1" alt="Composer">
-<br>
 <img src="AppIcons/tile/swoole-light.png" width="86" hspace="1" alt="Swoole CLI">
+<br>
 <img src="AppIcons/tile/tools-light.png" width="86" hspace="1" alt="环境工具">
 <img src="AppIcons/tile/ssl-light.png" width="86" hspace="1" alt="SSL 证书">
 <img src="AppIcons/tile/start-light.png" width="86" hspace="1" alt="快捷启动">
@@ -176,21 +188,25 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/clickhouse-dark.png" width="86" hspace="1" alt="ClickHouse">
 <img src="AppIcons/tile/qdrant-dark.png" width="86" hspace="1" alt="Qdrant">
 <img src="AppIcons/tile/consul-dark.png" width="86" hspace="1" alt="Consul">
+<br>
 <img src="AppIcons/tile/etcd-dark.png" width="86" hspace="1" alt="etcd">
 <img src="AppIcons/tile/php-dark.png" width="86" hspace="1" alt="PHP">
-<br>
 <img src="AppIcons/tile/go-dark.png" width="86" hspace="1" alt="Go">
 <img src="AppIcons/tile/java-dark.png" width="86" hspace="1" alt="Java">
 <img src="AppIcons/tile/python-dark.png" width="86" hspace="1" alt="Python">
 <img src="AppIcons/tile/node-dark.png" width="86" hspace="1" alt="Node">
+<img src="AppIcons/tile/rust-dark.png" width="86" hspace="1" alt="Rust">
 <img src="AppIcons/tile/maven-dark.png" width="86" hspace="1" alt="Maven">
+<br>
 <img src="AppIcons/tile/gradle-dark.png" width="86" hspace="1" alt="Gradle">
 <img src="AppIcons/tile/homebrew-dark.png" width="86" hspace="1" alt="Homebrew">
 <img src="AppIcons/tile/macports-dark.png" width="86" hspace="1" alt="MacPorts">
 <img src="AppIcons/tile/sdkman-dark.png" width="86" hspace="1" alt="SDKMAN">
+<img src="AppIcons/tile/nvm-dark.png" width="86" hspace="1" alt="nvm">
+<img src="AppIcons/tile/fnm-dark.png" width="86" hspace="1" alt="fnm">
 <img src="AppIcons/tile/composer-dark.png" width="86" hspace="1" alt="Composer">
-<br>
 <img src="AppIcons/tile/swoole-dark.png" width="86" hspace="1" alt="Swoole CLI">
+<br>
 <img src="AppIcons/tile/tools-dark.png" width="86" hspace="1" alt="环境工具">
 <img src="AppIcons/tile/ssl-dark.png" width="86" hspace="1" alt="SSL 证书">
 <img src="AppIcons/tile/start-dark.png" width="86" hspace="1" alt="快捷启动">
@@ -201,7 +217,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/gvm-logo-dark.png" width="86" hspace="1" alt="GVM 渐变原版">
 </div>
 
-源 SVG 与 128 × 128 渲染图在 [`AppIcons/`](AppIcons/)，逐个图标的完整清单和渲染说明见那边的 README。
+源文件与 128 × 128 渲染图在 [`AppIcons/`](AppIcons/)，逐个图标的完整清单和渲染说明见那边的 README。
 
 ## 环境要求
 
@@ -322,6 +338,7 @@ MacEnv/
 ├── server/java/versions/         # 静态包安装的 JDK
 ├── server/python/versions/       # 静态包安装的 Python
 ├── server/node/versions/         # 静态包安装的 Node
+├── server/rust/versions/         # 静态包安装的 Rust
 ├── server/swoole-cli/versions/
 ├── server/composer/versions/
 ├── vhost/                        # 站点 vhost、伪静态、日志

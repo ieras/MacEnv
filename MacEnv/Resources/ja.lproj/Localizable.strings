@@ -341,6 +341,23 @@
 "node.updatingManager" = "%@ を更新中…";
 "node.managerIntro" = "%@ は Node のバージョンマネージャーです。インストール後、Node ページでバージョンのインストールと管理ができます。";
 "node.fnmDefault" = "fnm default";
+
+// MARK: - Rust
+"message.noRustInstalled" = "Rust はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"rust.checkingManager" = "rustup を検出しています…";
+"rust.missingManager" = "%@ が見つかりません。「環境ツール」からインストールしてください。";
+"rust.managerIntro" = "%@ は Rust 公式のツールチェーンマネージャです。インストール後、Rust ページでバージョンのインストールと管理ができます。";
+"rust.setDefault" = "デフォルトに設定";
+"rust.setDefaultTitle" = "rustup のデフォルトツールチェーンを %@ に設定しています";
+"rust.installingManager" = "%@ をインストールしています…";
+"rust.updatingManager" = "%@ を更新しています…";
+"rust.rustupDefault" = "rustup default";
+"error.rustupMissing" = "rustup がインストールされていません。先に rustup をインストールしてください";
+"error.rustupFailed" = "rustup コマンドが失敗しました";
+"alert.uninstallRustTitle" = "rustup 管理の Rust をアンインストールしますか？";
+"alert.uninstallRustMessage" = "rustup toolchain uninstall %@ を実行します。このバージョンは rustup が管理しており、MacEnv はコマンドの代理のみを行います。";
+"alert.uninstallRustupTitle" = "rustup をアンインストールしますか？";
+"alert.uninstallRustupMessage" = "rustup self uninstall を実行し、%@（%@）とそれが管理する %ld 個の Rust ツールチェーンを削除し、シェル設定の初期化行を除去します。この操作は元に戻せません。続行しますか？";
 "alert.uninstallManagerTitle" = "%@ をアンインストールしますか？";
 "alert.uninstallManagerMessage" = "%@（%@）とそれが管理する %ld 個の Node バージョンを削除し、シェル設定の初期化行を除去します。この操作は元に戻せません。続行しますか？";
 "error.nvmMissing" = "nvm ディレクトリに nvm.sh が見つかりません。削除を中止しました";
@@ -404,6 +421,7 @@
 "module.java" = "Java";
 "module.python" = "Python";
 "module.node" = "NodeJs";
+"module.rust" = "Rust";
 "column.vendor" = "ベンダー";
 "java.setDefault" = "既定に設定";
 "sdkman.default" = "現在の既定";

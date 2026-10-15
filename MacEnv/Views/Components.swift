@@ -503,6 +503,7 @@ struct ModuleIcon: View {
         case "java": AssetIcon(name: "JavaIcon")
         case "python": AssetIcon(name: "PythonIcon")
         case "node": AssetIcon(name: "NodeIcon")
+        case "rust": AssetIcon(name: "RustIcon")
         case "tools": AssetIcon(name: "ToolsIcon")
         case "redis": RedisIcon()
         case "qdrant": QdrantIcon()

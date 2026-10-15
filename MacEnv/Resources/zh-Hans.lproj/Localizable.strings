@@ -341,6 +341,23 @@
 "node.updatingManager" = "正在更新 %@ 本体…";
 "node.managerIntro" = "%@ 是 Node 的版本管理器。安装后可在 Node 页用它安装和管理版本。";
 "node.fnmDefault" = "fnm default";
+
+// MARK: - Rust
+"message.noRustInstalled" = "暂无已安装 Rust，请在版本管理中安装或添加本地目录。";
+"rust.checkingManager" = "正在检测 rustup…";
+"rust.missingManager" = "未检测到 %@，请到「环境工具」里安装。";
+"rust.managerIntro" = "%@ 是 Rust 官方的工具链管理器。安装后可在 Rust 页用它安装和管理版本。";
+"rust.setDefault" = "设为默认";
+"rust.setDefaultTitle" = "正在将 rustup 的默认工具链设为 %@";
+"rust.installingManager" = "正在安装 %@ 本体…";
+"rust.updatingManager" = "正在更新 %@ 本体…";
+"rust.rustupDefault" = "rustup default";
+"error.rustupMissing" = "rustup 未安装，请先安装 rustup";
+"error.rustupFailed" = "rustup 命令执行失败";
+"alert.uninstallRustTitle" = "卸载 rustup 管理的 Rust？";
+"alert.uninstallRustMessage" = "将执行 rustup toolchain uninstall %@，该版本由 rustup 负责，MacEnv 只代理这条命令，不碰它的目录。";
+"alert.uninstallRustupTitle" = "卸载 rustup？";
+"alert.uninstallRustupMessage" = "将执行 rustup self uninstall，删除 %@（%@）以及它管理的全部 %ld 个 Rust 工具链，并移除 shell 配置里的初始化行。此操作不可恢复，确定？";
 "alert.uninstallManagerTitle" = "卸载 %@ 本体？";
 "alert.uninstallManagerMessage" = "将删除 %@（%@）及其管理的全部 %ld 个 Node 版本，并移除 shell 配置里的初始化行。此操作不可恢复，确定？";
 "error.nvmMissing" = "nvm 目录里找不到 nvm.sh，拒绝删除";
@@ -404,6 +421,7 @@
 "module.java" = "Java";
 "module.python" = "Python";
 "module.node" = "NodeJs";
+"module.rust" = "Rust";
 "column.vendor" = "发行商";
 "java.setDefault" = "设为默认";
 "sdkman.default" = "当前默认";

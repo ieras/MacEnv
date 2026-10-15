@@ -84,6 +84,7 @@ extension ComposerVersion: ServiceVersion {}
 extension JavaVersion: ServiceVersion {}
 extension MavenVersion: ServiceVersion {}
 extension GradleVersion: ServiceVersion {}
+extension RustVersion: ServiceVersion {}
 
 struct NginxVersion: Identifiable, Hashable {
     var id: String { executable.path }
@@ -391,6 +392,22 @@ struct NodeVersion: Identifiable, Hashable {
     var isNvmDefault = false
     // fnm 同理（默认版本存在 $FNM_DIR/aliases/default 文件里，扫描时纯文件比对）。
     var isFnmDefault = false
+
+    var id: String { executable.path }
+}
+
+// Rust 同构于 Go / Node：没有常驻进程，一个版本就是「Rust 根目录 + rustc 二进制」。
+// 跟别的模块有一处实质差别：官方包解包后二进制躺在 rustc/bin/、cargo/bin/ 下，不在标准
+// bin/ 里，所以静态安装必须跑包内的 install.sh 重排布局（见 RustService）。
+// source 区分四路来源：静态包 / Homebrew / MacPorts / rustup 工具链。
+struct RustVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    // rustup 自己的默认工具链，界面打徽章用。跟 MacEnv 的 env/rust 软链正交 ——
+    // 两边各写各的，谁都不接管谁（同 Node 的 nvm / fnm default）。
+    var isRustupDefault = false
 
     var id: String { executable.path }
 }

@@ -270,8 +270,8 @@ final class PortSearchTests: XCTestCase {
         XCTAssertTrue(ToolService.parsePortSearch("No match for nginx found\n", descriptions: []).isEmpty)
     }
 
-    // node 的 descriptions 片段必须跟 port search --line 的真实输出对得上。曾经照 FlyEnv
-    // 的 port info 口径写了 "scalable network programs"，跟 search 输出的
+    // node 的 descriptions 片段必须跟 port search --line 的真实输出对得上。曾经照 port info
+    // 的口径写了 "scalable network programs"，跟 search 输出的
     // "Evented I/O for V8 JavaScript" 对不上，每行都被描述过滤毙掉，列表静默全空。
     // 样例就是实跑 port search 抓的真实输出（2026-10，nodejs8 到 nodejs26 一族）。
     func testNodeCatalogDescriptionsMatchRealPortSearchOutput() {

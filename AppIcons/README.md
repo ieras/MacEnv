@@ -1,18 +1,18 @@
 # AppIcons
 
-MacEnv 用到的全部图标：**源 SVG** + **128×128 渲染图** + **圆角展示图块**，以及 README 使用的界面截图。
+MacEnv 用到的全部图标：**源文件** + **128×128 渲染图** + **圆角展示图块**，以及 README 使用的界面截图。
 
 ```
 AppIcons/
 ├── README.md
-├── svg/          源文件，从 MacEnv/Assets.xcassets/*.imageset 原样复制，未做任何改动
-├── png/          128×128 渲染图，每个图标两张：亮色版（蓝）+ 暗色版（白）
+├── svg/          源文件，从 MacEnv/Assets.xcassets/*.imageset 原样复制，未做任何改动（nvm / fnm 是栅格 PNG）
+├── png/          128×128 渲染图，每个图标两张：亮色版（白底）+ 暗色版（深底）
 ├── tile/         96×96 展示图块：圆角方形轮廓 + 图标 + 名字，根目录 README 用
 └── screenshots/  亮色主题两张、暗色主题两张，以及菜单栏图标与托盘菜单截图
 ```
 
 > 下面这张表是**放大看**用的：每个图标 128 px、一屏只放几个。
-> 要一眼看全，看根目录 README 的「图标」一节（引用的是 `tile/` 里的图块，29 个图标 × 明暗两套）。
+> 要一眼看全，看根目录 README 的「图标」一节（引用的是 `tile/` 里的图块，32 个图标 × 明暗两套）。
 > 图块的圆角方形轮廓是**烘焙进 PNG 的**，不是 CSS —— GitHub 的 HTML sanitizer 会剥掉 `style` 属性
 > （`html-pipeline` 的 `SanitizationFilter` 白名单里没有 `style`），`border-radius` 在 README 里用不了。
 
@@ -31,9 +31,11 @@ AppIcons/
 
 - **template（绝大多数）** —— app 里走 `Image(...).renderingMode(.template)`，颜色维度被整个丢掉，
   只拿 alpha 当遮罩填主题色。所以**源 SVG 本身是彩色的也没用**，这里渲染出来的就是 app 里的样子。
-- **original（Homebrew、菜单栏）** —— 保留 SVG 自带的硬编码配色，浅色深色各一套文件。
+- **original（Homebrew、菜单栏、nvm、fnm）** —— 保留源文件自带的硬编码配色，浅色深色各一套文件。
 
-⚠️ **源 SVG 一律原样使用 —— 不要自己收紧 `viewBox`，也不要删 `width` / `height`。**
+⚠️ **nvm / fnm 是栅格源，没有可用的 SVG。** 这两枚的品牌 logo（fnm 的 `mask` + 渐变、nvm 的 `clipPath` + `transform` 嵌套）过不了资源目录那套简化渲染器 —— 渲出来 fnm 是橙方块、nvm 是灰螺旋，所以在 asset catalog 里存的就是栅格 PNG（256@1x + 512@2x）。`AppIcons/svg/` 里放的是 `nvm.png` / `fnm.png`（跟 imageset 的 `@2x` 逐字节相同），不是 `.svg`。它们的明暗两版是同一个 logo 分别合成到白底与 `#1E1E1E` 底上 —— logo 自带中等亮度色，两边都读得清，所以**不是**两套配色。
+
+⚠️ **源文件一律原样使用 —— 不要自己收紧 `viewBox`，也不要删 `width` / `height`。**
 上游给的都是方形画布加一份内部留白，那是设计稿的取景。渲染器只拿 SVG 的**固有尺寸定长宽比**、不拿它当缩放系数，所以 `width="32"` 和 `width="1024"` 渲出来一模一样。觉得"图标看起来小了、偏了"就想去裁 viewBox 是错的 —— 按"内容贴边"收紧 viewBox 会把内容裁掉。完整规范见根目录 `AGENTS.md` 第六节。
 
 ---
@@ -71,6 +73,7 @@ AppIcons/
 | **Java** | <img src="png/java-light.png" width="128"> | <img src="png/java-dark.png" width="128"> |
 | **Python** | <img src="png/python-light.png" width="128"> | <img src="png/python-dark.png" width="128"> |
 | **Node** | <img src="png/node-light.png" width="128"> | <img src="png/node-dark.png" width="128"> |
+| **Rust** | <img src="png/rust-light.png" width="128"> | <img src="png/rust-dark.png" width="128"> |
 
 ## 构建工具
 
@@ -86,6 +89,8 @@ AppIcons/
 | **Homebrew**<br><sub>original 渲染，自带双色</sub> | <img src="png/homebrew-light.png" width="128"> | <img src="png/homebrew-dark.png" width="128"> |
 | **MacPorts** | <img src="png/macports-light.png" width="128"> | <img src="png/macports-dark.png" width="128"> |
 | **SDKMAN** | <img src="png/sdkman-light.png" width="128"> | <img src="png/sdkman-dark.png" width="128"> |
+| **nvm**<br><sub>original 渲染，栅格源</sub> | <img src="png/nvm-light.png" width="128"> | <img src="png/nvm-dark.png" width="128"> |
+| **fnm**<br><sub>original 渲染，栅格源</sub> | <img src="png/fnm-light.png" width="128"> | <img src="png/fnm-dark.png" width="128"> |
 | **Composer** | <img src="png/composer-light.png" width="128"> | <img src="png/composer-dark.png" width="128"> |
 | **Swoole CLI** | <img src="png/swoole-light.png" width="128"> | <img src="png/swoole-dark.png" width="128"> |
 
@@ -154,5 +159,5 @@ G 和三条速度线是 teal 渐变（`#70E5E7` → `#1BB6D4`），vm 跟主题�
 - 有几个图标**在 app 里就是"糊成一团"的**，不是渲染坏了 —— SDKMAN、Composer 这类官方 logo
   细节密度高，压成单色剪影后本来就只剩个轮廓。要改就得单独重构几何（像 Homebrew 那样），
   不能靠换渲染方式解决。
-- `svg/` 里的文件是**只读参考**。真正生效的是 `MacEnv/Assets.xcassets/*.imageset/`，
-  改图标要改那边，别改这里。
+- `svg/` 里的文件是**只读参考**（含 nvm / fnm 那两份栅格 PNG）。真正生效的是
+  `MacEnv/Assets.xcassets/*.imageset/`，改图标要改那边，别改这里。

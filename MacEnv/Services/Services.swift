@@ -27,6 +27,7 @@ final class Services {
     let hosts: HostService
     let tools: ToolService
     let node: NodeService
+    let rust: RustService
     private let catalogs: [String: StaticCatalogService]
 
     init(root: URL = macEnvDirectory) {
@@ -67,7 +68,12 @@ final class Services {
             // 正好落包根 —— 标准形状，install 逻辑一行不改。binaryNames 只给 node：
             // npm / npx 跟 node 在同一个 bin/ 里，跟着落位但不参与「装好」判定。
             "node": StaticCatalogService(root: root, app: "node", binaryNames: ["node"], displayName: "Node",
-                                         source: { try await NodeService.parseDist(NodeService.distEntries()) })
+                                         source: { try await NodeService.parseDist(NodeService.distEntries()) }),
+            // one-env 的 rust 只给 x86_64 的包，Apple Silicon 上跑不动，所以版本号照用、
+            // 下载地址自己按本机架构拼（见 RustService.versions）。官方包解包后二进制在
+            // rustc/bin/ 下、不是标准 bin/，install 也由 RustService 自己写。
+            "rust": StaticCatalogService(root: root, app: "rust", binaryNames: ["rustc"], displayName: "Rust",
+                                         source: { try await RustService.versions() })
         ]
         nginx = NginxService(root: root)
         paths = PathService(root: root)
@@ -87,6 +93,7 @@ final class Services {
         go = GoService(root: root)
         python = PythonService(root: root)
         node = NodeService(root: root)
+        rust = RustService(root: root)
         hosts = HostService(root: root)
         tools = ToolService(root: root)
         // Java 复用工具页的 SDKMAN 检测，所以必须排在 tools 后面。
