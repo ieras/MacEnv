@@ -1,6 +1,6 @@
 import Foundation
 
-// 对应 FlyEnv 的 Nginx 模块：Homebrew 提供二进制，MacEnv 用自己的配置和 PID 托管前台 master。
+// Nginx：Homebrew 提供二进制，MacEnv 用自己的配置和 PID 托管前台 master。
 @MainActor
 final class NginxService {
     let root: URL

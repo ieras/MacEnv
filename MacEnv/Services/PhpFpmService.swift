@@ -1,9 +1,9 @@
 import Foundation
 
-// 对应 FlyEnv 的 PHP-FPM 模块。php（CLI）不是服务，php-fpm 才是 —— 常驻、要起停、
-// 是 Nginx fastcgi_pass 的对端。配置按 PHP 版本各存一套，跟 FlyEnv 的
-// <PhpDir>/<v>/{conf,var} 同一个思路。
-// 每个版本一个 master 进程、一个 socket，互不干扰：8.4 和 8.5 可以同时跑（对齐 FlyEnv）。
+// PHP-FPM 模块。php（CLI）不是服务，php-fpm 才是 —— 常驻、要起停、
+// 是 Nginx fastcgi_pass 的对端。配置按 PHP 版本各存一套，目录结构：
+// <PhpDir>/<v>/{conf,var}。
+// 每个版本一个 master 进程、一个 socket，互不干扰：8.4 和 8.5 可以同时跑。
 @MainActor
 final class PhpFpmService {
     let root: URL

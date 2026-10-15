@@ -1,17 +1,17 @@
 import Foundation
 
-// 对应 FlyEnv 的 Host 模块（fork/module/Host + fork/module/Nginx/Host）。
+// 站点托管：nginx vhost / rewrite / log / hosts 一条龙。
 //
-// MacEnv 只做 nginx 一套 vhost，所以这里比 FlyEnv 少了一大半：
+// 只做 nginx 一套 vhost：
 //   · 砍掉 apache / caddy / frankenphp 三套 conf 生成
 //   · 砍掉 java / node / go / python / tomcat 五种站点类型
-//   · 砍掉商业授权锁（FlyEnv 免费版第 3 个站点就拦）
+//   · 砍掉商业授权锁
 //   · 砍掉 host.json 的 RSA 加密存盘（明文 JSON，反正没有 license 要保护）
-//   · 砍掉 updateNginxConf 那张 60 行的增量替换表 —— 改站点时直接从模板重生成一份，
+//   · 砍掉增量替换表 —— 改站点时直接从模板重生成一份，
 //     行为可预测得多，也不会有「改了端口但 listen 没跟着变」这类漏项
 //
-// 保留的核心机制：
-//   · vhost / rewrite / log 文件名一律用 host.id（FlyEnv #700）
+// 核心机制：
+//   · vhost / rewrite / log 文件名一律用 host.id
 //   · 系统 hosts 用 #X-HOSTS-BEGIN# 标记块整块替换，loopback 名字跳过
 //   · include enable-php-<两位版本>.conf 接线（NginxService.prepare 已经铺好）
 //   · 四个框架的伪静态自动填充 + 入口目录自动下探
@@ -61,9 +61,9 @@ final class HostService {
 
     // MARK: - 伪静态自动填充
 
-    // 对应 FlyEnv autoFillNginxRewrite。只在用户没写过 rewrite 的时候动手。
-    // FlyEnv 在 park 时才把 root 下探到 public/web，正常新建反而不下探 —— 结果是 Laravel
-    // 站点 root 停在项目根，try_files 找不到 index.php，直接 404。这里两种路径都下探。
+    // 只在用户没写过 rewrite 的时候动手。
+    // 新建和 park 两种路径都把 root 下探到 public/web：不下探的话 Laravel 站点
+    // root 停在项目根，try_files 找不到 index.php，直接 404。
     func autoFillRewrite(_ host: inout Host) {
         guard host.rewrite.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !host.root.isEmpty else { return }
         let root = URL(fileURLWithPath: host.root, isDirectory: true)
@@ -109,7 +109,7 @@ final class HostService {
         try prepare()
         let fm = FileManager.default
         let name = host.useSSL && !host.sslCert.isEmpty ? "nginxSSL.vhost" : "nginx.vhost"
-        // 站点模板管理：BaseDir/VhostTemplate/ 下的同名文件优先，跟 FlyEnv 一个规矩。
+        // 站点模板管理：BaseDir/VhostTemplate/ 下的同名文件优先。
         let custom = templateDirectory.appendingPathComponent(name)
         guard let defaults = Bundle.main.url(forResource: "HostDefaults", withExtension: nil) else {
             throw CommandError(message: L("error.hostDefaultsMissing"))
@@ -127,12 +127,11 @@ final class HostService {
             .replacingOccurrences(of: "#Port_Nginx#", with: "\(host.port)")
             .replacingOccurrences(of: "#Port_Nginx_SSL#", with: "\(host.sslPort)")
         // 有 PHP 版本就 include 那一份 enable-php-<两位版本>.conf（NginxService.prepare 铺的），
-        // 没有就留个注释标记，对应 FlyEnv 的 ##Static Site Nginx##。
+        // 没有就留个注释标记（静态站点）。
         content = content.replacingOccurrences(of: "include enable-php.conf;",
                                                 with: host.phpVersion.isEmpty ? "##Static Site Nginx##" : "include enable-php-\(host.phpVersion).conf;")
 
-        // 反向代理块，插在 #REWRITE-END 之后。模板每次重生成，不存在旧块要摘，省掉 FlyEnv
-        // handleReverseProxy 里那两行正则删除。
+        // 反向代理块，插在 #REWRITE-END 之后。模板每次重生成，不存在旧块要摘。
         if !host.reverseProxy.isEmpty {
             var block = ["#PWS-REVERSE-PROXY-BEGIN#"]
             for item in host.reverseProxy where !item.url.isEmpty {
@@ -184,7 +183,7 @@ final class HostService {
 
     // MARK: - 系统 hosts
 
-    // 标记块的内容。loopback 名字由系统自己解析，写进去只会白弹一次授权框（FlyEnv #700）。
+    // 标记块的内容。loopback 名字由系统自己解析，写进去只会白弹一次授权框。
     // 不写 ::1 —— nginx 的 `listen 80;` 只监听 IPv4，浏览器走 ::1 会连不上。
     func hostsBlock(_ hosts: [Host]) -> String {
         let isLoopback: (String) -> Bool = { name in
@@ -235,7 +234,7 @@ final class HostService {
         guard output.status == 0 else { throw CommandError(message: output.text) }
         host.sslCert = paths.cert
         host.sslKey = paths.key
-        // 对应 FlyEnv MkCertStore.taskConfirm：签完就把站点的 HTTPS 打开，不用用户再回表单勾一次。
+        // 签完就把站点的 HTTPS 打开，不用用户再回表单勾一次。
         host.useSSL = true
     }
 

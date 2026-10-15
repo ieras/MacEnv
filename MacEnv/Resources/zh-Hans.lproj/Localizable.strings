@@ -326,13 +326,31 @@
 "source.system" = "系统";
 "column.default" = "默认";
 "message.noGoInstalled" = "暂无已安装 Go，请在版本管理中安装或添加本地目录。";
+"message.noNodeInstalled" = "暂无已安装 Node，请在版本管理中安装或添加本地目录。";
 "message.gvmDefaultSet" = "默认版本已切换到 %@";
 "gvm.checking" = "正在检测 GVM…";
 "gvm.intro" = "GVM（Go Version Manager）是第三方的 Go 版本管理器，装好后可以在这里安装和切换多个 Go 版本。";
 "gvm.install" = "安装 GVM";
 "gvm.setDefault" = "设为默认";
+"node.nvmDefault" = "nvm default";
+"node.checkingManager" = "正在检测 nvm / fnm…";
+"node.missingManager" = "未检测到 %@，请到「环境工具」里安装。";
+"node.setDefault" = "设为默认";
+"node.setDefaultTitle" = "正在将 %@ 的默认版本设为 %@";
+"node.installingManager" = "正在安装 %@ 本体…";
+"node.updatingManager" = "正在更新 %@ 本体…";
+"node.managerIntro" = "%@ 是 Node 的版本管理器。安装后可在 Node 页用它安装和管理版本。";
+"node.fnmDefault" = "fnm default";
+"alert.uninstallManagerTitle" = "卸载 %@ 本体？";
+"alert.uninstallManagerMessage" = "将删除 %@（%@）及其管理的全部 %ld 个 Node 版本，并移除 shell 配置里的初始化行。此操作不可恢复，确定？";
+"error.nvmMissing" = "nvm 目录里找不到 nvm.sh，拒绝删除";
+"error.nvmRootUnsafe" = "NVM_DIR 指向家目录，拒绝删除";
+"error.fnmMissing" = "未找到 fnm 目录";
+"error.fnmRootUnsafe" = "FNM_DIR 指向家目录，拒绝删除";
 "error.gvmMissing" = "GVM 未安装，请先安装 GVM";
 "error.gvmFailed" = "GVM 命令执行失败";
+"error.nvmFailed" = "nvm 命令执行失败";
+"error.fnmFailed" = "fnm 命令执行失败";
 "error.gvmRootUnsafe" = "GVM 根目录异常，已取消卸载";
 "gvm.uninstall" = "卸载 GVM";
 "alert.uninstallGvmTitle" = "卸载 GVM？";
@@ -340,6 +358,8 @@
 "message.gvmUninstalled" = "GVM 已卸载";
 "alert.uninstallGoTitle" = "卸载 Homebrew Go？";
 "alert.uninstallGoMessage" = "将执行 brew uninstall %@，GOROOT 里的工具链会被删除，其他版本由 Homebrew 自行处理。";
+"alert.uninstallNodeTitle" = "卸载 nvm / fnm 管理的 Node？";
+"alert.uninstallNodeMessage" = "将执行 %@ uninstall %@，该版本由这个管理器负责，MacEnv 只代理这条命令，不碰它的目录。";
 
 // MARK: - 全局任务日志
 "action.update" = "更新";
@@ -367,6 +387,7 @@
 "tools.uninstallSDKMAN" = "卸载 SDKMAN";
 "tools.missingMacPorts" = "未检测到 MacPorts，请到「环境工具」里安装。";
 "tools.missingGvm" = "未检测到 GVM，请到「环境工具」里安装。";
+"tools.uninstallManager" = "卸载 %@ 本体";
 "tools.empty" = "这里还没有装东西。";
 "alert.uninstallBrewTitle" = "卸载 Homebrew？";
 "alert.uninstallBrewMessage" = "将删除 Homebrew 本体，以及它装过的全部 %d 个公式 —— 包括 MacEnv 正在管理的 nginx / PHP / MySQL / Redis / Go。这些服务会立刻从 MacEnv 里消失，且无法恢复。";
@@ -382,6 +403,7 @@
 "error.sdkmanMissing" = "SDKMAN 未安装";
 "module.java" = "Java";
 "module.python" = "Python";
+"module.node" = "NodeJs";
 "column.vendor" = "发行商";
 "java.setDefault" = "设为默认";
 "sdkman.default" = "当前默认";

@@ -326,13 +326,31 @@
 "source.system" = "システム";
 "column.default" = "デフォルト";
 "message.noGoInstalled" = "Go はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"message.noNodeInstalled" = "Node はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
 "message.gvmDefaultSet" = "デフォルトバージョンを %@ に切り替えました";
 "gvm.checking" = "GVM を確認中…";
 "gvm.intro" = "GVM（Go Version Manager）はサードパーティ製の Go バージョン管理ツールです。インストールするとここで複数バージョンを管理できます。";
 "gvm.install" = "GVM をインストール";
 "gvm.setDefault" = "デフォルトに設定";
+"node.nvmDefault" = "nvm default";
+"node.checkingManager" = "nvm / fnm を確認中…";
+"node.missingManager" = "%@ が見つかりません。「環境ツール」からインストールしてください。";
+"node.setDefault" = "デフォルトに設定";
+"node.setDefaultTitle" = "%@ のデフォルトバージョンを %@ に設定中";
+"node.installingManager" = "%@ をインストール中…";
+"node.updatingManager" = "%@ を更新中…";
+"node.managerIntro" = "%@ は Node のバージョンマネージャーです。インストール後、Node ページでバージョンのインストールと管理ができます。";
+"node.fnmDefault" = "fnm default";
+"alert.uninstallManagerTitle" = "%@ をアンインストールしますか？";
+"alert.uninstallManagerMessage" = "%@（%@）とそれが管理する %ld 個の Node バージョンを削除し、シェル設定の初期化行を除去します。この操作は元に戻せません。続行しますか？";
+"error.nvmMissing" = "nvm ディレクトリに nvm.sh が見つかりません。削除を中止しました";
+"error.nvmRootUnsafe" = "NVM_DIR がホームディレクトリを指しています。削除を中止しました";
+"error.fnmMissing" = "fnm ディレクトリが見つかりません";
+"error.fnmRootUnsafe" = "FNM_DIR がホームディレクトリを指しています。削除を中止しました";
 "error.gvmMissing" = "GVM がインストールされていません";
 "error.gvmFailed" = "GVM コマンドが失敗しました";
+"error.nvmFailed" = "nvm コマンドが失敗しました";
+"error.fnmFailed" = "fnm コマンドが失敗しました";
 "error.gvmRootUnsafe" = "GVM のルートディレクトリが異常なため、アンインストールを中止しました";
 "gvm.uninstall" = "GVM をアンインストール";
 "alert.uninstallGvmTitle" = "GVM をアンインストールしますか？";
@@ -340,6 +358,8 @@
 "message.gvmUninstalled" = "GVM をアンインストールしました";
 "alert.uninstallGoTitle" = "Homebrew の Go をアンインストールしますか？";
 "alert.uninstallGoMessage" = "brew uninstall %@ を実行します。GOROOT のツールチェーンが削除され、他のバージョンは Homebrew が処理します。";
+"alert.uninstallNodeTitle" = "nvm / fnm 管理の Node をアンインストールしますか？";
+"alert.uninstallNodeMessage" = "%@ uninstall %@ を実行します。このバージョンは各マネージャが管理しており、MacEnv はコマンドの代理のみを行います。";
 
 // MARK: - グローバルタスクログ
 "action.update" = "更新";
@@ -367,6 +387,7 @@
 "tools.uninstallSDKMAN" = "SDKMAN をアンインストール";
 "tools.missingMacPorts" = "MacPorts が見つかりません。「環境ツール」からインストールしてください。";
 "tools.missingGvm" = "GVM が見つかりません。「環境ツール」からインストールしてください。";
+"tools.uninstallManager" = "%@ をアンインストール";
 "tools.empty" = "まだ何もインストールされていません。";
 "alert.uninstallBrewTitle" = "Homebrew をアンインストールしますか？";
 "alert.uninstallBrewMessage" = "Homebrew 本体と、それで入れた %d 個の formula をすべて削除します —— MacEnv が管理している nginx / PHP / MySQL / Redis / Go も含まれます。これらのサービスは即座に MacEnv から消え、復元できません。";
@@ -382,6 +403,7 @@
 "error.sdkmanMissing" = "SDKMAN がインストールされていません";
 "module.java" = "Java";
 "module.python" = "Python";
+"module.node" = "NodeJs";
 "column.vendor" = "ベンダー";
 "java.setDefault" = "既定に設定";
 "sdkman.default" = "現在の既定";

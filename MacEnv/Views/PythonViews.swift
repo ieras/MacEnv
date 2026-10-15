@@ -1,9 +1,9 @@
 import SwiftUI
 
-// Python 是一等语言模块（FlyEnv 里跟 PHP / Go 同级），自己占一个页面。
+// Python 是一等语言模块（跟 PHP / Go 同级），自己占一个页面。
 // 两个 tab：已安装（含环境变量开关）、版本管理（静态包 / Homebrew / MacPorts）。
-// 没有 pyenv 那一栏：FlyEnv 自己也没有，而 pyenv 装 Python 是从源码编译，
-// GUI 里几分钟没进度、失败率高，不值得为对齐 Go 的 GVM 位置硬凑一个。
+// 没有 pyenv 那一栏：pyenv 装 Python 是从源码编译，GUI 里几分钟没进度、
+// 失败率高，不值得为对齐 Go 的 GVM 位置硬凑一个。
 struct PythonManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: PythonViewModel

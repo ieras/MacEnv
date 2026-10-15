@@ -13,9 +13,9 @@ let moduleGroups: [(String, [String])] = [
     ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant"]),
     ("sidebar.cache", ["redis"]),
     // 服务治理：服务发现 / 配置中心这一类组件，不是数据库也不是缓存。
-    // 顺序跟 FlyEnv 的 serviceGovernance 组一致（consul 在 etcd 前面）。
+    // 顺序：consul 在 etcd 前面。
     ("sidebar.governance", ["consul", "etcd"]),
-    ("sidebar.language", ["php", "go", "java", "python"]),
+    ("sidebar.language", ["php", "go", "java", "python", "node"]),
 ]
 
 // 控制台组的内容。它跟 moduleGroups 一样要同时喂给侧栏和设置页，
@@ -270,6 +270,7 @@ final class AppViewModel: ObservableObject {
     let goVM: GoViewModel
     let javaVM: JavaViewModel
     let pythonVM: PythonViewModel
+    let nodeVM: NodeViewModel
     let mavenVM: MavenViewModel
     let gradleVM: GradleViewModel
     let hostVM: HostViewModel
@@ -292,6 +293,7 @@ final class AppViewModel: ObservableObject {
         goVM = GoViewModel(state: state, services: services)
         javaVM = JavaViewModel(state: state, services: services)
         pythonVM = PythonViewModel(state: state, services: services)
+        nodeVM = NodeViewModel(state: state, services: services)
         mavenVM = MavenViewModel(state: state, services: services)
         gradleVM = GradleViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
@@ -312,6 +314,14 @@ final class AppViewModel: ObservableObject {
         services.etcd.onExit = { [weak self] in self?.etcdVM.objectWillChange.send() }
         // state 是独立的 ObservableObject，转发后观察本类的视图才会随它重绘。
         state.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
+        // 侧栏 Java / Python / NodeJs 的数量读的是 app.javaVM / app.pythonVM / app.nodeVM
+        // 属性链（那几个 VM 没进 ContentView 的 @ObservedObject 列表），子 VM 的 @Published
+        // 变化不会自动冒泡到本类 —— 不转发的话侧栏数字永远停在启动时的 0，只有点进页面
+        // （页面自己 @ObservedObject 持有 VM）才刷得出来。Java / Python 之前碰巧能显示，
+        // 是搭上了别的 @Published 变化触发的重算，同一颗雷。
+        javaVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
+        pythonVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
+        nodeVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         // 任何装/卸跑完都清洗一遍快捷启动：指向已不存在版本的 key 当场删掉，
         // 不然 quick-start.json 里会攒僵尸 key（计数对不上列表就是它闹的）。
         // 启动时 refreshAll 已把全部版本扫完，不必担心「还没扫到就误删」。
@@ -431,6 +441,7 @@ final class AppViewModel: ObservableObject {
         async let go: Void = goVM.refresh()
         async let java: Void = javaVM.refresh()
         async let python: Void = pythonVM.refresh()
+        async let node: Void = nodeVM.refresh()
         async let maven: Void = mavenVM.refresh()
         async let gradle: Void = gradleVM.refresh()
         async let nginx: Void = nginxVM.refresh()
@@ -444,6 +455,6 @@ final class AppViewModel: ObservableObject {
         async let etcd: Void = etcdVM.refresh()
         async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, java, python, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, consul, etcd, cert, hosts)
+        _ = await (swoole, composer, go, java, python, node, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, consul, etcd, cert, hosts)
     }
 }

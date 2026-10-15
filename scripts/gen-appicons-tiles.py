@@ -26,11 +26,11 @@ ICONS = [
     ("nginx", "Nginx"), ("mysql", "MySQL"), ("mariadb", "MariaDB"), ("redis", "Redis"),
     ("postgresql", "PostgreSQL"), ("clickhouse", "ClickHouse"), ("qdrant", "Qdrant"),
     ("consul", "Consul"), ("etcd", "etcd"),
-    ("php", "PHP"), ("go", "Go"), ("java", "Java"), ("python", "Python"), ("maven", "Maven"),
-    ("gradle", "Gradle"), ("homebrew", "Homebrew"), ("macports", "MacPorts"), ("sdkman", "SDKMAN"),
-    ("composer", "Composer"), ("swoole", "Swoole CLI"), ("tools", "环境工具"), ("ssl", "SSL 证书"),
-    ("start", "快捷启动"), ("tray", "菜单栏"), ("gvm", "GVM 矢量字标"), ("gvm-wordmark-color", "GVM 彩色字标"),
-    ("gvm-wordmark-solid", "GVM 单色字标"), ("gvm-logo", "GVM 渐变原版"),
+    ("php", "PHP"), ("go", "Go"), ("java", "Java"), ("python", "Python"), ("node", "Node"),
+    ("maven", "Maven"), ("gradle", "Gradle"), ("homebrew", "Homebrew"), ("macports", "MacPorts"),
+    ("sdkman", "SDKMAN"), ("composer", "Composer"), ("swoole", "Swoole CLI"), ("tools", "环境工具"),
+    ("ssl", "SSL 证书"), ("start", "快捷启动"), ("tray", "菜单栏"), ("gvm", "GVM 矢量字标"),
+    ("gvm-wordmark-color", "GVM 彩色字标"), ("gvm-wordmark-solid", "GVM 单色字标"), ("gvm-logo", "GVM 渐变原版"),
 ]
 
 S = 2                     # 像素倍率

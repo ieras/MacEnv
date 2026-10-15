@@ -1,11 +1,10 @@
 import Foundation
 
-// 对应 FlyEnv 的 Java 模块（src/fork/module/Java/index.ts）。
 // Java 跟 Go 同构：没有常驻进程，只管两件事 —— 机器上有哪些 JDK、把哪个放进 PATH。
 //
-// 跟 FlyEnv 最大的差别在扫描范围：它只扫 /Library/Java/JavaVirtualMachines 和
-// ~/.sdkman/candidates/java，前者在本机是空的，用户级的 ~/Library/Java/JavaVirtualMachines
-// 才是 macOS 上 .pkg / IDE 自带 JDK 真正落地的地方 —— 照抄会一个都扫不到。
+// 扫描范围比常规做法宽：不只扫 /Library/Java/JavaVirtualMachines（本机通常是空的），
+// ~/Library/Java/JavaVirtualMachines 才是 macOS 上 .pkg / IDE 自带 JDK 真正落地的地方，
+// 加上 ~/.sdkman/candidates/java 一路 —— 只扫系统目录会一个都扫不到。
 @MainActor
 final class JavaService {
     let root: URL

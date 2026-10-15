@@ -1,6 +1,6 @@
 import Foundation
 
-// 对应 FlyEnv 的 Composer 模块。composer 不是服务，没有进程要托管：
+// composer 不是服务，没有进程要托管：
 // 一个自包含的 .phar，拷成 composer 加个可执行位就能用，剩下的只有版本管理和 PATH。
 @MainActor
 final class ComposerService {

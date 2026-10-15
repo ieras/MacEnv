@@ -270,7 +270,7 @@ final class HostViewModel: ObservableObject {
 
     // MARK: - 站点配置文件
 
-    // 每个 site 一份 nginx vhost：vhost/nginx/<id>.conf，文件名用 id（FlyEnv #700）。
+    // 每个 site 一份 nginx vhost：vhost/nginx/<id>.conf，文件名用 id 而不是 name。
     func configText(_ host: Host) -> String {
         (try? String(contentsOf: service.nginxDirectory.appendingPathComponent("\(host.id).conf"), encoding: .utf8)) ?? ""
     }

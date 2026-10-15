@@ -26,6 +26,7 @@ final class Services {
     let gradle: GradleService
     let hosts: HostService
     let tools: ToolService
+    let node: NodeService
     private let catalogs: [String: StaticCatalogService]
 
     init(root: URL = macEnvDirectory) {
@@ -60,7 +61,13 @@ final class Services {
             // etcd 的 zip 是 <包目录>/{etcd,etcdctl,etcdutl}，二进制直接摆在包目录顶层、没有 bin/，
             // 走 install 里「顶层二进制补 bin/」那条分支。注意 binaryNames 只给 etcd ——
             // etcdctl / etcdutl 会被那条分支一起搬进 bin/，但不参与「这个包算不算装好了」的判断。
-            "etcd": StaticCatalogService(root: root, app: "etcd", binaryNames: ["etcd"], displayName: "etcd")
+            "etcd": StaticCatalogService(root: root, app: "etcd", binaryNames: ["etcd"], displayName: "etcd"),
+            // one-env 不支持 node（实测「app 类型错误」），直连 nodejs.org/dist/index.json。
+            // 官方包形状 node-vXX-darwin-arm64/{bin,include,lib,share}，「往上退两级」
+            // 正好落包根 —— 标准形状，install 逻辑一行不改。binaryNames 只给 node：
+            // npm / npx 跟 node 在同一个 bin/ 里，跟着落位但不参与「装好」判定。
+            "node": StaticCatalogService(root: root, app: "node", binaryNames: ["node"], displayName: "Node",
+                                         source: { try await NodeService.parseDist(NodeService.distEntries()) })
         ]
         nginx = NginxService(root: root)
         paths = PathService(root: root)
@@ -79,6 +86,7 @@ final class Services {
         composer = ComposerService(root: root)
         go = GoService(root: root)
         python = PythonService(root: root)
+        node = NodeService(root: root)
         hosts = HostService(root: root)
         tools = ToolService(root: root)
         // Java 复用工具页的 SDKMAN 检测，所以必须排在 tools 后面。

@@ -1,6 +1,6 @@
 import Foundation
 
-// 对应 FlyEnv 的 Maven 模块。Maven 没有常驻进程，只管「机器上有哪些、把哪个放进 PATH」，
+// Maven 没有常驻进程，只管「机器上有哪些、把哪个放进 PATH」，
 // 跟 Java / Go 同构。版本管理来源：Static（官方包）、Homebrew、MacPorts、SDKMAN。
 // 跟 Java 不同：mvn 自己会沿 PATH 找 java 或退到 /usr/libexec/java_home，所以 PATH 里
 // 放好 bin 就够了，不需要额外 export MAVEN_HOME。

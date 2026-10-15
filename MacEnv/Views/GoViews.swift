@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Go 是一等语言模块（FlyEnv 里跟 PHP / Node 同级），所以自己占一个页面而不是挂在 PHP 下面。
+// Go 是一等语言模块（跟 PHP / Node 同级），所以自己占一个页面而不是挂在 PHP 下面。
 // 两个 tab：已安装（含环境变量开关）、版本管理（静态包 / Homebrew / MacPorts / GVM）。
 // GVM 的**本体**（装 / 卸 / 路径）在环境工具页，这里只把「用 GVM 装的 Go」当一个来源。
 struct GoManagementView: View {

@@ -1,8 +1,7 @@
 import Foundation
 
-// 对应 FlyEnv 的 Python 模块（src/fork/module/Python/index.ts）。
-// Python 跟 Go / Java 同构：没有常驻进程、没有配置文件、没有日志（FlyEnv 那边
-// getConfigFiles / getLogFiles 都是空数组），只管两件事 —— 机器上有哪些解释器、把哪个放进 PATH。
+// Python 跟 Go / Java 同构：没有常驻进程、没有配置文件、没有日志，
+// 只管两件事 —— 机器上有哪些解释器、把哪个放进 PATH。
 //
 // 比 Go / Java 多出来的唯一一层是 shim：没有任何一个目录能同时提供 python 和 python3
 // （Homebrew 的 keg 里 bin/ 只有 python3、libexec/bin/ 只有 python；MacPorts 的 Portfile

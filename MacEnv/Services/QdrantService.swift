@@ -33,7 +33,7 @@ final class QdrantService {
     func port(for version: QdrantVersion) -> Int { Self.parsePort(try? String(contentsOf: configURL(for: version), encoding: .utf8)) ?? defaultPort }
 
     // Qdrant 的 config 是 YAML，http_port 缩进在 service: 下；storage_path / snapshots_path
-    // 我们一律写绝对路径，不学 FlyEnv 的 ./storage 相对 cwd（cwd 一飘数据就不知道去哪了）。
+    // 一律写绝对路径，不用相对 cwd 的 ./storage（cwd 一飘数据就不知道去哪了）。
     static func parsePort(_ content: String?) -> Int? {
         for line in (content ?? "").split(whereSeparator: \.isNewline) {
             let value = line.trimmingCharacters(in: .whitespaces)
@@ -79,8 +79,8 @@ final class QdrantService {
         try content.write(to: file, atomically: true, encoding: .utf8)
     }
 
-    // 只有静态包一条路：官方没发 brew 公式（brew 公式接口查不到 qdrant）、MacPorts 也没有 port
-    // （FlyEnv 的 brewinfo / portinfo 都返回空）。所以只扫静态目录和用户自定义目录。
+    // 只有静态包一条路：官方没发 brew 公式、MacPorts 也没有 port。
+    // 所以只扫静态目录和用户自定义目录。
     func installedVersions(customDirectories: [String] = []) async throws -> [QdrantVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String)] = []

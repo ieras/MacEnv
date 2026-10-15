@@ -1,6 +1,6 @@
 import Foundation
 
-// 对应 FlyEnv 的 Gradle 模块。没有常驻进程，只管「机器上有哪些、把哪个放进 PATH」，跟 Maven 同构。
+// Gradle 没有常驻进程，只管「机器上有哪些、把哪个放进 PATH」，跟 Maven 同构。
 // 版本管理来源：Static（官方包）、Homebrew、MacPorts、SDKMAN。gradle 自带 gradlew 封装，
 // 只把 bin 放进 PATH 即可，不需要额外 export GRADLE_HOME。
 @MainActor

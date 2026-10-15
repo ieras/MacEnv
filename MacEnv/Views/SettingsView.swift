@@ -75,7 +75,7 @@ struct SettingsView: View {
         }
     }
 
-    // 分类名右边的开关照 FlyEnv：整组一键全开/全关，组内有一个开着就算开。
+    // 分类名右边的开关：整组一键全开/全关，组内有一个开着就算开。
     private func moduleGroupCard(title: String, ids: [String]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {

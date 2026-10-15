@@ -47,8 +47,7 @@ final class ClickHouseViewModel: ObservableObject {
             // 已存在不再生成，ClickHouse 直接起不来。所以刷新时就把配置落好（同 Qdrant）。
             try service.prepare()
             // 版本来源只认 MacEnv 自己管的目录 + 用户自定义目录 —— 跟 Redis / Database /
-            // PostgreSQL / Qdrant 一致，不把用户的 shell PATH 当版本来源（FlyEnv 也只认
-            // setup 里的 dirs）。所以 paths.refresh() 排在扫描之后，只喂下面的 membership。
+            // PostgreSQL / Qdrant 一致。所以 paths.refresh() 排在扫描之后，只喂下面的 membership。
             versions = try await service.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             await service.adopt(versions)
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "clickhouse", directory: $0.directory)) })

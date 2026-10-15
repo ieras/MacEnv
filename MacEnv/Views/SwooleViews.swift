@@ -1,7 +1,7 @@
 import SwiftUI
 
-// Swoole CLI 挂在 PHP 页面里当 tab（FlyEnv 把它做成独立模块，但它的版本管理和
-// 运行时文件跟 PHP 是同一套东西，分开只会让人以为要装两遍）。
+// Swoole CLI 挂在 PHP 页面里当 tab：它的版本管理和运行时文件跟 PHP 是同一套东西，
+// 分开只会让人以为要装两遍。
 struct SwoolePanel: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: SwooleViewModel

@@ -17,7 +17,7 @@ final class StaticCatalogService {
     let app: String
     let binaryNames: [String]
     // 列表里显示的名字前缀。默认是 app 首字母大写，但 one-env 的接口名不总是好看的那个
-    // （golang → "Golang-1.27.1"，而 Go 官方和 FlyEnv 都写 "Go-1.27.1"）。
+    // （golang → "Golang-1.27.1"，而 Go 官方写 "Go-1.27.1"）。
     let displayName: String
     // one-env 对 mkcert 这类工具直接给裸二进制（没有扩展名、不是压缩包），拷到 bin/ 下就算装完。
     let rawBinary: Bool

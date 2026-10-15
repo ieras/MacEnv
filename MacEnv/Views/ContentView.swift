@@ -81,6 +81,9 @@ struct ContentView: View {
             } else if page == "python" {
                 PythonManagementView(app: app, vm: app.pythonVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "node" {
+                NodeManagementView(app: app, vm: app.nodeVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "hosts" {
                 HostManagementView(app: app, vm: hostVM, certVM: certVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -159,6 +162,16 @@ struct ContentView: View {
         .animation(.easeOut(duration: 0.18), value: toastVisible)
         .animation(.easeOut(duration: 0.18), value: app.state.task != nil)
         .onChange(of: app.state.messageToken) { _ in presentToast() }
+        // 探针2：记录 selectedPage 初始值和全部变化轨迹（调查页面恢复问题用）。
+        .onAppear {
+            let stamp = Date().timeIntervalSince1970
+            try? "[\(stamp)] appear page=\(selectedPage)\n".write(toFile: "/tmp/macenv-probe2.txt", atomically: true, encoding: .utf8)
+        }
+        .onChange(of: selectedPage) { newValue in
+            let stamp = Date().timeIntervalSince1970
+            let existing = (try? String(contentsOf: URL(fileURLWithPath: "/tmp/macenv-probe2.txt"), encoding: .utf8)) ?? ""
+            try? (existing + "[\(stamp)] change page=\(newValue)\n").write(to: URL(fileURLWithPath: "/tmp/macenv-probe2.txt"), atomically: true, encoding: .utf8)
+        }
         // 刷新完才有版本可起，所以自动拉服务必须排在 refreshAll 后面。
         .task {
             guard !isTesting else { return }
@@ -236,6 +249,7 @@ struct ContentView: View {
         case "go": Text(String(goVM.versions.count)).foregroundStyle(.secondary)
         case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(.secondary)
         case "python": Text(String(app.pythonVM.versions.count)).foregroundStyle(.secondary)
+        case "node": Text(String(app.nodeVM.versions.count)).foregroundStyle(.secondary)
         case "nginx":
             Toggle("", isOn: Binding(get: { nginxVM.isRunning }, set: { _ in
                 if nginxVM.isRunning {

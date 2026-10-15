@@ -40,6 +40,7 @@ ICONS=(
   go:GoIcon:go.svg
   java:JavaIcon:java.svg
   python:PythonIcon:python.svg
+  node:NodeIcon:nodejs.svg
   maven:MavenIcon:maven.svg
   gradle:GradleIcon:gradle.svg
   macports:MacPortsIcon:macports.svg

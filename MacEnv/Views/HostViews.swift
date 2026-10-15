@@ -249,7 +249,7 @@ struct HostEditorView: View {
 
     init(vm: HostViewModel, host: Host) {
         self.vm = vm
-        // 新建时预填一个随机域名（照 FlyEnv 的 flyenv-test-<uuid>.test），点保存就能直接建站点。
+        // 新建时预填一个随机域名（macenv-test-<uuid>.test），点保存就能直接建站点。
         var item = host
         if !vm.hosts.contains(where: { $0.id == host.id }), item.name.isEmpty {
             item.name = "macenv-test-" + String(UUID().uuidString.prefix(8)).lowercased() + ".test"
@@ -350,7 +350,7 @@ struct HostEditorView: View {
         .onAppear { if rewriteTemplates.isEmpty { rewriteTemplates = loadRewriteTemplates() } }
     }
 
-    // 内置伪静态模板（RewriteDefaults/，抄自 FlyEnv 的 static/rewrite）。
+    // 内置伪静态模板（RewriteDefaults/ 目录下的 .conf）。
     private func loadRewriteTemplates() -> [(String, String)] {
         guard let url = Bundle.main.url(forResource: "RewriteDefaults", withExtension: nil),
               let files = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else { return [] }

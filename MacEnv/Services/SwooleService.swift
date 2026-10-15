@@ -1,6 +1,6 @@
 import Foundation
 
-// 对应 FlyEnv 的 SwooleCli 模块。swoole-cli 是自包含的 PHP 运行时：
+// swoole-cli 是自包含的 PHP 运行时：
 // 同一个二进制既能当 swoole-cli 也能当 php，所以装完要拷一份改名 php，
 // 再把 composer 和 cacert.pem 放进 bin，它才算真的能用。
 //
@@ -74,7 +74,6 @@ final class SwooleService {
     }
 
     // 一次调用拿两个版本号：PHP_VERSION 是内置的 PHP，swoole_version() 是 swoole 自己。
-    // FlyEnv 为了这两个值要按顺序试 5 条命令，这里一条就够。
     private func probe(_ executable: URL) async throws -> (swoole: String, php: String) {
         let ini = executable.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("php.ini")
         // 显式带上 -c，否则加载的是编译时写死的路径，我们写的 php.ini 就白配了。

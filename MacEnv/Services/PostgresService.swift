@@ -109,7 +109,7 @@ final class PostgresService {
             try Data().write(to: passwordPending)
         }
         // 前台跑 postgres -D，不是 pg_ctl start —— pg_ctl 会 fork 守护进程然后父进程秒退，
-        // 托管句柄立刻失效（FlyEnv 注释里踩过同一个坑，跟 redis 的 daemonize no 一回事）。
+        // 托管句柄立刻失效（跟 redis 的 daemonize no 同一个坑）。
         let item = try supervisor.launch(at: version.executable,
                                          arguments: ["-D", data.path],
                                          directory: version.directory,
@@ -165,7 +165,7 @@ final class PostgresService {
 
     // initdb 的参数构造抽出来给单测钉行为。locale 必须显式给：GUI 启动的 App 环境里
     // 没有 LANG/LC_*，initdb 第一步 locale 校验就报「无效的区域设置」直接死（本机踩过）。
-    // en_US.UTF-8 跟 FlyEnv、Homebrew 官方 bottle 的做法一致，macOS 上永远存在。
+    // en_US.UTF-8 跟 Homebrew 官方 bottle 的做法一致，macOS 上永远存在。
     static let initdbLocale = "en_US.UTF-8"
     static func initdbArguments(_ data: URL) -> [String] {
         ["-D", data.path, "-U", "root", "--locale=" + initdbLocale, "--encoding=UTF8"]

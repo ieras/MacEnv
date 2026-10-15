@@ -1,10 +1,7 @@
 import Foundation
 
-// 对应 FlyEnv 的 MkCert 模块（fork/module/MkCert）。
-//
-// mkcert 是**一次性 CLI**，不是常驻服务：没有端口、没有配置文件、没有日志
-// （FlyEnv 的 getConfigFiles / getLogFiles 都返回 []），所以这里没有任何进程托管，
-// 也不进 serviceEntries / 快捷启动。
+// mkcert 是**一次性 CLI**，不是常驻服务：没有端口、没有配置文件、没有日志，
+// 所以这里没有任何进程托管，也不进 serviceEntries / 快捷启动。
 //
 // 它只干三件事：
 //   · 把自带的根 CA 装进钥匙串 —— mkcert 自己的 -install 内部是 `sudo security add-trusted-cert`，

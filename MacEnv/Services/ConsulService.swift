@@ -62,11 +62,11 @@ final class ConsulService {
         }
     }
 
-    // 默认配置照 FlyEnv 那份（server / bootstrap_expect / client_addr / ui_config.enabled），
-    // 另外补三样 FlyEnv 放在命令行上的东西，让「配置文件 = 唯一来源」：
-    //   data_dir / log_file  —— FlyEnv 走 -data-dir / -log-file 参数
-    //   bind_addr            —— FlyEnv 走 -bind=<本机 LAN IP>，为的是能组多机集群；
-    //                           MacEnv 只做本机开发环境，绑回环更安全，要连集群自己在配置页改
+    // 默认配置（server / bootstrap_expect / client_addr / ui_config.enabled）
+    // 加上三样必须写进文件的东西，让「配置文件 = 唯一来源」：
+    //   data_dir / log_file  —— 不走命令行参数，全靠配置文件
+    //   bind_addr            —— 绑回环 127.0.0.1：只做本机开发环境，绑全网卡没必要，
+    //                           更安全，要连集群自己在配置页改
     //   node_name            —— 本机 hostname 是 m2MacBook-Pro.local（带点），
     //                           Consul 拿它当节点名会踩合法性校验，所以固定一个干净的名字
     // 端口显式写出来，界面「端口」列读的就是它，显示值和真实监听端口不会各说各话。

@@ -1,10 +1,9 @@
 import SwiftUI
 
-// 环境工具页：Homebrew / MacPorts / SDKMAN / GVM 四个「工具本体」的装、卸、更新。
+// 环境工具页：Homebrew / MacPorts / SDKMAN / GVM / nvm / fnm 六个「工具本体」的装、卸、更新。
 //
 // 「用这个工具装东西」不在这里 —— 那是各模块版本管理页的来源 tab（Homebrew / MacPorts / …）。
-// 两边各司其职：一个入口管本体，一个入口用本体。FlyEnv 是把这两件事都塞进每个模块的
-// 版本管理页里，所以它没有这一页，也没地方卸载工具本体。
+// 两边各司其职：一个入口管本体，一个入口用本体。
 struct ToolsView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: ToolsViewModel
@@ -12,17 +11,20 @@ struct ToolsView: View {
 
     var body: some View {
         ModulePage {
-            SegmentedTabs(titles: ["Homebrew", "MacPorts", "SDKMAN", "GVM"], selection: $tab)
+            SegmentedTabs(titles: ["Homebrew", "MacPorts", "SDKMAN", "GVM", "nvm", "fnm"], selection: $tab)
         } content: {
             switch tab {
             case 1: macPortsPanel
             case 2: sdkmanPanel
             case 3: GvmPanel(vm: app.goVM)
+            case 4: ManagerPanel(vm: app.nodeVM, manager: "nvm")
+            case 5: ManagerPanel(vm: app.nodeVM, manager: "fnm")
             default: brewPanel
             }
         }
         // 搜索框三个 tab 共用一个 @Published，切 tab 时清掉，免得带着上一个工具的
-        // 过滤条件看到一张空表。GVM 只在那时才去检测 ~/.gvm。
+        // 过滤条件看到一张空表。GVM 只在那时才去检测 ~/.gvm；nvm / fnm 由各自的
+        // ManagerPanel.task 现问（初始 tab 值不触发 onChange，Node 页踩过这个坑）。
         .onChange(of: tab) { value in
             vm.search = ""
             if value == 3 { app.goVM.checkGvm() }
@@ -239,6 +241,100 @@ struct GvmPanel: View {
         } else {
             // 环境工具页是管本体的：只列 GVM 已装的 Go 版本，装新版本去 Go 页的 GVM 来源。
             GvmVersionTable(vm: vm, installedOnly: true)
+        }
+    }
+}
+
+// MARK: - nvm / fnm
+
+// nvm / fnm 只管 Node，本体管理跟 GVM 完全同构：本体在这一页（装 / 更新 / 卸 / 路径），
+// 「用 nvm / fnm 装 Node」在 Node 页的版本管理里当来源 tab。状态和动作留在
+// NodeViewModel（它们本来就是 Node 的东西），这里只读。nvm 和 fnm 面板结构一模一样，
+// 做成一个 view 传 manager 参数，别抄两遍。
+//
+// 「更新」= 重跑官方安装脚本（nvm / fnm 都没有自更新命令，官方脚本幂等）——
+// 比 GVM 面板多一个按钮（GVM 没有更新入口，brew 才有）。
+struct ManagerPanel: View {
+    @ObservedObject var vm: NodeViewModel
+    let manager: String  // "nvm" / "fnm"
+    @State private var confirmManagerUninstall = false
+    @State private var pendingUninstall: NodeVersion?
+
+    private var installed: Bool? { manager == "nvm" ? vm.nvmInstalled : vm.fnmInstalled }
+    private var rootPath: String { manager == "nvm" ? vm.nvmRootPath : vm.fnmDirectoryPath }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ToolHeader(name: manager,
+                       status: installed == true ? L("tools.installed") : L("tools.notInstalled"),
+                       path: installed == true ? rootPath : "") {
+                // 官方品牌 logo 原色渲染（fnm 多彩、nvm 绿渐变），template 会压成剪影毁掉。
+                if manager == "nvm" { NvmIcon() } else { FnmIcon() }
+            } actions: {
+                if installed == true {
+                    Button(L("action.update")) { vm.managerSelfAction(manager, "update") }
+                    Button { confirmManagerUninstall = true } label: { Image(systemName: "trash") }
+                        .help(String(format: L("tools.uninstallManager"), manager))
+                } else if installed == false {
+                    Button(L("action.install")) { vm.managerSelfAction(manager, "install") }
+                }
+                Link(destination: URL(string: manager == "nvm" ? "https://github.com/nvm-sh/nvm" : "https://github.com/Schniz/fnm")!) { Image(systemName: "globe") }
+            }
+            Divider()
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        // 检测责任收在面板自己：onChange(of: tab) 对初始 tab 值不触发（Node 页踩过），
+        // 谁显示这个面板谁负责把 nvm/fnm 检测跑一遍 —— 点进来、初始落页都覆盖。
+        .task { vm.checkManagers() }
+        .alert(L("alert.uninstallManagerTitle"), isPresented: $confirmManagerUninstall) {
+            Button(L("action.cancel"), role: .cancel) {}
+            Button(L("action.uninstall"), role: .destructive) { vm.managerSelfAction(manager, "uninstall") }
+        } message: {
+            // ⚠️ message 闭包在 body 每次求值时立即执行，String(format:) 的 %@ 数量必须跟参数
+            // 严格对上 —— 少一个是运行时 SIGSEGV，编译和单测都抓不到（Node 页面崩过）。
+            Text(String(format: L("alert.uninstallManagerMessage"), manager, tilde(rootPath),
+                        vm.versions.filter { $0.source == manager }.count))
+        }
+        .alert(L("alert.uninstallNodeTitle"), isPresented: Binding(
+            get: { pendingUninstall != nil },
+            set: { if !$0 { pendingUninstall = nil } })) {
+            Button(L("action.cancel"), role: .cancel) { pendingUninstall = nil }
+            Button(L("action.uninstall"), role: .destructive) {
+                if let version = pendingUninstall {
+                    vm.managerAction(version.source, "uninstall", version.version)
+                }
+                pendingUninstall = nil
+            }
+        } message: {
+            // ⚠️ 同上：2 个 %@（来源 + 版本号）。
+            Text(String(format: L("alert.uninstallNodeMessage"), pendingUninstall?.source ?? "", pendingUninstall?.version ?? ""))
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if installed == nil {
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(L("node.checkingManager")).foregroundStyle(.secondary)
+            }
+            .font(.callout)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        } else if installed == false {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(String(format: L("node.managerIntro"), manager))
+                    .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(L("action.install")) { vm.managerSelfAction(manager, "install") }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(30)
+        } else {
+            // 环境工具页是管本体的：只列管理器已装的版本，装新版本去 Node 页的对应来源 tab。
+            ManagerVersionListView(vm: vm, manager: manager, installedOnly: true) { version in
+                pendingUninstall = version
+            }
         }
     }
 }

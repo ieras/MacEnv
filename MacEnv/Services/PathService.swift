@@ -75,7 +75,7 @@ final class PathService {
     func membership(kind: String, directory: URL) -> PathMembership {
         let paths = [directory.path, directory.appendingPathComponent("bin").path, directory.appendingPathComponent("sbin").path]
         if let destination = try? FileManager.default.destinationOfSymbolicLink(atPath: envDirectory.appendingPathComponent(kind).path), destination == directory.path { return .app }
-        // PATH 里写的有可能是软链接（FlyEnv 的 env/php/bin 这类），两边都解析一次再比，
+        // PATH 里写的有可能是软链接，两边都解析一次再比，
         // 否则二进制明明在 PATH 里能跑，界面上却显示成没启用。
         let resolved = paths.map { URL(fileURLWithPath: $0).resolvingSymlinksInPath().path }
         if let path = allPath.first(where: { resolved.contains(URL(fileURLWithPath: $0).resolvingSymlinksInPath().path) }) {

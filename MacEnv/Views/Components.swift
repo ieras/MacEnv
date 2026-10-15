@@ -24,7 +24,7 @@ struct QdrantIcon: View {
     var body: some View { AssetIcon(name: "QdrantIcon") }
 }
 
-// 站点 / 站点证书共用。mkcert 那个盾牌 + SSL 字样的图标，跟 FlyEnv 用的是同一份。
+// 站点 / 站点证书共用。mkcert 盾牌 + SSL 字样的图标。
 struct SSLIcon: View {
     var body: some View { AssetIcon(name: "SSLIcon") }
 }
@@ -71,6 +71,31 @@ struct AssetIcon: View {
 struct HomebrewIcon: View {
     var body: some View {
         Image("HomebrewIcon")
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+    }
+}
+
+// fnm / nvm 的官方品牌 logo —— 照 HomebrewIcon 的先例走 original 渲染：template 会把
+// 品牌色压成单色剪影，logo 就废了（Homebrew 注释里记着这个下场）。这两个只出现在管理器
+// tab 顶栏，不占侧栏图标位，所以不挂明暗变体 —— logo 自带中等亮度色，深色面板上直接可读。
+// ⚠️ 这两枚是栅格化 PNG，源 SVG（Design/svg_icons/）不能用：fnm 的 mask+渐变、nvm 的
+// clipPath+transform 嵌套，资源目录那套简化渲染器全糊（fnm 变橙色方块、nvm 变灰螺旋），
+// 项目里其余 SVG 图标都是纯 path 所以没事。栅格化用 scripts/svgrender.swift（WKWebView，
+// 系统渲染内核，跟 Quick Look 同源）。256@1x + 512@2x，显示 22pt 够 10 倍余量。
+struct FnmIcon: View {
+    var body: some View {
+        Image("FnmIcon")
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+    }
+}
+
+struct NvmIcon: View {
+    var body: some View {
+        Image("NvmIcon")
             .resizable()
             .interpolation(.high)
             .scaledToFit()
@@ -261,12 +286,15 @@ struct VersionManagerHeader<Actions: View>: View {
     let busy: Bool
     let refreshing: Bool
     let onRefresh: () -> Void
+    // 分段控件总宽。来源多的页面（Node 有 nvm / fnm 两个管理器 tab）传大一点，
+    // 不然每段被挤到六十几磅，MacPorts 这种长名字会被截断。
+    var width: CGFloat = 330
     @ViewBuilder let actions: () -> Actions
 
     var body: some View {
         HStack {
             SegmentedTabs(items: sources.map { ($0, $0) }, selection: $source)
-                .frame(width: 330)
+                .frame(width: width)
             Link(destination: linkURL) { Image(systemName: "globe") }
             Spacer()
             Button { onRefresh() } label: { Image(systemName: "arrow.clockwise") }
@@ -285,6 +313,8 @@ struct StaticVersionListView: View {
     var busy = false
     let install: (StaticVersion) -> Void
     let uninstall: (StaticVersion) -> Void
+    // 行里版本名后跟的小徽章。只有 Node 的 LTS 用，其余模块不传（默认 nil）。
+    var badge: ((StaticVersion) -> String?)? = nil
 
     // 跟 brew / macports 清单同一个口径：版本从大到小，最新的在最上面。
     private var rows: [StaticVersion] {
@@ -295,7 +325,16 @@ struct StaticVersionListView: View {
         DataTable(columns: versionTableColumns, rows: rows,
                   loading: loading, loadingText: L("message.loadingVersions"),
                   empty: L("message.noStaticVersions")) { version in
-            Link(destination: version.url) { Label(version.name, systemImage: "link") }.buttonStyle(.borderless)
+            HStack(spacing: 6) {
+                Link(destination: version.url) { Label(version.name, systemImage: "link") }.buttonStyle(.borderless)
+                if let badge, let text = badge(version) {
+                    Text(text)
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(AppTheme.cardBackground, in: Capsule())
+                }
+            }
             Text(version.version)
             Group {
                 if version.installed { Image(systemName: "checkmark").foregroundStyle(AppTheme.green) }
@@ -463,6 +502,7 @@ struct ModuleIcon: View {
         case "go": GoIcon()
         case "java": AssetIcon(name: "JavaIcon")
         case "python": AssetIcon(name: "PythonIcon")
+        case "node": AssetIcon(name: "NodeIcon")
         case "tools": AssetIcon(name: "ToolsIcon")
         case "redis": RedisIcon()
         case "qdrant": QdrantIcon()

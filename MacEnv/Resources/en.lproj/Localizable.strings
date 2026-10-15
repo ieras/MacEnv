@@ -326,13 +326,31 @@
 "source.system" = "System";
 "column.default" = "Default";
 "message.noGoInstalled" = "No Go installed yet — install one from the version manager or add a local directory.";
+"message.noNodeInstalled" = "No Node installed yet — install one from the version manager or add a local directory.";
 "message.gvmDefaultSet" = "Default version switched to %@";
 "gvm.checking" = "Checking GVM…";
 "gvm.intro" = "GVM (Go Version Manager) is a third-party Go version manager. Install it to manage multiple Go versions here.";
 "gvm.install" = "Install GVM";
 "gvm.setDefault" = "Set default";
+"node.nvmDefault" = "nvm default";
+"node.checkingManager" = "Checking nvm / fnm…";
+"node.missingManager" = "%@ was not found — install it from Environment Tools.";
+"node.setDefault" = "Set default";
+"node.setDefaultTitle" = "Setting %@ default version to %@";
+"node.installingManager" = "Installing %@…";
+"node.updatingManager" = "Updating %@…";
+"node.managerIntro" = "%@ is a Node version manager. Once installed, use it on the Node page to install and manage versions.";
+"node.fnmDefault" = "fnm default";
+"alert.uninstallManagerTitle" = "Uninstall %@?";
+"alert.uninstallManagerMessage" = "This deletes %@ (%@) and the %ld Node versions it manages, and removes its init lines from shell config. This cannot be undone. Proceed?";
+"error.nvmMissing" = "nvm.sh not found in the nvm directory — refusing to delete";
+"error.nvmRootUnsafe" = "NVM_DIR points at the home directory — refusing to delete";
+"error.fnmMissing" = "fnm directory not found";
+"error.fnmRootUnsafe" = "FNM_DIR points at the home directory — refusing to delete";
 "error.gvmMissing" = "GVM is not installed";
 "error.gvmFailed" = "GVM command failed";
+"error.nvmFailed" = "nvm command failed";
+"error.fnmFailed" = "fnm command failed";
 "error.gvmRootUnsafe" = "GVM root directory looks wrong, uninstall cancelled";
 "gvm.uninstall" = "Uninstall GVM";
 "alert.uninstallGvmTitle" = "Uninstall GVM?";
@@ -340,6 +358,8 @@
 "message.gvmUninstalled" = "GVM uninstalled";
 "alert.uninstallGoTitle" = "Uninstall Homebrew Go?";
 "alert.uninstallGoMessage" = "This runs brew uninstall %@. The toolchain inside its GOROOT is removed; other versions are handled by Homebrew.";
+"alert.uninstallNodeTitle" = "Uninstall a Node managed by nvm / fnm?";
+"alert.uninstallNodeMessage" = "This runs %@ uninstall %@. The manager owns that version; MacEnv only proxies the command.";
 
 // MARK: - Global task log
 "action.update" = "Update";
@@ -367,6 +387,7 @@
 "tools.uninstallSDKMAN" = "Uninstall SDKMAN";
 "tools.missingMacPorts" = "MacPorts not found — install it from Environment Tools.";
 "tools.missingGvm" = "GVM not found — install it from Environment Tools.";
+"tools.uninstallManager" = "Uninstall %@";
 "tools.empty" = "Nothing installed through this tool yet.";
 "alert.uninstallBrewTitle" = "Uninstall Homebrew?";
 "alert.uninstallBrewMessage" = "This deletes Homebrew itself plus all %d formulae it installed — including the nginx / PHP / MySQL / Redis / Go that MacEnv manages. Those services disappear from MacEnv immediately and cannot be recovered.";
@@ -382,6 +403,7 @@
 "error.sdkmanMissing" = "SDKMAN is not installed";
 "module.java" = "Java";
 "module.python" = "Python";
+"module.node" = "NodeJs";
 "column.vendor" = "Vendor";
 "java.setDefault" = "Set default";
 "sdkman.default" = "Default";

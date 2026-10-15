@@ -1,6 +1,6 @@
 import Foundation
 
-// 反向代理的一条：路径前缀 → 上游地址。对应 FlyEnv AppHost.reverseProxy 的元素。
+// 反向代理的一条：路径前缀 → 上游地址。
 struct HostProxy: Codable, Hashable, Identifiable {
     var id = UUID()
     var path = "/"
@@ -9,11 +9,10 @@ struct HostProxy: Codable, Hashable, Identifiable {
 
 func hostID() -> String { String(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(13)).lowercased() }
 
-// 一个站点。FlyEnv 的 AppHost 把 port / ssl / nginx 各拆成一个嵌套对象（因为它同时要喂
-// nginx、apache、caddy、frankenphp 四套 vhost），MacEnv 只有 nginx，所以拍平 ——
-// 少一层取值路径，JSON 也短一半。
+// 一个站点。port / ssl / nginx 相关字段直接拍平在顶层：MacEnv 只有 nginx 一种
+// 服务端，少一层嵌套取值路径，JSON 也短一半。
 //
-// 文件名一律用 host.id 而不是 name：多个 localhost 站点同名会互相覆盖（FlyEnv #700 的教训）。
+// 文件名一律用 host.id 而不是 name：多个 localhost 站点同名会互相覆盖。
 // id 在改名时不变，所以改名不需要搬文件。
 struct Host: Codable, Hashable, Identifiable {
     var id = hostID()
@@ -32,7 +31,7 @@ struct Host: Codable, Hashable, Identifiable {
     var reverseProxy: [HostProxy] = []
     var isTop = false
 
-    // 对应 FlyEnv Fn.hostAlias：主域名 + 别名，去重后排序。写 vhost 的 server_name 和
+    // 主域名 + 别名，去重后排序。写 vhost 的 server_name 和
     // 系统 hosts 都吃这一份。
     var aliases: [String] {
         let extra = alias.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }

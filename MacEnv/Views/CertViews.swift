@@ -2,8 +2,7 @@ import SwiftUI
 import AppKit
 
 // 站点证书：服务 / 版本管理 / 证书 三个子 tab。
-// 对应 FlyEnv 的 MkCert 模块，但并进「站点」而不单列一个侧边栏条目 ——
-// FlyEnv 自己也是把它归到 site 类（MkCert/Module.ts 里 moduleType: 'site'）。
+// 证书是站点的一部分（自动 SSL、手动指定都挂在站点上），所以并进「站点」而不单列侧边栏条目。
 struct CertificatePanelView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: MkCertViewModel

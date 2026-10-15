@@ -269,6 +269,23 @@ final class PortSearchTests: XCTestCase {
         // 没有 tab 的行（「No match for x found」）不成对，跳过。
         XCTAssertTrue(ToolService.parsePortSearch("No match for nginx found\n", descriptions: []).isEmpty)
     }
+
+    // node 的 descriptions 片段必须跟 port search --line 的真实输出对得上。曾经照 FlyEnv
+    // 的 port info 口径写了 "scalable network programs"，跟 search 输出的
+    // "Evented I/O for V8 JavaScript" 对不上，每行都被描述过滤毙掉，列表静默全空。
+    // 样例就是实跑 port search 抓的真实输出（2026-10，nodejs8 到 nodejs26 一族）。
+    func testNodeCatalogDescriptionsMatchRealPortSearchOutput() {
+        let sample = """
+        nodejs8\t8.17.0\tlang net\tEvented I/O for V8 JavaScript
+        nodejs10\t10.24.1\tlang net\tEvented I/O for V8 JavaScript
+        nodejs18\t18.20.8\tlang net\tEvented I/O for V8 JavaScript
+        nodejs22\t22.22.2\tlang net\tEvented I/O for V8 JavaScript
+        nodejs26\t26.10.0\tlang net\tEvented I/O for V8 JavaScript
+        """
+        let result = ToolService.parsePortSearch(sample, descriptions: ToolService.portCatalogs["node"]?.descriptions ?? [])
+        XCTAssertEqual(result.count, 5)
+        XCTAssertEqual(result.first?.name, "nodejs8")
+    }
 }
 
 // MARK: - MacPorts PHP 扩展名解析

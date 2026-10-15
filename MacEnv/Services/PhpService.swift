@@ -1,6 +1,6 @@
 import Foundation
 
-// 对应 FlyEnv 的 PHP 模块：版本管理 + PATH 注入 + php.ini，不托管进程（PHP-FPM 是另一个模块）。
+// PHP CLI 模块：版本管理 + PATH 注入 + php.ini，不托管进程（PHP-FPM 是另一个模块）。
 //
 // 注意 static-php-cli 的包是「一个裸二进制」：CLI 包解出 php，FPM 包解出 php-fpm，
 // 所以安装走自己的流程，不能复用 StaticCatalogService.install —— 它按「二进制往上退两级」
@@ -101,7 +101,7 @@ final class PhpService {
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
 
-    // 接口给的是 -fpm- 的地址，把这一段换成 -cli- 就是 CLI 包（FlyEnv 同款做法）。
+    // 接口给的是 -fpm- 的地址，把这一段换成 -cli- 就是 CLI 包。
     // 归档名跟 StaticCatalogService 保持一致，列表里的「已下载」标记才对得上。
     func install(_ version: StaticVersion, report: @escaping (String) -> Void = { _ in }, onStart: ((Process) -> Void)? = nil) async throws {
         let cli = URL(string: version.url.absoluteString.replacingOccurrences(of: "-fpm-", with: "-cli-")) ?? version.url
@@ -166,7 +166,7 @@ final class PhpService {
 
     // MARK: - 扩展
 
-    // 常见高危函数，抄 FlyEnv 的 DisableFunction.vue（initFunctions）。紧凑写法省 160 行。
+    // 常见高危函数清单。紧凑写法省 160 行。
     static let commonDisableFunctions = """
     exec system passthru shell_exec proc_open popen pcntl_exec pcntl_alarm pcntl_fork
     pcntl_waitpid pcntl_wait pcntl_wifexited pcntl_wifstopped pcntl_wifsignaled
@@ -197,7 +197,7 @@ final class PhpService {
     time_sleep_until uniqid unpack vsprintf wordwrap
     """.split(whereSeparator: \.isWhitespace).map(String.init)
 
-    // 公式名和 .so 名对不上的几个，只能硬编码。FlyEnv 也是这么干的
+    // 公式名和 .so 名对不上的几个，只能硬编码。
     // （src/fork/module/Brew/index.ts 的 names 表）。
     static let extensionSonames = ["pecl_http": "http.so", "phalcon5": "phalcon.so",
                                    "phalcon4": "phalcon.so", "phalcon3": "phalcon.so",
@@ -252,7 +252,7 @@ final class PhpService {
 
     var macportsInstalled: Bool { FileManager.default.isExecutableFile(atPath: Self.macportsPort) }
 
-    // 可安装的 MacPorts 扩展：port search 直查（FlyEnv 同款），不读本地 PortIndex ——
+    // 可安装的 MacPorts 扩展：port search 直查，不读本地 PortIndex ——
     // 索引路径跟着 sources.conf 走（rsync 源在 tarballs/ports/ 下，file:// 本地源又不一样），
     // 硬编码路径读不到就静默空表，这个坑已经踩过一次。不跑 `port search` 的联网 sync 顾虑
     // 不存在：search 只查本地索引，不联网。
@@ -305,8 +305,7 @@ final class PhpService {
         "php" + version.majorMinor.replacingOccurrences(of: ".", with: "") + "-" + name
     }
 
-    // 装扩展分两步，FlyEnv 也这么干 —— 区别是它第二步让用户把 .so 复制到剪贴板自己粘，
-    // 这里直接替用户拷过去：
+    // 装扩展分两步，第二步直接替用户把 .so 拷过去（不用用户自己复制粘贴）：
     // 1. brew install shivammathur/extensions/<name>@8.4
     // 2. brew 把 .so 留在 Cellar 的 keg 里，PHP 的扩展目录看不到它，得拷一份
     // 返回真实的 soname，调用方拿去写 php.ini。
@@ -342,7 +341,7 @@ final class PhpService {
         try? await Brew.run("uninstall", formula: "shivammathur/extensions/\(name)@\(version.majorMinor)", report: report, onStart: onStart)
     }
 
-    // 把扩展写进 / 摘出 php.ini。装完不写 ini 等于没装，FlyEnv 到这一步是让用户复制粘贴的。
+    // 把扩展写进 / 摘出 php.ini。装完不写 ini 等于没装。
     func setExtension(_ name: String, soname: String, enabled: Bool, for version: PhpVersion) async throws {
         let path = try await iniPath(version)
         var text = (try? String(contentsOfFile: path, encoding: .utf8)) ?? ""

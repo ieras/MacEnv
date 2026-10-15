@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Java 跟 Go 同构（FlyEnv 里也是一等语言模块）：没有常驻进程，所以两个 tab ——
+// Java 跟 Go 同构（一等语言模块）：没有常驻进程，所以两个 tab ——
 // 已安装（含环境变量开关）、版本管理（Static / Homebrew / MacPorts / SDKMAN）。
 // SDKMAN 的**本体**在环境工具页，这里只把「用 SDKMAN 装的 JDK」当一个来源。
 struct JavaManagementView: View {

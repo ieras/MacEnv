@@ -1,6 +1,6 @@
 # MacEnv
 
-macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗口与菜单栏、Foundation 的 `Process` 托管服务进程，一个窗口把本机的 Nginx、MySQL、MariaDB、PostgreSQL、Redis、ClickHouse、Qdrant、Consul、etcd、PHP、Go、Java、Python 管起来。
+macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗口与菜单栏、Foundation 的 `Process` 托管服务进程，一个窗口把本机的 Nginx、MySQL、MariaDB、PostgreSQL、Redis、ClickHouse、Qdrant、Consul、etcd、PHP、Go、Java、Python、Node 管起来。
 
 ## 界面预览
 
@@ -107,6 +107,14 @@ Java 是「已安装 + 版本管理 + Maven + Gradle」四个页签，后两个�
 - shim 按版本隔离（目录名带版本与路径摘要），切换版本时软链目标跟着变，界面才能判出当前启用的是哪一个
 - 版本号跑一次 `--version` 读出来，Python 2 把结果写到 stderr 也能解析
 
+### Node
+
+已安装、版本管理两个页签，跟 Go / Python 一样属于「不需要启动服务」的模块。版本来源覆盖静态包（nodejs.org 官方包）、Homebrew 的 `node` / `node@22` 公式族、MacPorts 的 `nodejs` 系 port，以及机器上 nvm 或 fnm 装着的版本 —— 后两者只读地混进列表，装卸走它们自己的命令。
+
+- nvm / fnm 装的版本同样能一键放进 PATH：五路来源共用一个归属开关，谁启用谁生效，这就是「当前 node 版本」的语义
+- npm / npx 跟 node 在同一个 `bin/` 里，跟着版本走，不用像 Python 那样补名字
+- 版本列表带 LTS 徽章；nvm 的 default 版本在已安装列表里打标记（纯展示，不接管 nvm 的切换语义）
+
 ### 版本与 PATH
 
 - 版本来源：Homebrew、MacPorts、MacEnv 下载安装的静态包、用户自己加的目录，以及登录 shell 的 `PATH` 里出现过的目录
@@ -142,6 +150,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/go-light.png" width="86" hspace="1" alt="Go">
 <img src="AppIcons/tile/java-light.png" width="86" hspace="1" alt="Java">
 <img src="AppIcons/tile/python-light.png" width="86" hspace="1" alt="Python">
+<img src="AppIcons/tile/node-light.png" width="86" hspace="1" alt="Node">
 <img src="AppIcons/tile/maven-light.png" width="86" hspace="1" alt="Maven">
 <img src="AppIcons/tile/gradle-light.png" width="86" hspace="1" alt="Gradle">
 <img src="AppIcons/tile/homebrew-light.png" width="86" hspace="1" alt="Homebrew">
@@ -173,6 +182,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/go-dark.png" width="86" hspace="1" alt="Go">
 <img src="AppIcons/tile/java-dark.png" width="86" hspace="1" alt="Java">
 <img src="AppIcons/tile/python-dark.png" width="86" hspace="1" alt="Python">
+<img src="AppIcons/tile/node-dark.png" width="86" hspace="1" alt="Node">
 <img src="AppIcons/tile/maven-dark.png" width="86" hspace="1" alt="Maven">
 <img src="AppIcons/tile/gradle-dark.png" width="86" hspace="1" alt="Gradle">
 <img src="AppIcons/tile/homebrew-dark.png" width="86" hspace="1" alt="Homebrew">
@@ -311,6 +321,7 @@ MacEnv/
 ├── server/golang/versions/       # 静态包安装的 Go
 ├── server/java/versions/         # 静态包安装的 JDK
 ├── server/python/versions/       # 静态包安装的 Python
+├── server/node/versions/         # 静态包安装的 Node
 ├── server/swoole-cli/versions/
 ├── server/composer/versions/
 ├── vhost/                        # 站点 vhost、伪静态、日志

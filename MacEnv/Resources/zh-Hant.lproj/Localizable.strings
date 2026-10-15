@@ -326,13 +326,31 @@
 "source.system" = "系統";
 "column.default" = "預設";
 "message.noGoInstalled" = "暫無已安裝 Go，請在版本管理中安裝或新增本機目錄。";
+"message.noNodeInstalled" = "暫無已安裝 Node，請在版本管理中安裝或新增本機目錄。";
 "message.gvmDefaultSet" = "預設版本已切換到 %@";
 "gvm.checking" = "正在偵測 GVM…";
 "gvm.intro" = "GVM（Go Version Manager）是第三方的 Go 版本管理器，安裝後可以在這裡安裝與切換多個 Go 版本。";
 "gvm.install" = "安裝 GVM";
 "gvm.setDefault" = "設為預設";
+"node.nvmDefault" = "nvm default";
+"node.checkingManager" = "正在檢測 nvm / fnm…";
+"node.missingManager" = "未偵測到 %@，請到「環境工具」裡安裝。";
+"node.setDefault" = "設為預設";
+"node.setDefaultTitle" = "正在將 %@ 的預設版本設為 %@";
+"node.installingManager" = "正在安裝 %@ 本體…";
+"node.updatingManager" = "正在更新 %@ 本體…";
+"node.managerIntro" = "%@ 是 Node 的版本管理器。安裝後可在 Node 頁面用它安裝和管理版本。";
+"node.fnmDefault" = "fnm default";
+"alert.uninstallManagerTitle" = "卸載 %@ 本體？";
+"alert.uninstallManagerMessage" = "將刪除 %@（%@）及其管理的全部 %ld 個 Node 版本，並移除 shell 設定裡的初始化行。此操作不可恢復，確定？";
+"error.nvmMissing" = "nvm 目錄裡找不到 nvm.sh，拒絕刪除";
+"error.nvmRootUnsafe" = "NVM_DIR 指向家目錄，拒絕刪除";
+"error.fnmMissing" = "未找到 fnm 目錄";
+"error.fnmRootUnsafe" = "FNM_DIR 指向家目錄，拒絕刪除";
 "error.gvmMissing" = "GVM 未安裝，請先安裝 GVM";
 "error.gvmFailed" = "GVM 命令執行失敗";
+"error.nvmFailed" = "nvm 命令執行失敗";
+"error.fnmFailed" = "fnm 命令執行失敗";
 "error.gvmRootUnsafe" = "GVM 根目錄異常，已取消解除安裝";
 "gvm.uninstall" = "解除安裝 GVM";
 "alert.uninstallGvmTitle" = "解除安裝 GVM？";
@@ -340,6 +358,8 @@
 "message.gvmUninstalled" = "GVM 已解除安裝";
 "alert.uninstallGoTitle" = "卸載 Homebrew Go？";
 "alert.uninstallGoMessage" = "將執行 brew uninstall %@，GOROOT 內的開發工具鏈會被刪除，其他版本交由 Homebrew 處理。";
+"alert.uninstallNodeTitle" = "卸載 nvm / fnm 管理的 Node？";
+"alert.uninstallNodeMessage" = "將執行 %@ uninstall %@，該版本由這個管理器負責，MacEnv 只代理這條命令，不碰它的目錄。";
 
 // MARK: - 全域任務日誌
 "action.update" = "更新";
@@ -367,6 +387,7 @@
 "tools.uninstallSDKMAN" = "解除安裝 SDKMAN";
 "tools.missingMacPorts" = "未偵測到 MacPorts，請到「環境工具」安裝。";
 "tools.missingGvm" = "未偵測到 GVM，請到「環境工具」安裝。";
+"tools.uninstallManager" = "卸載 %@ 本體";
 "tools.empty" = "這裡還沒裝任何東西。";
 "alert.uninstallBrewTitle" = "解除安裝 Homebrew？";
 "alert.uninstallBrewMessage" = "將刪除 Homebrew 本體，以及它裝過的全部 %d 個公式 —— 包含 MacEnv 正在管理的 nginx / PHP / MySQL / Redis / Go。這些服務會立刻從 MacEnv 消失，且無法還原。";
@@ -382,6 +403,7 @@
 "error.sdkmanMissing" = "SDKMAN 未安裝";
 "module.java" = "Java";
 "module.python" = "Python";
+"module.node" = "NodeJs";
 "column.vendor" = "發行商";
 "java.setDefault" = "設為預設";
 "sdkman.default" = "目前預設";

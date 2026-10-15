@@ -11,7 +11,7 @@ import Foundation
 // 启动方式：`etcd --config-file <yaml>`，**前台**跑（不加任何 daemonize 开关，父进程秒退会让
 // 托管句柄失效 —— 同 redis / consul / clickhouse）。
 //
-// 跟 FlyEnv 的三处关键差异（照抄会出事，理由写在 configContent 上面）。
+// 配置有三处必须显式写全（理由写在 configContent 上面）。
 @MainActor
 final class EtcdService {
     let root: URL
@@ -68,19 +68,19 @@ final class EtcdService {
         }
     }
 
-    // 对照 FlyEnv 的 initConfig()，三处必须改：
+    // 配置三处必须写全：
     //
-    // ① **补 initial-cluster。** FlyEnv 那份写了 `name: "etcd-flyenv-test"` 却没写 initial-cluster，
-    //    而 etcd 的 initial-cluster 默认值是 `default=http://localhost:2380` —— 名字对不上，
+    // ① **initial-cluster 要显式写。** 只写 name 不写 initial-cluster，etcd 的
+    //    initial-cluster 默认值是 `default=http://localhost:2380` —— 名字对不上，
     //    etcd 直接拒绝启动（couldn't find local name ... in the initial cluster configuration）。
-    // ② **log-outputs 必须指向文件。** FlyEnv 写 `["stdout"]`，但 MacEnv 的 ProcessSupervisor.launch
-    //    把 standardOutput 接到 /dev/null（只有 stderr 落盘），照抄的话「日志」tab 永远是空的。
-    //    Consul 靠配置里的 log_file 解决同一个问题，etcd 就靠 log-outputs。
-    // ③ **补 data-dir。** FlyEnv 压根没设，etcd 会在工作目录下建 default.etcd —— 也就是
-    //    数据落在二进制旁边。MacEnv 显式指定到 server/etcd/etcd-<major>-data。
+    // ② **log-outputs 必须指向文件。** MacEnv 的 ProcessSupervisor.launch
+    //    把 standardOutput 接到 /dev/null（只有 stderr 落盘），写 `["stdout"]` 的话
+    //    「日志」tab 永远是空的。Consul 靠配置里的 log_file 解决同一个问题，etcd 就靠 log-outputs。
+    // ③ **data-dir 要显式指定。** 不设的话 etcd 会在工作目录下建 default.etcd —— 也就是
+    //    数据落在二进制旁边。显式指定到 server/etcd/etcd-<major>-data。
     //
-    // 另外把 listen-*-urls 从 0.0.0.0 收回 127.0.0.1：FlyEnv 绑全网卡是为了能组多机集群，
-    // MacEnv 只做本机开发环境，绑回环更安全（要连集群自己在配置页改）。
+    // 另外把 listen-*-urls 绑回环 127.0.0.1：只做本机开发环境，绑全网卡没必要，
+    // 回环更安全（要连集群自己在配置页改）。
     private func configContent(_ version: EtcdVersion) -> String {
         let name = "macenv-etcd"
         let peer = "http://127.0.0.1:2380"
@@ -103,7 +103,7 @@ final class EtcdService {
     }
 
     // 来源两条：Homebrew（homebrew/core 有正式公式）和静态包（one-env 给的官方 GitHub release zip）。
-    // 没有 MacPorts —— `port search '^etcd$'` 是 No match，FlyEnv 那边也没给这一栏。
+    // 没有 MacPorts —— `port search '^etcd$'` 是 No match。
     func installedVersions(customDirectories: [String] = []) async throws -> [EtcdVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String, String?)] = []
@@ -189,7 +189,7 @@ final class EtcdService {
             try? FileManager.default.removeItem(at: pidFile)
             return
         }
-        // SIGTERM 是 etcd 的优雅退出信号（FlyEnv 的 _stopSignal() 也把 etcd 归在 -TERM 那一组）：
+        // SIGTERM 是 etcd 的优雅退出信号：
         // 它会停 raft、刷 WAL、关 bolt，所以别一上来就 SIGKILL。
         try await supervisor.terminate(target, force: true)
         runningVersion = nil

@@ -200,7 +200,7 @@ final class ToolService {
         try await Command.privilegedStream("PATH=/opt/local/bin:/usr/bin:/bin /opt/local/bin/port -q uninstall \(singleQuoted(name))", report: report)
     }
 
-    // MARK: - MacPorts 可装清单（FlyEnv 同款）
+    // MARK: - MacPorts 可装清单
 
     // 每个模块一份清单定义。查询用 port search --name --line --regex <正则>，
     // 输出一行一个 port：「名字\t版本\t类别\t描述」；描述用来滤掉正则圈进来的同名同族
@@ -210,7 +210,7 @@ final class ToolService {
         let regex: String
         let descriptions: [String]
         let installed: (String) -> Bool
-        // 装/卸时一起带上的伴随 port：FlyEnv 的做法 —— php 是个多 SAPI 大包，
+        // 装/卸时一起带上的伴随 port：php 是个多 SAPI 大包，
         // 只装 php84 没有 fpm/mysql/apache2handler；mysql/mariadb 只装本体起不了服务。
         let companions: (String) -> [String]
     }
@@ -297,6 +297,19 @@ final class ToolService {
             regex: "^consul$",
             descriptions: ["Consul is a distributed service mesh"],
             installed: { _ in FileManager.default.isExecutableFile(atPath: "/opt/local/bin/consul") },
+            companions: { _ in [] }),
+        // MacPorts 的 nodejs 系 port（nodejs / nodejs18 / nodejs22 …）二进制同名
+        // （都装 /opt/local/bin/node），按二进制分不出装的是哪个 port —— installed
+        // 查 MacPorts 自己的 registry（每个已装 port 在 /opt/local/var/macports/software/
+        // 下有自己的目录）。注意 nodejs 方案里一度误判「MacPorts 没有 node」，实测有。
+        "node": PortCatalog(
+            regex: "^nodejs\\d*$",
+            // port search --line 的描述列实际措辞是 "Evented I/O for V8 JavaScript"
+            // （nodejs8 到 nodejs26 一族都一样）。写过跟 search 输出对不上的措辞，
+            // 每行都被描述过滤毙掉，列表静默全空。regex 已经钉死 port 家族，
+            // 这里给个宽松片段兜底就行。
+            descriptions: ["JavaScript"],
+            installed: { name in FileManager.default.fileExists(atPath: "/opt/local/var/macports/software/\(name)") },
             companions: { _ in [] })
     ]
 
@@ -369,7 +382,7 @@ final class ToolService {
         return decorate(items, app: app)
     }
 
-    // 装 / 卸一组 port。clean 先清掉上次装到一半的半成品（FlyEnv 同款）；
+    // 装 / 卸一组 port。clean 先清掉上次装到一半的半成品；
     // 卸载带 --follow-dependents 把连带的依赖一起收走。
     // PATH 带 /opt/local/sbin：装 php-fpm / mysql 这类时 port 要调 sbin 下的工具。
     func port(_ action: String, app: String, name: String, report: @escaping (String) -> Void) async throws {
@@ -405,7 +418,7 @@ final class ToolService {
 
     // get.sdkman.io 的 bash 4 检查包在 `if [ -n "$BASH_VERSION" ]` 里，用 zsh 跑整个跳过 ——
     // macOS 自带的 /bin/bash 是 3.2，用 bash 跑会被它自己拒掉。脚本自己也处理 $ZSH_VERSION。
-    // 所以不需要先 brew install bash（FlyEnv 那一步是多余的），也不需要提权。
+    // 所以不需要先 brew install bash，也不需要提权。
     func installSDKMAN(report: @escaping (String) -> Void, onStart: @escaping (Process) -> Void) async throws {
         let script = try await download(Self.sdkmanInstaller, named: "sdkman-install.sh", report: report)
         let status = try await Command.stream("/bin/zsh", [script.path], onStart: onStart, onOutput: report)

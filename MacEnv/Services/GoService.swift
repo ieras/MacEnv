@@ -1,9 +1,8 @@
 import Foundation
 
-// 对应 FlyEnv 的 GoLang 模块（src/fork/module/GoLang/index.ts + gvm.ts）。
 // Go 没有常驻进程，这个模块只管两件事：机器上有哪些版本、把哪个放进 PATH。
 //
-// 版本来源有三处，跟 FlyEnv 的分法一致：
+// 版本来源有三处：
 //   1. 我们自己装的静态包（server/golang/versions/golang-<版本>/bin/go）
 //   2. 用户自己加的目录
 //   3. GVM 装的（~/.gvm/gos/goX.Y.Z）—— GVM 是第三方 Go 版本管理器，
@@ -112,7 +111,7 @@ final class GoService {
 
     var gvmInitScript: URL { gvmRoot.appendingPathComponent("scripts/gvm") }
 
-    // gvm 装没装，就看它那个初始化脚本在不在 —— FlyEnv 判得一模一样。
+    // gvm 装没装，就看它那个初始化脚本在不在。
     var gvmInstalled: Bool { FileManager.default.fileExists(atPath: gvmInitScript.path) }
 
     func gvmGoDirectories() -> [URL] {
@@ -176,7 +175,7 @@ final class GoService {
     private static let gvmInstaller = "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer"
 
     // GOROOT 指向一个已经不存在的目录时（上一个默认版本被删了），gvm 每条命令都会带着坏 GOROOT 跑。
-    // 先把悬空的 default 清掉再干活，FlyEnv 的 sanitize 也是这一步。
+    // 先把悬空的 default 清掉再干活。
     private static let gvmSanitize = #"if [ -n "$GOROOT" ] && [ ! -d "$GOROOT" ]; then rm -f "$GVM_ROOT/environments/default"; unset GOROOT GOPATH GOBIN gvm_go_name gvm_pkgset_name; fi"#
 
     // GVM installer 往这些文件里挑**已存在的**追加 source 行（它的 update_profile），没有标记注释，

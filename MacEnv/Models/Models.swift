@@ -108,6 +108,9 @@ struct StaticVersion: Codable, Hashable, Identifiable {
     let url: URL
     var downloaded: Bool
     var installed: Bool
+    // 只有 Node 的源填它（LTS 代号，如 "Jod"），界面打徽章用，其余模块恒为 nil。
+    // 可选带默认值：之前落盘的缓存 JSON 缺这个字段也能解码。
+    var lts: String? = nil
 }
 
 struct ServiceAlias: Codable, Hashable, Identifiable {
@@ -173,8 +176,8 @@ struct ClickHouseVersion: Identifiable, Hashable {
     var id: String { executable.path }
 }
 
-// Qdrant 跟 ClickHouse 一样：官方没发 brew 公式（brew 公式接口查不到 qdrant）、MacPorts
-// 也没有 port（FlyEnv 的 brewinfo / portinfo 都返回空），来源只有静态包一条路，没有 formula。
+// Qdrant 跟 ClickHouse 一样：官方没发 brew 公式、MacPorts也没有 port，
+// 来源只有静态包一条路，没有 formula。
 struct QdrantVersion: Identifiable, Hashable {
     let version: String
     let directory: URL
@@ -268,8 +271,7 @@ struct PhpVersion: Identifiable, Hashable {
 }
 
 // php.ini 是纯文本，改一个配置项就是「找到那一行替换，没有就插一行」。
-// 逐行扫而不是抄 FlyEnv 的三个正则（IniParse.ts）：它为了兼容缩进和行尾写得很绕，
-// 逐行判注释前缀反而更短，也不会误伤用户注释掉的同名行。
+// 逐行判注释前缀来定位：比一上来就正则替换短，也不会误伤用户注释掉的同名行。
 enum IniFile {
     // 只认「非注释 + 有等号」的行。
     private static func pair(_ line: String) -> (String, String)? {
@@ -372,6 +374,23 @@ struct PythonVersion: Identifiable, Hashable {
     let directory: URL
     let executable: URL
     let source: String
+
+    var id: String { executable.path }
+}
+
+// Node 同构于 Go：没有常驻进程，一个版本就是「Node 根目录 + node 二进制」。
+// npm / npx 跟 node 在同一个 bin/ 里，跟着版本走，不用像 Python 那样补名字。
+// source 区分五路来源：静态包 / Homebrew / nvm / fnm / 自定义目录。
+struct NodeVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    // nvm 自己的 default 版本，界面打徽章用。纯信息展示 —— MacEnv 的 PATH 块
+    // （env/node 软链）和 nvm 的 default 各写各的，正交，谁都不接管谁。
+    var isNvmDefault = false
+    // fnm 同理（默认版本存在 $FNM_DIR/aliases/default 文件里，扫描时纯文件比对）。
+    var isFnmDefault = false
 
     var id: String { executable.path }
 }

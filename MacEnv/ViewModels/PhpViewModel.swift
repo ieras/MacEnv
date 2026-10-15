@@ -55,7 +55,7 @@ final class PhpViewModel: ObservableObject, PortListHost {
             // 先问一次登录 shell 拿真实 PATH：GUI 启动的 app 继承不到用户 rc 里改过的 PATH，
             // 但 PathService 会去问 zsh/bash。
             try await services.paths.refresh()
-            // PATH 里的目录也当扫描目标。用户可能用别的工具（FlyEnv 之类）装了 php，
+            // PATH 里的目录也当扫描目标。用户可能用别的工具装了 php，
             // shell 里 `php -v` 是 8.4、MacEnv 里却一个都看不到，版本号就对不上。
             versions = try await services.php.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
