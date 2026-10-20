@@ -12,6 +12,7 @@ struct ContentView: View {
     @ObservedObject var postgresVM: PostgresViewModel
     @ObservedObject var clickhouseVM: ClickHouseViewModel
     @ObservedObject var qdrantVM: QdrantViewModel
+    @ObservedObject var neo4jVM: Neo4jViewModel
     @ObservedObject var consulVM: ConsulViewModel
     @ObservedObject var etcdVM: EtcdViewModel
     @State private var selectedPage = "nginx"
@@ -100,6 +101,9 @@ struct ContentView: View {
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "qdrant" {
                 QdrantManagementView(app: app, vm: qdrantVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "neo4j" {
+                Neo4jManagementView(app: app, vm: neo4jVM) { selectedPage = "java" }
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "consul" {
                 ConsulManagementView(app: app, vm: consulVM)
@@ -276,9 +280,9 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || phpVM.versions.isEmpty)
             .help(L("sidebar.phpToggleHint"))
-        // 端口固定的单实例服务（mysql / mariadb 走下面的 DatabaseKind 分支）：六个 kind 一套开关。
+        // 端口固定的单实例服务（mysql / mariadb 走下面的 DatabaseKind 分支）：七个 kind 一套开关。
         // 开关 = 有没有版本在跑；开启优先起勾了快捷启动的版本，没配就起列表第一个（版本号最大）。
-        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant":
+        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant", "neo4j":
             if let entry = app.entry(id) {
                 Toggle("", isOn: Binding(
                     get: { entry.targets.contains { app.targetRunning($0.key) } },

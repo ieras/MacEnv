@@ -34,6 +34,7 @@
 "column.installed" = "Installed";
 "column.dataDir" = "Data dir";
 "column.port" = "Port";
+"column.java" = "Java";
 
 "action.start" = "Start";
 "action.stop" = "Stop";
@@ -152,6 +153,7 @@
 "message.started" = "started";
 "message.stopped" = "stopped";
 "message.databaseAlreadyRunning" = "Another version is running, stop it before starting ";
+"message.neo4jJavaWhileRunning" = "Cannot change Java while Neo4j is running, stop it first";
 "message.environmentStarted" = "Selected environment started";
 "message.environmentStopped" = "Selected environment stopped";
 "message.quickStartEmpty" = "No quick start environment yet. Turn on \"Quick start\" in the service list.";
@@ -175,6 +177,7 @@
 "error.nginxOwnerMismatch" = "Nginx process ownership check failed, no stop signal sent";
 "error.nginxDefaultsMissing" = "Missing Nginx default config resource";
 "error.databaseStartFailed" = "Failed to start";
+"error.neo4jJavaMissing" = "No Java runtime selected, cannot start Neo4j";
 "error.databaseDataDirIncomplete" = "%@ data directory is incomplete, remove %@ and retry";
 "error.mariadbInstallerMissing" = "MariaDB data directory initialiser not found";
 "error.postgresInstallerMissing" = "initdb not found; cannot initialise the PostgreSQL data directory";
@@ -201,7 +204,10 @@
 "module.redis" = "Redis";
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
+"module.neo4j" = "Neo4j";
 "qdrant.openDashboard" = "Open Dashboard";
+"neo4j.openBrowser" = "Open Browser";
+"neo4j.installJava" = "Install compatible Java";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";
 "module.etcd" = "etcd";

@@ -48,7 +48,7 @@ struct MacEnvApp: App {
 
     var body: some Scene {
         Window(L("app.name"), id: "main") {
-            ContentView(app: model, nginxVM: model.nginxVM, databaseVM: model.databaseVM, redisVM: model.redisVM, certVM: model.certVM, phpVM: model.phpVM, hostVM: model.hostVM, goVM: model.goVM, postgresVM: model.postgresVM, clickhouseVM: model.clickhouseVM, qdrantVM: model.qdrantVM, consulVM: model.consulVM, etcdVM: model.etcdVM)
+            ContentView(app: model, nginxVM: model.nginxVM, databaseVM: model.databaseVM, redisVM: model.redisVM, certVM: model.certVM, phpVM: model.phpVM, hostVM: model.hostVM, goVM: model.goVM, postgresVM: model.postgresVM, clickhouseVM: model.clickhouseVM, qdrantVM: model.qdrantVM, neo4jVM: model.neo4jVM, consulVM: model.consulVM, etcdVM: model.etcdVM)
                 .frame(minWidth: 900, minHeight: 620)
                 // ModulePage（所有模块页的外壳）靠它读全局任务状态，画「任务进行中」指示条。
                 .environmentObject(model.state)

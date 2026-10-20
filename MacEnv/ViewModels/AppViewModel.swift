@@ -10,7 +10,7 @@ import ServiceManagement
 // （设置页不把它当模块开关）。留一个空组会在设置页画出「标题 + 点了没反应的开关 + 空白网格」。
 let moduleGroups: [(String, [String])] = [
     ("sidebar.web", ["hosts", "nginx"]),
-    ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant"]),
+    ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant", "neo4j"]),
     ("sidebar.cache", ["redis"]),
     // 服务治理：服务发现 / 配置中心这一类组件，不是数据库也不是缓存。
     // 顺序：consul 在 etcd 前面。
@@ -261,6 +261,7 @@ final class AppViewModel: ObservableObject {
     let postgresVM: PostgresViewModel
     let clickhouseVM: ClickHouseViewModel
     let qdrantVM: QdrantViewModel
+    let neo4jVM: Neo4jViewModel
     let consulVM: ConsulViewModel
     let etcdVM: EtcdViewModel
     let certVM: MkCertViewModel
@@ -285,6 +286,7 @@ final class AppViewModel: ObservableObject {
         postgresVM = PostgresViewModel(state: state, services: services)
         clickhouseVM = ClickHouseViewModel(state: state, services: services)
         qdrantVM = QdrantViewModel(state: state, services: services)
+        neo4jVM = Neo4jViewModel(state: state, services: services)
         consulVM = ConsulViewModel(state: state, services: services)
         etcdVM = EtcdViewModel(state: state, services: services)
         certVM = MkCertViewModel(state: state, services: services)
@@ -300,7 +302,7 @@ final class AppViewModel: ObservableObject {
         gradleVM = GradleViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
         toolsVM = ToolsViewModel(state: state, services: services)
-        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, consulVM, etcdVM]
+        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, neo4jVM, consulVM, etcdVM]
         // 卸掉 Homebrew 会把 nginx / php / mysql / redis / go 一起带走，工具页看不到那些 VM，
         // 所以由这里注入一个「刷全部」的回调 —— 反过来让工具页依赖 AppViewModel 是转圈依赖。
         toolsVM.onRefreshAll = { [weak self] in await self?.refreshAll() }
@@ -311,6 +313,7 @@ final class AppViewModel: ObservableObject {
         services.redis.onExit = { [weak self] in self?.redisVM.objectWillChange.send() }
         services.postgres.onExit = { [weak self] in self?.postgresVM.objectWillChange.send() }
         services.qdrant.onExit = { [weak self] in self?.qdrantVM.objectWillChange.send() }
+        services.neo4j.onExit = { [weak self] in self?.neo4jVM.objectWillChange.send() }
         services.clickhouse.onExit = { [weak self] in self?.clickhouseVM.objectWillChange.send() }
         services.consul.onExit = { [weak self] in self?.consulVM.objectWillChange.send() }
         services.etcd.onExit = { [weak self] in self?.etcdVM.objectWillChange.send() }
@@ -455,10 +458,11 @@ final class AppViewModel: ObservableObject {
         async let postgres: Void = postgresVM.refresh()
         async let clickhouse: Void = clickhouseVM.refresh()
         async let qdrant: Void = qdrantVM.refresh()
+        async let neo4j: Void = neo4jVM.refresh()
         async let consul: Void = consulVM.refresh()
         async let etcd: Void = etcdVM.refresh()
         async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, java, python, node, rust, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, consul, etcd, cert, hosts)
+        _ = await (swoole, composer, go, java, python, node, rust, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, neo4j, consul, etcd, cert, hosts)
     }
 }

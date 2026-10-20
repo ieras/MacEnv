@@ -34,6 +34,7 @@
 "column.installed" = "是否已安裝";
 "column.dataDir" = "資料目錄";
 "column.port" = "連接埠";
+"column.java" = "Java";
 
 "action.start" = "啟動";
 "action.stop" = "停止";
@@ -152,6 +153,7 @@
 "message.started" = "已啟動";
 "message.stopped" = "已停止";
 "message.databaseAlreadyRunning" = "已有其他版本在執行，請先停止後再啟動 ";
+"message.neo4jJavaWhileRunning" = "服務執行中不能更換 Java，請先停止 Neo4j";
 "message.environmentStarted" = "所選環境已啟動";
 "message.environmentStopped" = "所選環境已停止";
 "message.quickStartEmpty" = "尚無快速啟動環境，請在服務清單中開啟「快速啟動」。";
@@ -175,6 +177,7 @@
 "error.nginxOwnerMismatch" = "Nginx 程序歸屬驗證失敗，未送出停止訊號";
 "error.nginxDefaultsMissing" = "缺少 Nginx 預設設定資源";
 "error.databaseStartFailed" = "啟動失敗";
+"error.neo4jJavaMissing" = "未選擇 Java 執行環境，無法啟動 Neo4j";
 "error.databaseDataDirIncomplete" = "%@ 資料目錄初始化不完整，請清理 %@ 後重試";
 "error.mariadbInstallerMissing" = "找不到 MariaDB 資料目錄初始化指令";
 "error.postgresInstallerMissing" = "找不到 initdb，無法初始化 PostgreSQL 資料目錄";
@@ -201,7 +204,10 @@
 "module.redis" = "Redis";
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
+"module.neo4j" = "Neo4j";
 "qdrant.openDashboard" = "開啟 Dashboard";
+"neo4j.openBrowser" = "開啟 Browser";
+"neo4j.installJava" = "安裝相容的 Java";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";
 "module.etcd" = "etcd";

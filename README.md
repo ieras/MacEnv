@@ -151,6 +151,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/postgresql-light.png" width="86" hspace="1" alt="PostgreSQL">
 <img src="AppIcons/tile/clickhouse-light.png" width="86" hspace="1" alt="ClickHouse">
 <img src="AppIcons/tile/qdrant-light.png" width="86" hspace="1" alt="Qdrant">
+<img src="AppIcons/tile/neo4j-light.png" width="86" hspace="1" alt="Neo4j">
 <img src="AppIcons/tile/consul-light.png" width="86" hspace="1" alt="Consul">
 <br>
 <img src="AppIcons/tile/etcd-light.png" width="86" hspace="1" alt="etcd">
@@ -187,6 +188,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/postgresql-dark.png" width="86" hspace="1" alt="PostgreSQL">
 <img src="AppIcons/tile/clickhouse-dark.png" width="86" hspace="1" alt="ClickHouse">
 <img src="AppIcons/tile/qdrant-dark.png" width="86" hspace="1" alt="Qdrant">
+<img src="AppIcons/tile/neo4j-dark.png" width="86" hspace="1" alt="Neo4j">
 <img src="AppIcons/tile/consul-dark.png" width="86" hspace="1" alt="Consul">
 <br>
 <img src="AppIcons/tile/etcd-dark.png" width="86" hspace="1" alt="etcd">

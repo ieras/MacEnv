@@ -24,7 +24,7 @@ os.makedirs(OUT, exist_ok=True)
 # 顺序跟根 README 图标墙、AppIcons/README.md 的分节保持一致
 ICONS = [
     ("nginx", "Nginx"), ("mysql", "MySQL"), ("mariadb", "MariaDB"), ("redis", "Redis"),
-    ("postgresql", "PostgreSQL"), ("clickhouse", "ClickHouse"), ("qdrant", "Qdrant"),
+    ("postgresql", "PostgreSQL"), ("clickhouse", "ClickHouse"), ("qdrant", "Qdrant"), ("neo4j", "Neo4j"),
     ("consul", "Consul"), ("etcd", "etcd"),
     ("php", "PHP"), ("go", "Go"), ("java", "Java"), ("python", "Python"), ("node", "Node"), ("rust", "Rust"),
     ("maven", "Maven"), ("gradle", "Gradle"), ("homebrew", "Homebrew"), ("macports", "MacPorts"),

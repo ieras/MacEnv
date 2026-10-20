@@ -10,6 +10,7 @@ final class Services {
     let mariadb: DatabaseService
     let redis: RedisService
     let qdrant: QdrantService
+    let neo4j: Neo4jService
     let postgres: PostgresService
     let clickhouse: ClickHouseService
     let consul: ConsulService
@@ -56,6 +57,9 @@ final class Services {
             // qdrant 的 tar.gz 里就一个裸 qdrant 二进制（不是裸二进制下载，外面裹了层 tar，
             // 所以不能用 rawBinary）。官方没发 brew 公式、MacPorts 也没 port —— 只有静态包一条路。
             "qdrant": StaticCatalogService(root: root, app: "qdrant", binaryNames: ["qdrant"], displayName: "Qdrant"),
+            // neo4j 的社区 tar.gz 顶层就是标准包目录（neo4j-community-<版本>/{bin,conf,...}），
+            // install 路径③ 一行不用改。它自己不带运行时，JDK 归属见 Neo4jService。
+            "neo4j": StaticCatalogService(root: root, app: "neo4j", binaryNames: ["neo4j"], displayName: "Neo4j"),
             // consul 的 zip 里只有单个平铺的 consul 二进制（没有目录层），走 install 里
             // 「包顶就一个裸二进制」那条分支落到 bin/consul —— 同 qdrant，不用 rawBinary。
             "consul": StaticCatalogService(root: root, app: "consul", binaryNames: ["consul"], displayName: "Consul"),
@@ -81,6 +85,7 @@ final class Services {
         mariadb = DatabaseService(kind: .mariadb, root: root)
         redis = RedisService(root: root)
         qdrant = QdrantService(root: root)
+        neo4j = Neo4jService(root: root)
         postgres = PostgresService(root: root)
         clickhouse = ClickHouseService(root: root)
         consul = ConsulService(root: root)

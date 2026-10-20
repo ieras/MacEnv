@@ -24,6 +24,10 @@ struct QdrantIcon: View {
     var body: some View { AssetIcon(name: "QdrantIcon") }
 }
 
+struct Neo4jIcon: View {
+    var body: some View { AssetIcon(name: "Neo4jIcon") }
+}
+
 // 站点 / 站点证书共用。mkcert 盾牌 + SSL 字样的图标。
 struct SSLIcon: View {
     var body: some View { AssetIcon(name: "SSLIcon") }
@@ -365,6 +369,7 @@ struct ServiceIcon: View {
         case "clickhouse": AssetIcon(name: "ClickHouseIcon")
         case "consul": AssetIcon(name: "ConsulIcon")
         case "etcd": AssetIcon(name: "EtcdIcon")
+        case "neo4j": Neo4jIcon()
         default: DatabaseIcon(kind: DatabaseKind(rawValue: kind) ?? .mysql)
         }
     }
@@ -511,6 +516,7 @@ struct ModuleIcon: View {
         case "clickhouse": AssetIcon(name: "ClickHouseIcon")
         case "consul": AssetIcon(name: "ConsulIcon")
         case "etcd": AssetIcon(name: "EtcdIcon")
+        case "neo4j": Neo4jIcon()
         default: DatabaseIcon(kind: DatabaseKind(rawValue: id) ?? .mysql)
         }
     }

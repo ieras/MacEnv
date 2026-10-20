@@ -190,6 +190,22 @@ struct QdrantVersion: Identifiable, Hashable {
 
 extension QdrantVersion: ServiceVersion {}
 
+// Neo4j 是图数据库，归数据库组。官方只发静态 tar.gz（社区版）+ Homebrew 只有一个
+// 启动服务的 cask（brew 安装接口查不到公式），所以来源只有 Static 一条路。
+// 发行版解包后是标准 bin/ 布局，StaticCatalogService 路径③ 直接吃；
+// 特别之处是它自己不带运行时 —— 起进程必须有兼容的 JDK，绑定关系存在
+// Neo4jService 的 UserDefaults 里（bin 路径 → JAVA_HOME）。
+struct Neo4jVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+extension Neo4jVersion: ServiceVersion {}
+
 // Consul 是服务治理组件（服务发现 + 健康检查 + KV + 自带的 Web UI），不是数据库。
 // 官方包是**单个平铺的裸二进制**（zip 里只有 consul 一个条目，解压后 182MB），
 // Homebrew 只有 cask / hashicorp tap（本机那个 tap 未信任，加载直接报错）、
