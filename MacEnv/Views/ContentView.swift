@@ -9,10 +9,12 @@ struct ContentView: View {
     @ObservedObject var phpVM: PhpViewModel
     @ObservedObject var hostVM: HostViewModel
     @ObservedObject var goVM: GoViewModel
+    @ObservedObject var erlangVM: ErlangViewModel
     @ObservedObject var postgresVM: PostgresViewModel
     @ObservedObject var clickhouseVM: ClickHouseViewModel
     @ObservedObject var qdrantVM: QdrantViewModel
     @ObservedObject var neo4jVM: Neo4jViewModel
+    @ObservedObject var rabbitmqVM: RabbitMQViewModel
     @ObservedObject var consulVM: ConsulViewModel
     @ObservedObject var etcdVM: EtcdViewModel
     @State private var selectedPage = "nginx"
@@ -76,6 +78,9 @@ struct ContentView: View {
             } else if page == "go" {
                 GoManagementView(app: app, vm: goVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "erlang" {
+                ErlangManagementView(app: app, vm: erlangVM)
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "java" {
                 JavaManagementView(app: app, vm: app.javaVM)
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -104,6 +109,9 @@ struct ContentView: View {
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "neo4j" {
                 Neo4jManagementView(app: app, vm: neo4jVM) { selectedPage = "java" }
+                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else if page == "rabbitmq" {
+                RabbitMQManagementView(app: app, vm: rabbitmqVM) { selectedPage = "erlang" }
                     .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else if page == "consul" {
                 ConsulManagementView(app: app, vm: consulVM)
@@ -251,13 +259,14 @@ struct ContentView: View {
     @ViewBuilder
     private func moduleTrailing(_ id: String) -> some View {
         switch id {
-        // 站点、Go、Java、Python 都没有常驻进程，只显示数量。
+        // 站点、Go、Java、Python、Erlang 都没有常驻进程，只显示数量。
         case "hosts": Text(String(hostVM.hosts.count)).foregroundStyle(.secondary)
         case "go": Text(String(goVM.versions.count)).foregroundStyle(.secondary)
         case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(.secondary)
         case "python": Text(String(app.pythonVM.versions.count)).foregroundStyle(.secondary)
         case "node": Text(String(app.nodeVM.versions.count)).foregroundStyle(.secondary)
         case "rust": Text(String(app.rustVM.versions.count)).foregroundStyle(.secondary)
+        case "erlang": Text(String(erlangVM.versions.count)).foregroundStyle(.secondary)
         case "nginx":
             Toggle("", isOn: Binding(get: { nginxVM.isRunning }, set: { _ in
                 if nginxVM.isRunning {
@@ -280,9 +289,9 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || phpVM.versions.isEmpty)
             .help(L("sidebar.phpToggleHint"))
-        // 端口固定的单实例服务（mysql / mariadb 走下面的 DatabaseKind 分支）：七个 kind 一套开关。
+        // 端口固定的单实例服务（mysql / mariadb 走下面的 DatabaseKind 分支）：八个 kind 一套开关。
         // 开关 = 有没有版本在跑；开启优先起勾了快捷启动的版本，没配就起列表第一个（版本号最大）。
-        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant", "neo4j":
+        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant", "neo4j", "rabbitmq":
             if let entry = app.entry(id) {
                 Toggle("", isOn: Binding(
                     get: { entry.targets.contains { app.targetRunning($0.key) } },

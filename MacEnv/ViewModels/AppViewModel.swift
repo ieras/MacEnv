@@ -11,11 +11,12 @@ import ServiceManagement
 let moduleGroups: [(String, [String])] = [
     ("sidebar.web", ["hosts", "nginx"]),
     ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant", "neo4j"]),
-    ("sidebar.cache", ["redis"]),
+    // 缓存与消息队列：Redis（缓存）+ RabbitMQ（消息队列）。
+    ("sidebar.cache", ["redis", "rabbitmq"]),
     // 服务治理：服务发现 / 配置中心这一类组件，不是数据库也不是缓存。
     // 顺序：consul 在 etcd 前面。
     ("sidebar.governance", ["consul", "etcd"]),
-    ("sidebar.language", ["php", "go", "java", "python", "node", "rust"]),
+    ("sidebar.language", ["php", "go", "java", "python", "node", "rust", "erlang"]),
 ]
 
 // 控制台组的内容。它跟 moduleGroups 一样要同时喂给侧栏和设置页，
@@ -262,6 +263,7 @@ final class AppViewModel: ObservableObject {
     let clickhouseVM: ClickHouseViewModel
     let qdrantVM: QdrantViewModel
     let neo4jVM: Neo4jViewModel
+    let rabbitmqVM: RabbitMQViewModel
     let consulVM: ConsulViewModel
     let etcdVM: EtcdViewModel
     let certVM: MkCertViewModel
@@ -273,6 +275,7 @@ final class AppViewModel: ObservableObject {
     let pythonVM: PythonViewModel
     let nodeVM: NodeViewModel
     let rustVM: RustViewModel
+    let erlangVM: ErlangViewModel
     let mavenVM: MavenViewModel
     let gradleVM: GradleViewModel
     let hostVM: HostViewModel
@@ -287,6 +290,7 @@ final class AppViewModel: ObservableObject {
         clickhouseVM = ClickHouseViewModel(state: state, services: services)
         qdrantVM = QdrantViewModel(state: state, services: services)
         neo4jVM = Neo4jViewModel(state: state, services: services)
+        rabbitmqVM = RabbitMQViewModel(state: state, services: services)
         consulVM = ConsulViewModel(state: state, services: services)
         etcdVM = EtcdViewModel(state: state, services: services)
         certVM = MkCertViewModel(state: state, services: services)
@@ -298,11 +302,12 @@ final class AppViewModel: ObservableObject {
         pythonVM = PythonViewModel(state: state, services: services)
         nodeVM = NodeViewModel(state: state, services: services)
         rustVM = RustViewModel(state: state, services: services)
+        erlangVM = ErlangViewModel(state: state, services: services)
         mavenVM = MavenViewModel(state: state, services: services)
         gradleVM = GradleViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
         toolsVM = ToolsViewModel(state: state, services: services)
-        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, neo4jVM, consulVM, etcdVM]
+        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, neo4jVM, rabbitmqVM, consulVM, etcdVM]
         // 卸掉 Homebrew 会把 nginx / php / mysql / redis / go 一起带走，工具页看不到那些 VM，
         // 所以由这里注入一个「刷全部」的回调 —— 反过来让工具页依赖 AppViewModel 是转圈依赖。
         toolsVM.onRefreshAll = { [weak self] in await self?.refreshAll() }
@@ -314,6 +319,7 @@ final class AppViewModel: ObservableObject {
         services.postgres.onExit = { [weak self] in self?.postgresVM.objectWillChange.send() }
         services.qdrant.onExit = { [weak self] in self?.qdrantVM.objectWillChange.send() }
         services.neo4j.onExit = { [weak self] in self?.neo4jVM.objectWillChange.send() }
+        services.rabbitmq.onExit = { [weak self] in self?.rabbitmqVM.objectWillChange.send() }
         services.clickhouse.onExit = { [weak self] in self?.clickhouseVM.objectWillChange.send() }
         services.consul.onExit = { [weak self] in self?.consulVM.objectWillChange.send() }
         services.etcd.onExit = { [weak self] in self?.etcdVM.objectWillChange.send() }
@@ -449,6 +455,7 @@ final class AppViewModel: ObservableObject {
         async let python: Void = pythonVM.refresh()
         async let node: Void = nodeVM.refresh()
         async let rust: Void = rustVM.refresh()
+        async let erlang: Void = erlangVM.refresh()
         async let maven: Void = mavenVM.refresh()
         async let gradle: Void = gradleVM.refresh()
         async let nginx: Void = nginxVM.refresh()
@@ -459,10 +466,11 @@ final class AppViewModel: ObservableObject {
         async let clickhouse: Void = clickhouseVM.refresh()
         async let qdrant: Void = qdrantVM.refresh()
         async let neo4j: Void = neo4jVM.refresh()
+        async let rabbitmq: Void = rabbitmqVM.refresh()
         async let consul: Void = consulVM.refresh()
         async let etcd: Void = etcdVM.refresh()
         async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, java, python, node, rust, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, neo4j, consul, etcd, cert, hosts)
+        _ = await (swoole, composer, go, java, python, node, rust, erlang, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, neo4j, rabbitmq, consul, etcd, cert, hosts)
     }
 }

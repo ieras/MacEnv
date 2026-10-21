@@ -206,6 +206,23 @@ struct Neo4jVersion: Identifiable, Hashable {
 
 extension Neo4jVersion: ServiceVersion {}
 
+// RabbitMQ 是消息队列，归缓存与消息队列组。跟 Neo4j 一样「自己不带运行时」——
+// 它是 Erlang/OTP 写的，起进程必须有兼容的 erl，绑定关系存在
+// RabbitMQService 的 UserDefaults 里（sbin 路径 → Erlang 根目录）。
+// 来源三条路：官方 generic-unix 静态 tar.xz / Homebrew / MacPorts，
+// 官方包解包后是 sbin/rabbitmq-server（不是标准 bin/）。
+struct RabbitMQVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+    let formula: String?
+
+    var id: String { executable.path }
+}
+
+extension RabbitMQVersion: ServiceVersion {}
+
 // Consul 是服务治理组件（服务发现 + 健康检查 + KV + 自带的 Web UI），不是数据库。
 // 官方包是**单个平铺的裸二进制**（zip 里只有 consul 一个条目，解压后 182MB），
 // Homebrew 只有 cask / hashicorp tap（本机那个 tap 未信任，加载直接报错）、
@@ -453,6 +470,22 @@ struct JavaVersion: Identifiable, Hashable {
 
     var id: String { executable.path }
 }
+
+// Erlang/OTP 同构于 Go / Java：没有常驻进程，一个版本就是「Erlang 根目录 + erl 二进制」。
+// version 记的是 OTP release（27 / 28）—— brew 公式名（erlang@27）、MacPorts 的 port 名
+// （erlang27）、RabbitMQ 的官方兼容矩阵全按它走，用户嘴里的「Erlang 27」也是它。
+// 静态包不做：官方 macOS 没有预编译发行版（one-env 实测返回空），
+// Homebrew / MacPorts 之外只有 kerl 源码编译，不在覆盖范围。
+struct ErlangVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+extension ErlangVersion: ServiceVersion {}
 
 // SDKMAN 的 `sdk list java` 一行。identifier 是 sdk 自己的安装标识（21.0.12-amzn），
 // vendor 只在换厂商那一行出现，续行是空的 —— 解析时要继承上一行。

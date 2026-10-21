@@ -38,14 +38,16 @@ enum Brew {
     }
 
     // 已安装版本只读本地 Cellar，不查询远程公式；第三方 tap 从安装凭据保留。
-    static func installedBinaries(_ app: String, binary: String) async throws -> [(file: URL, formula: String)] {
+    // subdirectory：二进制在 keg 里的上层目录，绝大多数公式是 bin/，
+    // rabbitmq 这类把整套发行版按原样搬进来的（prefix.install Dir["*"]）是 sbin/。
+    static func installedBinaries(_ app: String, binary: String, subdirectory: String = "bin") async throws -> [(file: URL, formula: String)] {
         let fm = FileManager.default
         var result: [(URL, String)] = []
         for cellar in ["/opt/homebrew/Cellar", "/usr/local/Cellar"] {
             let formulae = (try? fm.contentsOfDirectory(at: URL(fileURLWithPath: cellar), includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
             for formula in formulae where formula.lastPathComponent == app || formula.lastPathComponent.hasPrefix(app + "@") {
                 for keg in (try? fm.contentsOfDirectory(at: formula, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? [] {
-                    let file = keg.appendingPathComponent("bin/\(binary)")
+                    let file = keg.appendingPathComponent("\(subdirectory)/\(binary)")
                     guard fm.isExecutableFile(atPath: file.path) else { continue }
                     let receipt = try? Data(contentsOf: keg.appendingPathComponent("INSTALL_RECEIPT.json"))
                     let json = receipt.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }

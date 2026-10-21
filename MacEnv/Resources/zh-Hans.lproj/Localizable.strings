@@ -35,6 +35,7 @@
 "column.dataDir" = "数据目录";
 "column.port" = "端口";
 "column.java" = "Java";
+"column.erlang" = "Erlang";
 
 "action.start" = "启动";
 "action.stop" = "停止";
@@ -154,6 +155,7 @@
 "message.stopped" = "已停止";
 "message.databaseAlreadyRunning" = "已有其他版本运行，请先停止后再启动 ";
 "message.neo4jJavaWhileRunning" = "服务运行中不能更换 Java，请先停止 Neo4j";
+"message.rabbitmqErlangWhileRunning" = "服务运行中不能更换 Erlang，请先停止 RabbitMQ";
 "message.environmentStarted" = "所选环境已启动";
 "message.environmentStopped" = "所选环境已停止";
 "message.quickStartEmpty" = "暂无快捷启动环境，请在服务列表中打开“快捷启动”。";
@@ -178,6 +180,7 @@
 "error.nginxDefaultsMissing" = "缺少 Nginx 默认配置资源";
 "error.databaseStartFailed" = "启动失败";
 "error.neo4jJavaMissing" = "未选择 Java 运行时，无法启动 Neo4j";
+"error.rabbitmqErlangMissing" = "未选择 Erlang 运行时，无法启动 RabbitMQ";
 "error.databaseDataDirIncomplete" = "%@ 数据目录初始化不完整，请清理 %@ 后重试";
 "error.mariadbInstallerMissing" = "未找到 MariaDB 数据目录初始化命令";
 "error.postgresInstallerMissing" = "未找到 initdb，无法初始化 PostgreSQL 数据目录";
@@ -205,14 +208,18 @@
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
 "module.neo4j" = "Neo4j";
+"module.rabbitmq" = "RabbitMQ";
 "qdrant.openDashboard" = "打开 Dashboard";
 "neo4j.openBrowser" = "打开 Browser";
+"rabbitmq.openManager" = "打开管理界面";
 "neo4j.installJava" = "安装兼容的 Java";
+"rabbitmq.installErlang" = "安装兼容的 Erlang";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";
 "module.etcd" = "etcd";
 "module.php" = "PHP";
 "module.go" = "Go";
+"module.erlang" = "Erlang";
 "settings.proxy" = "启用代理";
 "settings.openDataDir" = "打开 MacEnv 数据目录";
 "settings.general" = "通用";
@@ -332,6 +339,7 @@
 "source.system" = "系统";
 "column.default" = "默认";
 "message.noGoInstalled" = "暂无已安装 Go，请在版本管理中安装或添加本地目录。";
+"message.noErlangInstalled" = "暂无已安装 Erlang，请在版本管理中安装或添加本地目录。";
 "message.noNodeInstalled" = "暂无已安装 Node，请在版本管理中安装或添加本地目录。";
 "message.gvmDefaultSet" = "默认版本已切换到 %@";
 "gvm.checking" = "正在检测 GVM…";
@@ -381,6 +389,10 @@
 "message.gvmUninstalled" = "GVM 已卸载";
 "alert.uninstallGoTitle" = "卸载 Homebrew Go？";
 "alert.uninstallGoMessage" = "将执行 brew uninstall %@，GOROOT 里的工具链会被删除，其他版本由 Homebrew 自行处理。";
+"alert.uninstallErlangTitle" = "卸载 Homebrew Erlang？";
+"alert.uninstallErlangMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
+"alert.uninstallRabbitMQTitle" = "卸载 Homebrew RabbitMQ？";
+"alert.uninstallRabbitMQMessage" = "将执行 brew uninstall %@，其他版本由 Homebrew 自行处理。";
 "alert.uninstallNodeTitle" = "卸载 nvm / fnm 管理的 Node？";
 "alert.uninstallNodeMessage" = "将执行 %@ uninstall %@，该版本由这个管理器负责，MacEnv 只代理这条命令，不碰它的目录。";
 

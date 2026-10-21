@@ -152,6 +152,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/clickhouse-light.png" width="86" hspace="1" alt="ClickHouse">
 <img src="AppIcons/tile/qdrant-light.png" width="86" hspace="1" alt="Qdrant">
 <img src="AppIcons/tile/neo4j-light.png" width="86" hspace="1" alt="Neo4j">
+<img src="AppIcons/tile/rabbitmq-light.png" width="86" hspace="1" alt="RabbitMQ">
 <img src="AppIcons/tile/consul-light.png" width="86" hspace="1" alt="Consul">
 <br>
 <img src="AppIcons/tile/etcd-light.png" width="86" hspace="1" alt="etcd">
@@ -161,6 +162,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/python-light.png" width="86" hspace="1" alt="Python">
 <img src="AppIcons/tile/node-light.png" width="86" hspace="1" alt="Node">
 <img src="AppIcons/tile/rust-light.png" width="86" hspace="1" alt="Rust">
+<img src="AppIcons/tile/erlang-light.png" width="86" hspace="1" alt="Erlang">
 <img src="AppIcons/tile/maven-light.png" width="86" hspace="1" alt="Maven">
 <br>
 <img src="AppIcons/tile/gradle-light.png" width="86" hspace="1" alt="Gradle">
@@ -189,6 +191,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/clickhouse-dark.png" width="86" hspace="1" alt="ClickHouse">
 <img src="AppIcons/tile/qdrant-dark.png" width="86" hspace="1" alt="Qdrant">
 <img src="AppIcons/tile/neo4j-dark.png" width="86" hspace="1" alt="Neo4j">
+<img src="AppIcons/tile/rabbitmq-dark.png" width="86" hspace="1" alt="RabbitMQ">
 <img src="AppIcons/tile/consul-dark.png" width="86" hspace="1" alt="Consul">
 <br>
 <img src="AppIcons/tile/etcd-dark.png" width="86" hspace="1" alt="etcd">
@@ -198,6 +201,7 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 <img src="AppIcons/tile/python-dark.png" width="86" hspace="1" alt="Python">
 <img src="AppIcons/tile/node-dark.png" width="86" hspace="1" alt="Node">
 <img src="AppIcons/tile/rust-dark.png" width="86" hspace="1" alt="Rust">
+<img src="AppIcons/tile/erlang-dark.png" width="86" hspace="1" alt="Erlang">
 <img src="AppIcons/tile/maven-dark.png" width="86" hspace="1" alt="Maven">
 <br>
 <img src="AppIcons/tile/gradle-dark.png" width="86" hspace="1" alt="Gradle">

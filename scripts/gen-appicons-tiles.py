@@ -25,8 +25,10 @@ os.makedirs(OUT, exist_ok=True)
 ICONS = [
     ("nginx", "Nginx"), ("mysql", "MySQL"), ("mariadb", "MariaDB"), ("redis", "Redis"),
     ("postgresql", "PostgreSQL"), ("clickhouse", "ClickHouse"), ("qdrant", "Qdrant"), ("neo4j", "Neo4j"),
+    ("rabbitmq", "RabbitMQ"),
     ("consul", "Consul"), ("etcd", "etcd"),
     ("php", "PHP"), ("go", "Go"), ("java", "Java"), ("python", "Python"), ("node", "Node"), ("rust", "Rust"),
+    ("erlang", "Erlang"),
     ("maven", "Maven"), ("gradle", "Gradle"), ("homebrew", "Homebrew"), ("macports", "MacPorts"),
     ("sdkman", "SDKMAN"), ("nvm", "nvm"), ("fnm", "fnm"),
     ("composer", "Composer"), ("swoole", "Swoole CLI"), ("tools", "环境工具"),

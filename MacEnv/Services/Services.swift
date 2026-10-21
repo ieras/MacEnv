@@ -11,6 +11,7 @@ final class Services {
     let redis: RedisService
     let qdrant: QdrantService
     let neo4j: Neo4jService
+    let rabbitmq: RabbitMQService
     let postgres: PostgresService
     let clickhouse: ClickHouseService
     let consul: ConsulService
@@ -29,6 +30,7 @@ final class Services {
     let tools: ToolService
     let node: NodeService
     let rust: RustService
+    let erlang: ErlangService
     private let catalogs: [String: StaticCatalogService]
 
     init(root: URL = macEnvDirectory) {
@@ -60,6 +62,10 @@ final class Services {
             // neo4j 的社区 tar.gz 顶层就是标准包目录（neo4j-community-<版本>/{bin,conf,...}），
             // install 路径③ 一行不用改。它自己不带运行时，JDK 归属见 Neo4jService。
             "neo4j": StaticCatalogService(root: root, app: "neo4j", binaryNames: ["neo4j"], displayName: "Neo4j"),
+            // rabbitmq 的官方包是 rabbitmq-server-generic-unix-<版本>.tar.xz，解包后
+            // sbin/rabbitmq-server 摆在一整套发行版目录下 —— install 路径③ 直接吃
+            //（sbin 是它认得的父目录名）。它自己不带运行时，Erlang 归属见 RabbitMQService。
+            "rabbitmq": StaticCatalogService(root: root, app: "rabbitmq", binaryNames: ["rabbitmq-server"], displayName: "RabbitMQ"),
             // consul 的 zip 里只有单个平铺的 consul 二进制（没有目录层），走 install 里
             // 「包顶就一个裸二进制」那条分支落到 bin/consul —— 同 qdrant，不用 rawBinary。
             "consul": StaticCatalogService(root: root, app: "consul", binaryNames: ["consul"], displayName: "Consul"),
@@ -86,6 +92,7 @@ final class Services {
         redis = RedisService(root: root)
         qdrant = QdrantService(root: root)
         neo4j = Neo4jService(root: root)
+        rabbitmq = RabbitMQService(root: root)
         postgres = PostgresService(root: root)
         clickhouse = ClickHouseService(root: root)
         consul = ConsulService(root: root)
@@ -99,6 +106,7 @@ final class Services {
         python = PythonService(root: root)
         node = NodeService(root: root)
         rust = RustService(root: root)
+        erlang = ErlangService(root: root)
         hosts = HostService(root: root)
         tools = ToolService(root: root)
         // Java 复用工具页的 SDKMAN 检测，所以必须排在 tools 后面。

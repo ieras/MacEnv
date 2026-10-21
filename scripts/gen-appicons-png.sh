@@ -35,6 +35,7 @@ ICONS=(
   clickhouse:ClickHouseIcon:clickhouse.svg
   qdrant:QdrantIcon:qdrant.svg
   neo4j:Neo4jIcon:neo4j.svg
+  rabbitmq:RabbitMQIcon:rabbitmq.svg
   consul:ConsulIcon:consul.svg
   etcd:EtcdIcon:etcd.svg
   php:PhpIcon:php.svg
@@ -43,6 +44,7 @@ ICONS=(
   python:PythonIcon:python.svg
   node:NodeIcon:nodejs.svg
   rust:RustIcon:rust.svg
+  erlang:ErlangIcon:erlang-logo.svg
   maven:MavenIcon:maven.svg
   gradle:GradleIcon:gradle.svg
   macports:MacPortsIcon:macports.svg

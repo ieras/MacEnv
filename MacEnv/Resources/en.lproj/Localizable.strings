@@ -35,6 +35,7 @@
 "column.dataDir" = "Data dir";
 "column.port" = "Port";
 "column.java" = "Java";
+"column.erlang" = "Erlang";
 
 "action.start" = "Start";
 "action.stop" = "Stop";
@@ -154,6 +155,7 @@
 "message.stopped" = "stopped";
 "message.databaseAlreadyRunning" = "Another version is running, stop it before starting ";
 "message.neo4jJavaWhileRunning" = "Cannot change Java while Neo4j is running, stop it first";
+"message.rabbitmqErlangWhileRunning" = "Cannot change Erlang while RabbitMQ is running, stop it first";
 "message.environmentStarted" = "Selected environment started";
 "message.environmentStopped" = "Selected environment stopped";
 "message.quickStartEmpty" = "No quick start environment yet. Turn on \"Quick start\" in the service list.";
@@ -178,6 +180,7 @@
 "error.nginxDefaultsMissing" = "Missing Nginx default config resource";
 "error.databaseStartFailed" = "Failed to start";
 "error.neo4jJavaMissing" = "No Java runtime selected, cannot start Neo4j";
+"error.rabbitmqErlangMissing" = "No Erlang runtime selected, cannot start RabbitMQ";
 "error.databaseDataDirIncomplete" = "%@ data directory is incomplete, remove %@ and retry";
 "error.mariadbInstallerMissing" = "MariaDB data directory initialiser not found";
 "error.postgresInstallerMissing" = "initdb not found; cannot initialise the PostgreSQL data directory";
@@ -205,14 +208,18 @@
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
 "module.neo4j" = "Neo4j";
+"module.rabbitmq" = "RabbitMQ";
 "qdrant.openDashboard" = "Open Dashboard";
 "neo4j.openBrowser" = "Open Browser";
+"rabbitmq.openManager" = "Open Management UI";
 "neo4j.installJava" = "Install compatible Java";
+"rabbitmq.installErlang" = "Install compatible Erlang";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";
 "module.etcd" = "etcd";
 "module.php" = "PHP";
 "module.go" = "Go";
+"module.erlang" = "Erlang";
 "settings.proxy" = "Enable proxy";
 "settings.openDataDir" = "Open MacEnv data directory";
 "settings.general" = "General";
@@ -332,6 +339,7 @@
 "source.system" = "System";
 "column.default" = "Default";
 "message.noGoInstalled" = "No Go installed yet — install one from the version manager or add a local directory.";
+"message.noErlangInstalled" = "No Erlang installed yet — install one from the version manager or add a local directory.";
 "message.noNodeInstalled" = "No Node installed yet — install one from the version manager or add a local directory.";
 "message.gvmDefaultSet" = "Default version switched to %@";
 "gvm.checking" = "Checking GVM…";
@@ -381,6 +389,10 @@
 "message.gvmUninstalled" = "GVM uninstalled";
 "alert.uninstallGoTitle" = "Uninstall Homebrew Go?";
 "alert.uninstallGoMessage" = "This runs brew uninstall %@. The toolchain inside its GOROOT is removed; other versions are handled by Homebrew.";
+"alert.uninstallErlangTitle" = "Uninstall Homebrew Erlang?";
+"alert.uninstallErlangMessage" = "This runs brew uninstall %@; other versions are handled by Homebrew.";
+"alert.uninstallRabbitMQTitle" = "Uninstall Homebrew RabbitMQ?";
+"alert.uninstallRabbitMQMessage" = "This runs brew uninstall %@; other versions are handled by Homebrew.";
 "alert.uninstallNodeTitle" = "Uninstall a Node managed by nvm / fnm?";
 "alert.uninstallNodeMessage" = "This runs %@ uninstall %@. The manager owns that version; MacEnv only proxies the command.";
 

@@ -35,6 +35,7 @@
 "column.dataDir" = "データディレクトリ";
 "column.port" = "ポート";
 "column.java" = "Java";
+"column.erlang" = "Erlang";
 
 "action.start" = "起動";
 "action.stop" = "停止";
@@ -154,6 +155,7 @@
 "message.stopped" = "停止しました";
 "message.databaseAlreadyRunning" = "他のバージョンが起動中です。停止してから を起動してください";
 "message.neo4jJavaWhileRunning" = "Neo4j の実行中は Java を変更できません。先に停止してください";
+"message.rabbitmqErlangWhileRunning" = "RabbitMQ の実行中は Erlang を変更できません。先に停止してください";
 "message.environmentStarted" = "選択した環境を起動しました";
 "message.environmentStopped" = "選択した環境を停止しました";
 "message.quickStartEmpty" = "クイック起動の環境がありません。サービス一覧で「クイック起動」をオンにしてください。";
@@ -178,6 +180,7 @@
 "error.nginxDefaultsMissing" = "Nginx のデフォルト設定リソースがありません";
 "error.databaseStartFailed" = "起動に失敗しました";
 "error.neo4jJavaMissing" = "Java 実行環境が未選択のため、Neo4j を起動できません";
+"error.rabbitmqErlangMissing" = "Erlang 実行環境が未選択のため、RabbitMQ を起動できません";
 "error.databaseDataDirIncomplete" = "%@ のデータディレクトリの初期化が不完全です。%@ を削除して再試行してください";
 "error.mariadbInstallerMissing" = "MariaDB のデータディレクトリ初期化コマンドが見つかりません";
 "error.postgresInstallerMissing" = "initdb が見つからず、PostgreSQL のデータディレクトリを初期化できません";
@@ -205,14 +208,18 @@
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
 "module.neo4j" = "Neo4j";
+"module.rabbitmq" = "RabbitMQ";
 "qdrant.openDashboard" = "Dashboardを開く";
 "neo4j.openBrowser" = "Browserを開く";
+"rabbitmq.openManager" = "管理画面を開く";
 "neo4j.installJava" = "互換性のある Java をインストール";
+"rabbitmq.installErlang" = "互換性のある Erlang をインストール";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";
 "module.etcd" = "etcd";
 "module.php" = "PHP";
 "module.go" = "Go";
+"module.erlang" = "Erlang";
 "settings.proxy" = "プロキシを有効にする";
 "settings.openDataDir" = "MacEnv データディレクトリを開く";
 "settings.general" = "一般";
@@ -332,6 +339,7 @@
 "source.system" = "システム";
 "column.default" = "デフォルト";
 "message.noGoInstalled" = "Go はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
+"message.noErlangInstalled" = "Erlang はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
 "message.noNodeInstalled" = "Node はまだインストールされていません。バージョン管理からインストールするか、ローカルディレクトリを追加してください。";
 "message.gvmDefaultSet" = "デフォルトバージョンを %@ に切り替えました";
 "gvm.checking" = "GVM を確認中…";
@@ -381,6 +389,10 @@
 "message.gvmUninstalled" = "GVM をアンインストールしました";
 "alert.uninstallGoTitle" = "Homebrew の Go をアンインストールしますか？";
 "alert.uninstallGoMessage" = "brew uninstall %@ を実行します。GOROOT のツールチェーンが削除され、他のバージョンは Homebrew が処理します。";
+"alert.uninstallErlangTitle" = "Homebrew の Erlang をアンインストールしますか？";
+"alert.uninstallErlangMessage" = "brew uninstall %@ を実行します。他のバージョンは Homebrew が処理します。";
+"alert.uninstallRabbitMQTitle" = "Homebrew の RabbitMQ をアンインストールしますか？";
+"alert.uninstallRabbitMQMessage" = "brew uninstall %@ を実行します。他のバージョンは Homebrew が処理します。";
 "alert.uninstallNodeTitle" = "nvm / fnm 管理の Node をアンインストールしますか？";
 "alert.uninstallNodeMessage" = "%@ uninstall %@ を実行します。このバージョンは各マネージャが管理しており、MacEnv はコマンドの代理のみを行います。";
 

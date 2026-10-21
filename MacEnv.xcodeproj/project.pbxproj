@@ -70,6 +70,14 @@
 		100000000000000000000206 /* RustViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000206 /* RustViews.swift */; };
 		100000000000000000000207 /* RustServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000207 /* RustServiceTests.swift */; };
 		100000000000000000000211 /* Neo4jServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000211 /* Neo4jServiceTests.swift */; };
+		100000000000000000000212 /* ErlangService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000212 /* ErlangService.swift */; };
+		100000000000000000000213 /* ErlangViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000213 /* ErlangViewModel.swift */; };
+		100000000000000000000214 /* ErlangViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000214 /* ErlangViews.swift */; };
+		100000000000000000000215 /* RabbitMQService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000215 /* RabbitMQService.swift */; };
+		100000000000000000000216 /* RabbitMQViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000216 /* RabbitMQViewModel.swift */; };
+		100000000000000000000217 /* RabbitMQViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000217 /* RabbitMQViews.swift */; };
+		100000000000000000000218 /* ErlangServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000218 /* ErlangServiceTests.swift */; };
+		100000000000000000000219 /* RabbitMQServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000219 /* RabbitMQServiceTests.swift */; };
 		100000000000000000000057 /* GoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000057 /* GoService.swift */; };
 		100000000000000000000058 /* GoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000058 /* GoViewModel.swift */; };
 		100000000000000000000059 /* GoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000059 /* GoViews.swift */; };
@@ -182,6 +190,14 @@
 		200000000000000000000206 /* RustViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustViews.swift; sourceTree = "<group>"; };
 		200000000000000000000207 /* RustServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustServiceTests.swift; sourceTree = "<group>"; };
 		200000000000000000000211 /* Neo4jServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Neo4jServiceTests.swift; sourceTree = "<group>"; };
+		200000000000000000000212 /* ErlangService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErlangService.swift; sourceTree = "<group>"; };
+		200000000000000000000213 /* ErlangViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErlangViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000214 /* ErlangViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErlangViews.swift; sourceTree = "<group>"; };
+		200000000000000000000215 /* RabbitMQService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RabbitMQService.swift; sourceTree = "<group>"; };
+		200000000000000000000216 /* RabbitMQViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RabbitMQViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000217 /* RabbitMQViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RabbitMQViews.swift; sourceTree = "<group>"; };
+		200000000000000000000218 /* ErlangServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErlangServiceTests.swift; sourceTree = "<group>"; };
+		200000000000000000000219 /* RabbitMQServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RabbitMQServiceTests.swift; sourceTree = "<group>"; };
 		200000000000000000000057 /* GoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoService.swift; sourceTree = "<group>"; };
 		200000000000000000000058 /* GoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000059 /* GoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoViews.swift; sourceTree = "<group>"; };
@@ -286,6 +302,8 @@
 				200000000000000000000099 /* ClickHouseService.swift */,
 				200000000000000000000102 /* QdrantService.swift */,
 				200000000000000000000208 /* Neo4jService.swift */,
+				200000000000000000000212 /* ErlangService.swift */,
+				200000000000000000000215 /* RabbitMQService.swift */,
 				200000000000000000000105 /* ConsulService.swift */,
 				200000000000000000000108 /* EtcdService.swift */,
 				200000000000000000000074 /* MkCertService.swift */,
@@ -320,6 +338,8 @@
 				200000000000000000000100 /* ClickHouseViewModel.swift */,
 				200000000000000000000103 /* QdrantViewModel.swift */,
 				200000000000000000000209 /* Neo4jViewModel.swift */,
+				200000000000000000000213 /* ErlangViewModel.swift */,
+				200000000000000000000216 /* RabbitMQViewModel.swift */,
 				200000000000000000000106 /* ConsulViewModel.swift */,
 				200000000000000000000109 /* EtcdViewModel.swift */,
 				200000000000000000000075 /* MkCertViewModel.swift */,
@@ -350,6 +370,8 @@
 				200000000000000000000101 /* ClickHouseViews.swift */,
 				200000000000000000000104 /* QdrantViews.swift */,
 				200000000000000000000210 /* Neo4jViews.swift */,
+				200000000000000000000214 /* ErlangViews.swift */,
+				200000000000000000000217 /* RabbitMQViews.swift */,
 				200000000000000000000107 /* ConsulViews.swift */,
 				200000000000000000000110 /* EtcdViews.swift */,
 				200000000000000000000076 /* CertViews.swift */,
@@ -401,6 +423,8 @@
 				200000000000000000000203 /* NodeServiceTests.swift */,
 				200000000000000000000207 /* RustServiceTests.swift */,
 				200000000000000000000211 /* Neo4jServiceTests.swift */,
+				200000000000000000000218 /* ErlangServiceTests.swift */,
+				200000000000000000000219 /* RabbitMQServiceTests.swift */,
 				200000000000000000000111 /* StaticCatalogInstallTests.swift */,
 			);
 			path = MacEnvTests;
@@ -541,8 +565,14 @@
 				100000000000000000000103 /* QdrantViewModel.swift in Sources */,
 				100000000000000000000104 /* QdrantViews.swift in Sources */,
 				100000000000000000000208 /* Neo4jService.swift in Sources */,
+				100000000000000000000212 /* ErlangService.swift in Sources */,
+				100000000000000000000215 /* RabbitMQService.swift in Sources */,
 				100000000000000000000209 /* Neo4jViewModel.swift in Sources */,
+				100000000000000000000213 /* ErlangViewModel.swift in Sources */,
+				100000000000000000000216 /* RabbitMQViewModel.swift in Sources */,
 				100000000000000000000210 /* Neo4jViews.swift in Sources */,
+				100000000000000000000214 /* ErlangViews.swift in Sources */,
+				100000000000000000000217 /* RabbitMQViews.swift in Sources */,
 				100000000000000000000105 /* ConsulService.swift in Sources */,
 				100000000000000000000106 /* ConsulViewModel.swift in Sources */,
 				100000000000000000000107 /* ConsulViews.swift in Sources */,
@@ -608,6 +638,8 @@
 				100000000000000000000203 /* NodeServiceTests.swift in Sources */,
 				100000000000000000000207 /* RustServiceTests.swift in Sources */,
 				100000000000000000000211 /* Neo4jServiceTests.swift in Sources */,
+				100000000000000000000218 /* ErlangServiceTests.swift in Sources */,
+				100000000000000000000219 /* RabbitMQServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
