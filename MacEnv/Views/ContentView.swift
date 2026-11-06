@@ -24,8 +24,6 @@ struct ContentView: View {
 
     private var themeTint: Color { AppTheme.tint(colorScheme) }
 
-    private var sidebarSelection: Color { AppTheme.selection(colorScheme) }
-
     private var busy: Bool { app.state.busy }
 
     // quick-start.json 里存的 key 可能指向已卸载的版本（僵尸 key）：列表只渲染还存在的服务，
@@ -177,16 +175,6 @@ struct ContentView: View {
         .animation(.easeOut(duration: 0.18), value: toastVisible)
         .animation(.easeOut(duration: 0.18), value: app.state.task != nil)
         .onChange(of: app.state.messageToken) { _ in presentToast() }
-        // 探针2：记录 selectedPage 初始值和全部变化轨迹（调查页面恢复问题用）。
-        .onAppear {
-            let stamp = Date().timeIntervalSince1970
-            try? "[\(stamp)] appear page=\(selectedPage)\n".write(toFile: "/tmp/macenv-probe2.txt", atomically: true, encoding: .utf8)
-        }
-        .onChange(of: selectedPage) { newValue in
-            let stamp = Date().timeIntervalSince1970
-            let existing = (try? String(contentsOf: URL(fileURLWithPath: "/tmp/macenv-probe2.txt"), encoding: .utf8)) ?? ""
-            try? (existing + "[\(stamp)] change page=\(newValue)\n").write(to: URL(fileURLWithPath: "/tmp/macenv-probe2.txt"), atomically: true, encoding: .utf8)
-        }
         // 刷新完才有版本可起，所以自动拉服务必须排在 refreshAll 后面。
         .task {
             guard !isTesting else { return }
@@ -195,53 +183,65 @@ struct ContentView: View {
         }
     }
 
+    // 侧栏必须用系统 List：行由 AppKit 承载，命中区域跟标题栏安全区 inset 一起走。
+    // 早先用 ScrollView + contentShape/onTapGesture 自己算命中，发布版有标准不透明标题栏
+    // （多 52pt top inset）时视觉行整体下移、热区留在原位，点 A 会打开上一两行的模块。
     private var sidebar: some View {
-        VStack(spacing: 0) {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L("sidebar.console")).font(.headline).foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 12)
-                    HStack(spacing: 8) {
-                        AssetIcon(name: "StartIcon").frame(width: 20, height: 20)
-                        Text(L("sidebar.quickStart"))
-                        Spacer()
-                        Text(quickStartCountLabel).foregroundStyle(.secondary).monospacedDigit()
-                        // 电源键跟它管的东西待在同一行、最右侧：点一下起/停快捷启动里的全部服务。
-                        Button {
-                            app.launch(quickStartKeys, stop: quickStartRunning)
-                        } label: {
-                            Image(systemName: quickStartRunning ? "power.circle.fill" : "power.circle")
-                                .foregroundStyle(quickStartRunning ? AppTheme.green : .secondary)
-                        }
-                        .buttonStyle(.borderless)
-                        .help(quickStartRunning ? L("menu.stopQuickStart") : L("menu.startQuickStart"))
-                        .disabled(busy || quickStartTargets.isEmpty)
-                    }
-                    .padding(.horizontal, 8).padding(.vertical, 6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(page == "quick-start" ? sidebarSelection : .clear, in: RoundedRectangle(cornerRadius: AppTheme.radiusRow))
-                    .contentShape(Rectangle()).onTapGesture { selectedPage = "quick-start" }
-
-                    // 环境工具紧贴快捷启动下面：都是「控制台」这一组的东西。
-                    // 这一组不放进 moduleGroups（那会把「控制台」标题画两遍），条目从 consoleModules 来。
-                    ForEach(consoleModules.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
-
-                    // 分组、条目顺序全读 moduleGroups，跟设置页的模块开关同一份配置。
-                    // 控制台那一组的标题和快捷启动行上面已经画了，moduleGroups 里也不再有它。
-                    ForEach(moduleGroups, id: \.0) { group in
-                        Text(L(group.0)).font(.headline).foregroundStyle(.secondary).padding(.horizontal, 8).padding(.top, 12)
-                        ForEach(group.1.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16).padding(.bottom, 8)
+        List(selection: Binding<String?>(
+            get: { page },
+            set: { newValue in if let newValue { selectedPage = newValue } }
+        )) {
+            Section {
+                quickStartRow
+                // 环境工具紧贴快捷启动：都是「控制台」这一组的东西，标题由 sectionTitle 画。
+                ForEach(consoleModules.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
+            } header: {
+                sectionTitle(L("sidebar.console"))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            // 分组、条目顺序全读 moduleGroups，跟设置页的模块开关同一份配置。
+            ForEach(moduleGroups, id: \.0) { group in
+                Section {
+                    ForEach(group.1.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
+                } header: {
+                    sectionTitle(L(group.0))
+                }
+            }
         }
+        .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.windowBackground)
         .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
     }
 
-    // 一行侧栏条目：图标 + 名字 + 右侧（开关或数量），选中高亮和点击切页对所有模块都一样。
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title).font(.headline).foregroundStyle(.secondary)
+    }
+
+    // 快捷启动行：电源键跟它管的东西待在同一行、最右侧，点一下起/停全部快捷服务。
+    private var quickStartRow: some View {
+        HStack(spacing: 8) {
+            AssetIcon(name: "StartIcon").frame(width: 20, height: 20)
+            Text(L("sidebar.quickStart"))
+            Spacer()
+            Text(quickStartCountLabel).foregroundStyle(.secondary).monospacedDigit()
+            Button {
+                app.launch(quickStartKeys, stop: quickStartRunning)
+            } label: {
+                Image(systemName: quickStartRunning ? "power.circle.fill" : "power.circle")
+                    .foregroundStyle(quickStartRunning ? AppTheme.green : .secondary)
+            }
+            .buttonStyle(.borderless)
+            .help(quickStartRunning ? L("menu.stopQuickStart") : L("menu.startQuickStart"))
+            .disabled(busy || quickStartTargets.isEmpty)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
+        .tag("quick-start")
+    }
+
+    // 一行侧栏条目：图标 + 名字 + 右侧（开关或数量）。选中与切页交给 List.selection。
     private func moduleRow(_ id: String) -> some View {
         HStack(spacing: 8) {
             ModuleIcon(id: id).frame(width: 20, height: 20)
@@ -251,9 +251,8 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8).padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(page == id ? sidebarSelection : .clear, in: RoundedRectangle(cornerRadius: AppTheme.radiusRow))
-        .contentShape(Rectangle())
-        .onTapGesture { selectedPage = id }
+        .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
+        .tag(id)
     }
 
     @ViewBuilder

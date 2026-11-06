@@ -651,7 +651,6 @@ enum AppTheme {
     static let stroke = Color.primary.opacity(0.08)
     static let radiusPanel: CGFloat = 8
     static let radiusCard: CGFloat = 6
-    static let radiusRow: CGFloat = 10
     static let radiusOverlay: CGFloat = 10
 
     // 长任务日志浮层。宽度按 toast 的两倍不到给 —— 装包日志一行能有一百多个字符，
@@ -669,9 +668,6 @@ enum AppTheme {
     // 主色调和侧栏选中色按明暗两套给，系统色一失焦就变灰，所以自己算。
     static func tint(_ scheme: ColorScheme) -> Color {
         scheme == .dark ? Color(red: 0.38, green: 0.50, blue: 0.63) : Color(red: 0.42, green: 0.54, blue: 0.66)
-    }
-    static func selection(_ scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color(red: 0.27, green: 0.34, blue: 0.43) : Color(red: 0.82, green: 0.87, blue: 0.93)
     }
 }
 
