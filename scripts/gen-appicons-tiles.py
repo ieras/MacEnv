@@ -21,7 +21,7 @@ SRC = os.path.join(ROOT, "AppIcons/png")
 OUT = os.path.join(ROOT, "AppIcons/tile")
 os.makedirs(OUT, exist_ok=True)
 
-# 顺序跟根 README 图标墙、AppIcons/README.md 的分节保持一致
+# 顺序对齐 README 图标墙
 ICONS = [
     ("nginx", "Nginx"), ("mysql", "MySQL"), ("mariadb", "MariaDB"), ("redis", "Redis"),
     ("postgresql", "PostgreSQL"), ("clickhouse", "ClickHouse"), ("qdrant", "Qdrant"), ("neo4j", "Neo4j"),
@@ -59,13 +59,12 @@ def p(v):
     return int(round(v * S))
 
 
-SS = 4                    # 超采样倍率：PIL 画圆角不做抗锯齿，放大 4 倍画完再缩回来
+SS = 4                    # 超采样倍率
 
 for suffix, bg, stroke, label_c in THEMES:
     for name, label in ICONS:
         big = (CARD_W * SS, CARD_H * SS)
-        # 圆角外必须透明。用不透明底（RGB）的话，深色图块的四角也是深色的，
-        # 圆角直接被吃掉 —— 在浅色页面上看起来就是一个直角黑方块。
+        # 圆角外透明
         rgb = Image.new("RGB", big, bg)
         ImageDraw.Draw(rgb).rounded_rectangle([0, 0, big[0] - 1, big[1] - 1],
                                               radius=CARD_R * SS, outline=stroke,
@@ -75,8 +74,8 @@ for suffix, bg, stroke, label_c in THEMES:
                                                 radius=CARD_R * SS, fill=255)
 
         size = (p(CARD_W), p(CARD_H))
-        im = rgb.resize(size, Image.LANCZOS)             # RGB 与 alpha 分开缩，
-        im.putalpha(alpha.resize(size, Image.LANCZOS))   # 避免非预乘插值产生暗边
+        im = rgb.resize(size, Image.LANCZOS)
+        im.putalpha(alpha.resize(size, Image.LANCZOS))
 
         ic = Image.open(f"{SRC}/{name}-{suffix}.png").convert("RGBA").resize((p(ICON), p(ICON)), Image.LANCZOS)
         im.paste(ic, (p((CARD_W - ICON) / 2), p(ICON_Y)), ic)
@@ -84,8 +83,7 @@ for suffix, bg, stroke, label_c in THEMES:
         ImageDraw.Draw(im, "RGBA").text((p(CARD_W / 2), p(LABEL_Y)), label,
                                         font=f_label, fill=label_c, anchor="ma")
 
-        # 带 alpha 的图不能用 MEDIANCUT（会丢透明），得用 FASTOCTREE —— 它连 alpha 一起量化，
-        # 22.8 KB 直接降到 4.8 KB，肉眼无差。64 色在文字上能看出台阶，128 色看不出。
+        # FASTOCTREE 保留 alpha
         im.quantize(colors=128, method=Image.FASTOCTREE).save(
             f"{OUT}/{name}-{suffix}.png", optimize=True)
 

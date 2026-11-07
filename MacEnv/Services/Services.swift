@@ -1,6 +1,5 @@
 import Foundation
 
-// 所有服务的持有者，供 ViewModel 注入。
 @MainActor
 final class Services {
     let root: URL
@@ -41,47 +40,22 @@ final class Services {
             "php": StaticCatalogService(root: root, app: "php", binaryNames: ["php"]),
             "swoole-cli": StaticCatalogService(root: root, app: "swoole-cli", binaryNames: ["swoole-cli"]),
             "composer": StaticCatalogService(root: root, app: "composer", binaryNames: ["composer"]),
-            // one-env 对 mkcert 直接给裸二进制（不是压缩包），所以要 rawBinary。
             "mkcert": StaticCatalogService(root: root, app: "mkcert", binaryNames: ["mkcert"], rawBinary: true),
-            // one-env 的目录接口只认 "golang"，传 "go" 它会回 400（app 类型错误）。
             "golang": StaticCatalogService(root: root, app: "golang", binaryNames: ["go"], displayName: "Go"),
-            // JDK 的 tarball 里是 Contents/Home/bin/java，「往上退两级」正好落在 Home 这一层。
             "java": StaticCatalogService(root: root, app: "java", binaryNames: ["java"]),
-            // one-env 对 python 只回一个空数组，所以走 python-build-standalone。解压后是
-            // python/bin/python3，「往上退两级」正好落在安装根，跟 one-env 那批包完全一致。
             "python": StaticCatalogService(root: root, app: "python", binaryNames: ["python3"], displayName: "Python",
                                           source: { try await PythonService.standaloneVersions() }),
             "maven": StaticCatalogService(root: root, app: "maven", binaryNames: ["mvn"], displayName: "Maven"),
             "gradle": StaticCatalogService(root: root, app: "gradle", binaryNames: ["gradle"], displayName: "Gradle"),
-            // one-env 对 clickhouse 给的是裸二进制（clickhouse-macos-aarch64，182MB），同 mkcert。
             "clickhouse": StaticCatalogService(root: root, app: "clickhouse", binaryNames: ["clickhouse"],
                                               displayName: "ClickHouse", rawBinary: true),
-            // qdrant 的 tar.gz 里就一个裸 qdrant 二进制（不是裸二进制下载，外面裹了层 tar，
-            // 所以不能用 rawBinary）。官方没发 brew 公式、MacPorts 也没 port —— 只有静态包一条路。
             "qdrant": StaticCatalogService(root: root, app: "qdrant", binaryNames: ["qdrant"], displayName: "Qdrant"),
-            // neo4j 的社区 tar.gz 顶层就是标准包目录（neo4j-community-<版本>/{bin,conf,...}），
-            // install 路径③ 一行不用改。它自己不带运行时，JDK 归属见 Neo4jService。
             "neo4j": StaticCatalogService(root: root, app: "neo4j", binaryNames: ["neo4j"], displayName: "Neo4j"),
-            // rabbitmq 的官方包是 rabbitmq-server-generic-unix-<版本>.tar.xz，解包后
-            // sbin/rabbitmq-server 摆在一整套发行版目录下 —— install 路径③ 直接吃
-            //（sbin 是它认得的父目录名）。它自己不带运行时，Erlang 归属见 RabbitMQService。
             "rabbitmq": StaticCatalogService(root: root, app: "rabbitmq", binaryNames: ["rabbitmq-server"], displayName: "RabbitMQ"),
-            // consul 的 zip 里只有单个平铺的 consul 二进制（没有目录层），走 install 里
-            // 「包顶就一个裸二进制」那条分支落到 bin/consul —— 同 qdrant，不用 rawBinary。
             "consul": StaticCatalogService(root: root, app: "consul", binaryNames: ["consul"], displayName: "Consul"),
-            // etcd 的 zip 是 <包目录>/{etcd,etcdctl,etcdutl}，二进制直接摆在包目录顶层、没有 bin/，
-            // 走 install 里「顶层二进制补 bin/」那条分支。注意 binaryNames 只给 etcd ——
-            // etcdctl / etcdutl 会被那条分支一起搬进 bin/，但不参与「这个包算不算装好了」的判断。
             "etcd": StaticCatalogService(root: root, app: "etcd", binaryNames: ["etcd"], displayName: "etcd"),
-            // one-env 不支持 node（实测「app 类型错误」），直连 nodejs.org/dist/index.json。
-            // 官方包形状 node-vXX-darwin-arm64/{bin,include,lib,share}，「往上退两级」
-            // 正好落包根 —— 标准形状，install 逻辑一行不改。binaryNames 只给 node：
-            // npm / npx 跟 node 在同一个 bin/ 里，跟着落位但不参与「装好」判定。
             "node": StaticCatalogService(root: root, app: "node", binaryNames: ["node"], displayName: "Node",
                                          source: { try await NodeService.parseDist(NodeService.distEntries()) }),
-            // one-env 的 rust 只给 x86_64 的包，Apple Silicon 上跑不动，所以版本号照用、
-            // 下载地址自己按本机架构拼（见 RustService.versions）。官方包解包后二进制在
-            // rustc/bin/ 下、不是标准 bin/，install 也由 RustService 自己写。
             "rust": StaticCatalogService(root: root, app: "rust", binaryNames: ["rustc"], displayName: "Rust",
                                          source: { try await RustService.versions() })
         ]
@@ -109,7 +83,6 @@ final class Services {
         erlang = ErlangService(root: root)
         hosts = HostService(root: root)
         tools = ToolService(root: root)
-        // Java 复用工具页的 SDKMAN 检测，所以必须排在 tools 后面。
         java = JavaService(root: root, tools: tools)
         maven = MavenService(root: root, tools: tools)
         gradle = GradleService(root: root, tools: tools)

@@ -9,14 +9,12 @@ final class RabbitMQViewModel: ObservableObject, PortListHost {
     @Published var staticVersions: [StaticVersion] = []
     @Published var staticLoading = false
     @Published var pathMembership: [String: PathMembership] = [:]
-    // 版本管理里的 Homebrew / MacPorts 两栏。
     @Published var formulae: [BrewFormulaItem] = []
     @Published var portItems: [PortItem] = []
     @Published var portLoading = false
     @Published var selected = ""
     @Published var configText = ""
     @Published var logText = ""
-    // Erlang 装卸、换绑定时让 Erlang 列重算（绑定存在 UserDefaults 里，不是 @Published）。
     @Published private var erlangRevision = 0
     @Published var customDirectories: [String] = {
         guard let data = UserDefaults.standard.data(forKey: "macenv.rabbitmq.directories"),
@@ -36,7 +34,6 @@ final class RabbitMQViewModel: ObservableObject, PortListHost {
     func configURL(_ version: RabbitMQVersion) -> URL { services.rabbitmq.configURL(for: version) }
     func mnesiaURL(_ version: RabbitMQVersion) -> URL { services.rabbitmq.mnesiaURL(for: version) }
     func logURL() -> URL? { selectedVersion().map { services.rabbitmq.logFile(for: $0) } }
-    // AMQP（5672）给客户端驱动用，管理界面（15672）给浏览器用，两个都展示。
     func port(_ version: RabbitMQVersion) -> String {
         let ports = services.rabbitmq.ports(for: version)
         return "\(ports.amqp) / \(ports.management)"
@@ -48,9 +45,6 @@ final class RabbitMQViewModel: ObservableObject, PortListHost {
         do {
             try await services.paths.refresh()
             let service = services.rabbitmq
-            // Erlang 列表必须先就位：扫 RabbitMQ 版本要借一个 erl 跑 rabbitmqctl version
-            // （escript 离不了 PATH 里的 erl），自动绑定也要从这份列表里挑。
-            // Erlang 模块刷新同一批目录，这里单独刷一份（同 Neo4j 的 installedJava）。
             service.installedErlang = await services.erlang.installedVersions(customDirectories: services.paths.allPath)
             let found = try await service.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             for version in found { try service.prepare(version) }
@@ -63,7 +57,6 @@ final class RabbitMQViewModel: ObservableObject, PortListHost {
         } catch {
             state.message = error.localizedDescription
         }
-        // brew 查不到（没装、或公式被 tap 挡了）不该把上面的扫描结果一起判成失败（同 GoViewModel）。
         Task {
             do { formulae = try await Brew.formulae("rabbitmq") }
             catch { state.message = error.localizedDescription }
@@ -145,7 +138,6 @@ final class RabbitMQViewModel: ObservableObject, PortListHost {
     }
 
     func installStatic(_ version: StaticVersion) {
-        // StaticCatalogService 的落点是 versions/<app>-<版本>，整包（含 sbin/）搬过去。
         let target = services.rabbitmq.versionsDirectory.appendingPathComponent("rabbitmq-\(version.version)")
         guard !(versions.contains { $0.directory.resolvingSymlinksInPath() == target.resolvingSymlinksInPath() && running($0) }) else { state.message = L("message.stopFirst"); return }
         state.runStreaming(String(format: L("message.installingFor"), "RabbitMQ \(version.version)"), packageDirectory: target) { report, attach in

@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Maven 跟 Go / Java 同构：没有常驻进程，两个 tab —— 已安装（含 PATH 开关）、版本管理（Static / Homebrew / MacPorts / SDKMAN）。
 struct MavenManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: MavenViewModel
@@ -13,7 +12,6 @@ struct MavenManagementView: View {
     @State private var uninstallFormula: String?
     @State private var uninstallSdkman: SdkmanVersion?
 
-    // 本体不包 ModulePage 外壳——它作为 Java 模块页里的一个 tab 被嵌入，外壳由 Java 页统一给。
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SegmentedTabs(titles: [L("tab.installed"), L("tab.versions")], selection: $tab)
@@ -49,7 +47,6 @@ struct MavenManagementView: View {
 
     // MARK: - 版本管理
 
-    // 四个来源：Static（我们自己下的官方包）、Homebrew、MacPorts、SDKMAN。
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts", "SDKMAN"], source: $source,
@@ -95,7 +92,6 @@ struct MavenManagementView: View {
         }
     }
 
-    // `sdk list maven` 是平铺版本号，没有 Vendor / Identifier 这些列，所以只留版本、状态、操作。
     private var sdkmanColumns: [TableColumn] {
         [TableColumn(title: L("column.library"), minWidth: 90, weight: 1),
          TableColumn(title: L("column.version"), minWidth: 100, weight: 1),
@@ -141,7 +137,6 @@ struct MavenManagementView: View {
 
     // MARK: - 已安装
 
-    // 版本 / Maven Home / 来源 / PATH 开关。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 80),
          TableColumn(title: L("column.directory"), minWidth: 140, weight: 1),
@@ -157,12 +152,7 @@ struct MavenManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()

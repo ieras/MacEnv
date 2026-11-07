@@ -1,7 +1,5 @@
 import SwiftUI
 
-// Composer 挂在 PHP 页面里当 tab。跟 Swoole CLI 一样不是服务：没有启停，
-// 只有版本、PATH，外加一条 brew 通道（brew 的 composer 就是个 .phar 壳子）。
 struct ComposerPanel: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: ComposerViewModel
@@ -20,15 +18,9 @@ struct ComposerPanel: View {
                     .help(L("action.customPathHint"))
                 Link(destination: URL(string: "https://getcomposer.org/download/")!) { Image(systemName: "globe") }
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task {
-                        if source == "static" { await vm.loadStatic(force: true) } else { await vm.refresh() }
-                        refreshing = false
-                    }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) {
+                    if source == "static" { await vm.loadStatic(force: true) } else { await vm.refresh() }
+                }
             }
             .panelHeader()
             Divider()
@@ -51,7 +43,6 @@ struct ComposerPanel: View {
         .task { await vm.loadStatic() }
     }
 
-    // 版本 / 路径 / 来源 / 环境变量。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 60),
          TableColumn(title: L("column.path"), minWidth: 140, weight: 1),

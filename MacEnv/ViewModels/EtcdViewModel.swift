@@ -24,7 +24,6 @@ final class EtcdViewModel: ObservableObject {
 
     func selectedVersion() -> EtcdVersion? { versions.first { $0.id == selected } ?? versions.first }
 
-    // 端口按版本读（配置是每主版本一份），表格每行显示自己那份配置里的值。
     func port(_ version: EtcdVersion) -> String {
         let ports = services.etcd.ports(version)
         return "\(ports.client) / \(ports.peer)"
@@ -43,14 +42,11 @@ final class EtcdViewModel: ObservableObject {
             versions = found
             await service.adopt(found)
             pathMembership = Dictionary(uniqueKeysWithValues: found.map { ($0.id, services.paths.membership(kind: "etcd", directory: $0.directory)) })
-            // brew 清单丢后台慢慢填，别拖住 refresh 返回。
             Task {
                 do { formulae = try await service.brewFormulae() }
                 catch { state.message = error.localizedDescription }
             }
             if !found.contains(where: { $0.id == selected }) { selected = found.first?.id ?? "" }
-            // 选中的版本先把配置落好：配置是「已存在就不覆盖」，不先落一份的话用户第一次进
-            // 「配置」tab 看到的是空白编辑器，手一滑保存就把空内容写进去，etcd 之后起不来（同 Consul / ClickHouse）。
             if let version = selectedVersion() { try service.prepare(version) }
         } catch {
             state.message = error.localizedDescription
@@ -73,7 +69,6 @@ final class EtcdViewModel: ObservableObject {
             objectWillChange.send()
         }
         do {
-            // restart 落到 start：start 里会先把还在跑的实例收掉。
             if operation != "stop" { try await service.start(version) }
             else { try await service.stop() }
             state.message = "etcd " + (operation == "start" ? L("message.started") : L("message.stopped"))
@@ -142,7 +137,6 @@ final class EtcdViewModel: ObservableObject {
             configText = ""
             return
         }
-        // 进配置页时顺手补一份：没装版本时没有落点，装完 refresh 已经落过了。
         try? services.etcd.prepare(version)
         configText = services.etcd.configText(version)
     }

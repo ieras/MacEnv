@@ -52,7 +52,6 @@ final class NginxViewModel: ObservableObject, PortListHost {
             await services.nginx.adopt(versions)
             if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "nginx", directory: $0.directory)) })
-            // brew 丢后台慢慢填，别拖住 refresh 返回（同 PhpViewModel）。
             Task {
                 do { formula = try await services.nginx.brewFormula() }
                 catch { state.message = error.localizedDescription }
@@ -212,10 +211,8 @@ final class NginxViewModel: ObservableObject, PortListHost {
     }
 }
 
-// 统一服务注册表条目：Nginx。
 extension NginxViewModel: ServiceManageable {
     var kind: String { "nginx" }
-    // 每个版本独立监听端口，允许多版本同时跑。
     var singleInstance: Bool { false }
     var targets: [LaunchTarget] { versions.map { LaunchTarget(key: "nginx:" + $0.id, kind: "nginx", versionID: $0.id, title: "Nginx " + $0.version) } }
     func isRunning(_ versionID: String) -> Bool { versions.first { $0.id == versionID }.map { services.nginx.running($0) } ?? false }

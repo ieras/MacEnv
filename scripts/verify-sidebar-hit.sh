@@ -3,8 +3,7 @@ set -eu
 root="$(cd "$(dirname "$0")/.." && pwd)"
 app="$root/build/Products/Release/MacEnv.app"
 
-# 只对正式 Release 包验收。Debug 产物是 stub + MacEnv.debug.dylib，标题栏形态不同，
-# 侧栏热区错位的 bug 在 Debug 包里根本复现不出来。
+# Release 包侧栏点击验收
 [ -d "$app" ] || { echo "没有 Release 包，先跑 scripts/build-release-app.sh"; exit 1; }
 binary="$app/Contents/MacOS/MacEnv"
 size=$(stat -f%z "$binary")

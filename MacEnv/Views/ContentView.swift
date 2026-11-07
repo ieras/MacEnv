@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @ObservedObject var app: AppViewModel
@@ -26,29 +27,21 @@ struct ContentView: View {
 
     private var busy: Bool { app.state.busy }
 
-    // quick-start.json 里存的 key 可能指向已卸载的版本（僵尸 key）：列表只渲染还存在的服务，
-    // 计数、电源键、自启动必须用同一个口径，不然数字对不上列表。
-    private var quickStartTargets: [LaunchTarget] {
-        app.launchTargets.filter { app.state.quickStartTargets.contains($0.key) }
-    }
+    private var quickStartTargets: [LaunchTarget] { app.quickStartLaunchTargets }
 
     private var quickStartKeys: [String] { quickStartTargets.map(\.key) }
 
-    // 快捷启动里只要有一个在跑，电源键就是绿的；全关才是灰的。
     private var quickStartRunning: Bool { quickStartTargets.contains { app.targetRunning($0.key) } }
 
-    // 侧栏那一行显示「在跑/总数」，比如 1/3。
     private var quickStartCountLabel: String {
         "\(quickStartTargets.filter { app.targetRunning($0.key) }.count)/\(quickStartTargets.count)"
     }
 
-    // 模块开关关掉的条目不出现在侧栏；当前正看着的那页被关掉就回落到快捷启动，避免右侧白屏。
     private var page: String { (app.state.modules[selectedPage] ?? true) ? selectedPage : "quick-start" }
 
     private func presentToast() {
         toastDismissTask?.cancel()
         toastVisible = true
-        // 多行/长文案（多半是报错）给点时间看，普通 tips 3 秒就够。
         let seconds: UInt64 = (app.state.message.count > 40 || app.state.message.contains("\n")) ? 6 : 3
         toastDismissTask = Task { @MainActor in
             do { try await Task.sleep(nanoseconds: seconds * 1_000_000_000) } catch { return }
@@ -65,66 +58,50 @@ struct ContentView: View {
         NavigationSplitView {
             sidebar
         } detail: {
-            if page == "quick-start" {
-                QuickStartListView(app: app, nginxVM: nginxVM, databaseVM: databaseVM, phpVM: phpVM)
-            } else if page == "tools" {
-                ToolsView(app: app, vm: app.toolsVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "php" {
-                PhpManagementView(app: app, vm: phpVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "go" {
-                GoManagementView(app: app, vm: goVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "erlang" {
-                ErlangManagementView(app: app, vm: erlangVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "java" {
-                JavaManagementView(app: app, vm: app.javaVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "python" {
-                PythonManagementView(app: app, vm: app.pythonVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "node" {
-                NodeManagementView(app: app, vm: app.nodeVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "rust" {
-                RustManagementView(app: app, vm: app.rustVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "hosts" {
-                HostManagementView(app: app, vm: hostVM, certVM: certVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "redis" {
-                RedisManagementView(app: app, vm: redisVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "postgresql" {
-                PostgresManagementView(app: app, vm: postgresVM)
-            } else if page == "clickhouse" {
-                ClickHouseManagementView(app: app, vm: clickhouseVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "qdrant" {
-                QdrantManagementView(app: app, vm: qdrantVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "neo4j" {
-                Neo4jManagementView(app: app, vm: neo4jVM) { selectedPage = "java" }
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "rabbitmq" {
-                RabbitMQManagementView(app: app, vm: rabbitmqVM) { selectedPage = "erlang" }
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "consul" {
-                ConsulManagementView(app: app, vm: consulVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if page == "etcd" {
-                EtcdManagementView(app: app, vm: etcdVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            } else if let kind = DatabaseKind(rawValue: page) {
-                DatabaseManagementView(app: app, vm: databaseVM, kind: kind)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .id(kind)
-            } else {
-                NginxManagementView(app: app, vm: nginxVM)
-                    .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            Group {
+                if page == "quick-start" {
+                    QuickStartListView(app: app, nginxVM: nginxVM, databaseVM: databaseVM, phpVM: phpVM)
+                } else if page == "tools" {
+                    ToolsView(app: app, vm: app.toolsVM)
+                } else if page == "php" {
+                    PhpManagementView(app: app, vm: phpVM)
+                } else if page == "go" {
+                    GoManagementView(app: app, vm: goVM)
+                } else if page == "erlang" {
+                    ErlangManagementView(app: app, vm: erlangVM)
+                } else if page == "java" {
+                    JavaManagementView(app: app, vm: app.javaVM)
+                } else if page == "python" {
+                    PythonManagementView(app: app, vm: app.pythonVM)
+                } else if page == "node" {
+                    NodeManagementView(app: app, vm: app.nodeVM)
+                } else if page == "rust" {
+                    RustManagementView(app: app, vm: app.rustVM)
+                } else if page == "hosts" {
+                    HostManagementView(app: app, vm: hostVM, certVM: certVM)
+                } else if page == "redis" {
+                    RedisManagementView(app: app, vm: redisVM)
+                } else if page == "postgresql" {
+                    PostgresManagementView(app: app, vm: postgresVM)
+                } else if page == "clickhouse" {
+                    ClickHouseManagementView(app: app, vm: clickhouseVM)
+                } else if page == "qdrant" {
+                    QdrantManagementView(app: app, vm: qdrantVM)
+                } else if page == "neo4j" {
+                    Neo4jManagementView(app: app, vm: neo4jVM) { selectedPage = "java" }
+                } else if page == "rabbitmq" {
+                    RabbitMQManagementView(app: app, vm: rabbitmqVM) { selectedPage = "erlang" }
+                } else if page == "consul" {
+                    ConsulManagementView(app: app, vm: consulVM)
+                } else if page == "etcd" {
+                    EtcdManagementView(app: app, vm: etcdVM)
+                } else if let kind = DatabaseKind(rawValue: page) {
+                    DatabaseManagementView(app: app, vm: databaseVM, kind: kind).id(kind)
+                } else {
+                    NginxManagementView(app: app, vm: nginxVM)
+                }
             }
+            .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .navigationTitle(L("app.name"))
         .toolbar {
@@ -142,8 +119,6 @@ struct ContentView: View {
             }
         }
         .tint(themeTint)
-        // 等待指示：浮在右上角、外观切换按钮正下方。工具栏那一排是系统标题栏的一部分，
-        // SwiftUI 视图塞不进去（会被标题栏裁掉），所以落在其下方的浮层里。
         .overlay(alignment: .topTrailing) {
             if busy {
                 HStack(spacing: 8) {
@@ -157,7 +132,6 @@ struct ContentView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        // 右下角浮层：长任务日志（跑完不自动消失）在上，短提示 toast 在下，两个都出现时摞着不打架。
         .overlay(alignment: .bottomTrailing) {
             VStack(alignment: .trailing, spacing: 12) {
                 if let task = app.state.task {
@@ -175,7 +149,6 @@ struct ContentView: View {
         .animation(.easeOut(duration: 0.18), value: toastVisible)
         .animation(.easeOut(duration: 0.18), value: app.state.task != nil)
         .onChange(of: app.state.messageToken) { _ in presentToast() }
-        // 刷新完才有版本可起，所以自动拉服务必须排在 refreshAll 后面。
         .task {
             guard !isTesting else { return }
             await app.refreshAll()
@@ -183,9 +156,6 @@ struct ContentView: View {
         }
     }
 
-    // 侧栏必须用系统 List：行由 AppKit 承载，命中区域跟标题栏安全区 inset 一起走。
-    // 早先用 ScrollView + contentShape/onTapGesture 自己算命中，发布版有标准不透明标题栏
-    // （多 52pt top inset）时视觉行整体下移、热区留在原位，点 A 会打开上一两行的模块。
     private var sidebar: some View {
         List(selection: Binding<String?>(
             get: { page },
@@ -193,12 +163,10 @@ struct ContentView: View {
         )) {
             Section {
                 quickStartRow
-                // 环境工具紧贴快捷启动：都是「控制台」这一组的东西，标题由 sectionTitle 画。
                 ForEach(consoleModules.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
             } header: {
                 sectionTitle(L("sidebar.console"))
             }
-            // 分组、条目顺序全读 moduleGroups，跟设置页的模块开关同一份配置。
             ForEach(moduleGroups, id: \.0) { group in
                 Section {
                     ForEach(group.1.filter { app.state.modules[$0] ?? true }, id: \.self) { moduleRow($0) }
@@ -209,27 +177,64 @@ struct ContentView: View {
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .background(SidebarSelectionHighlightOff())
         .background(AppTheme.windowBackground)
         .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
+        .navigationSplitViewColumnWidth(min: 232, ideal: 252, max: 300)
     }
 
     private func sectionTitle(_ title: String) -> some View {
         Text(title).font(.headline).foregroundStyle(.secondary)
     }
 
-    // 快捷启动行：电源键跟它管的东西待在同一行、最右侧，点一下起/停全部快捷服务。
+    private struct SidebarSelectionHighlightOff: NSViewRepresentable {
+        func makeNSView(context: Context) -> NSView { Probe() }
+        func updateNSView(_ nsView: NSView, context: Context) {}
+
+        private final class Probe: NSView {
+            override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+            override func viewDidMoveToWindow() {
+                super.viewDidMoveToWindow()
+                DispatchQueue.main.async { [weak self] in
+                    guard let root = self?.window?.contentView else { return }
+                    Self.turnOff(root)
+                    DispatchQueue.main.async { [weak self] in
+                        guard let root = self?.window?.contentView else { return }
+                        Self.turnOff(root)
+                    }
+                }
+            }
+
+            private static func turnOff(_ view: NSView) {
+                if let outline = view as? NSOutlineView { outline.selectionHighlightStyle = .none }
+                for sub in view.subviews { turnOff(sub) }
+            }
+        }
+    }
+
+    private func rowBackground(_ id: String) -> some View {
+        RoundedRectangle(cornerRadius: AppTheme.radiusRow)
+            .fill(page == id ? themeTint : Color.clear)
+            .padding(.horizontal, 8)
+    }
+
     private var quickStartRow: some View {
         HStack(spacing: 8) {
             AssetIcon(name: "StartIcon").frame(width: 20, height: 20)
             Text(L("sidebar.quickStart"))
+                .foregroundStyle(page == "quick-start" ? Color.white : Color.primary)
             Spacer()
-            Text(quickStartCountLabel).foregroundStyle(.secondary).monospacedDigit()
+            Text(quickStartCountLabel)
+                .foregroundStyle(page == "quick-start" ? Color.white.opacity(0.85) : Color.secondary)
+                .monospacedDigit()
             Button {
                 app.launch(quickStartKeys, stop: quickStartRunning)
             } label: {
                 Image(systemName: quickStartRunning ? "power.circle.fill" : "power.circle")
-                    .foregroundStyle(quickStartRunning ? AppTheme.green : .secondary)
+                    .foregroundStyle(quickStartRunning ? AppTheme.green
+                                     : (page == "quick-start" ? Color.white.opacity(0.85) : Color.secondary))
             }
             .buttonStyle(.borderless)
             .help(quickStartRunning ? L("menu.stopQuickStart") : L("menu.startQuickStart"))
@@ -237,41 +242,43 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8).padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowBackground(rowBackground("quick-start"))
         .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
         .tag("quick-start")
     }
 
-    // 一行侧栏条目：图标 + 名字 + 右侧（开关或数量）。选中与切页交给 List.selection。
     private func moduleRow(_ id: String) -> some View {
         HStack(spacing: 8) {
             ModuleIcon(id: id).frame(width: 20, height: 20)
             Text(moduleName(id))
+                .foregroundStyle(page == id ? Color.white : Color.primary)
+                .fixedSize(horizontal: true, vertical: false)
             Spacer()
-            moduleTrailing(id)
+            moduleTrailing(id, selected: page == id)
         }
         .padding(.horizontal, 8).padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowBackground(rowBackground(id))
         .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
         .tag(id)
     }
 
     @ViewBuilder
-    private func moduleTrailing(_ id: String) -> some View {
+    private func moduleTrailing(_ id: String, selected: Bool) -> some View {
+        let badge = selected ? Color.white.opacity(0.85) : Color.secondary
         switch id {
-        // 站点、Go、Java、Python、Erlang 都没有常驻进程，只显示数量。
-        case "hosts": Text(String(hostVM.hosts.count)).foregroundStyle(.secondary)
-        case "go": Text(String(goVM.versions.count)).foregroundStyle(.secondary)
-        case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(.secondary)
-        case "python": Text(String(app.pythonVM.versions.count)).foregroundStyle(.secondary)
-        case "node": Text(String(app.nodeVM.versions.count)).foregroundStyle(.secondary)
-        case "rust": Text(String(app.rustVM.versions.count)).foregroundStyle(.secondary)
-        case "erlang": Text(String(erlangVM.versions.count)).foregroundStyle(.secondary)
+        case "hosts": Text(String(hostVM.hosts.count)).foregroundStyle(badge)
+        case "go": Text(String(goVM.versions.count)).foregroundStyle(badge)
+        case "java": Text(String(app.javaVM.versions.count)).foregroundStyle(badge)
+        case "python": Text(String(app.pythonVM.versions.count)).foregroundStyle(badge)
+        case "node": Text(String(app.nodeVM.versions.count)).foregroundStyle(badge)
+        case "rust": Text(String(app.rustVM.versions.count)).foregroundStyle(badge)
+        case "erlang": Text(String(erlangVM.versions.count)).foregroundStyle(badge)
         case "nginx":
             Toggle("", isOn: Binding(get: { nginxVM.isRunning }, set: { _ in
                 if nginxVM.isRunning {
                     app.launch(app.launchTargets.filter { $0.kind == "nginx" }.map(\.key), stop: true)
                 } else {
-                    // 侧栏开关的启动规则：优先起勾了快捷启动的版本，没配就起版本号最大的。
                     let version = nginxVM.versions.first { app.state.quickStartTargets.contains("nginx:" + $0.id) }
                         ?? nginxVM.versions.max { $0.version.compare($1.version, options: .numeric) == .orderedAscending }
                     if let version { nginxVM.selectedID = version.id; app.launch(["nginx:" + version.id]) }
@@ -280,7 +287,6 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || nginxVM.versions.isEmpty)
             .help(L("sidebar.nginxToggleHint"))
-        // php 是特例：一键把所有 php-fpm 版本全部拉起来（nginx 站点依赖 fpm）。
         case "php":
             Toggle("", isOn: Binding(get: { phpVM.fpmRunningAny }, set: { _ in
                 Task { if phpVM.fpmRunningAny { await phpVM.stopAll() } else { await phpVM.startAll() } }
@@ -288,8 +294,6 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || phpVM.versions.isEmpty)
             .help(L("sidebar.phpToggleHint"))
-        // 端口固定的单实例服务（mysql / mariadb 走下面的 DatabaseKind 分支）：八个 kind 一套开关。
-        // 开关 = 有没有版本在跑；开启优先起勾了快捷启动的版本，没配就起列表第一个（版本号最大）。
         case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant", "neo4j", "rabbitmq":
             if let entry = app.entry(id) {
                 Toggle("", isOn: Binding(
@@ -309,8 +313,6 @@ struct ContentView: View {
                     if databaseVM.running(kind) {
                         app.launch(app.launchTargets.filter { $0.kind == kind.rawValue }.map(\.key), stop: true)
                     } else {
-                        // 同 Nginx：优先起勾了快捷启动的版本，没配就起版本号最大的。
-                        // 数据库的 launch key 就是 version.id，没有前缀。
                         let all = databaseVM.versions[kind] ?? []
                         let version = all.first { app.state.quickStartTargets.contains($0.id) }
                             ?? all.max { $0.version.compare($1.version, options: .numeric) == .orderedAscending }
@@ -331,11 +333,8 @@ struct QuickStartListView: View {
     @ObservedObject var databaseVM: DatabaseViewModel
     @ObservedObject var phpVM: PhpViewModel
 
-    private var targets: [LaunchTarget] {
-        app.launchTargets.filter { app.state.quickStartTargets.contains($0.key) }
-    }
+    private var targets: [LaunchTarget] { app.quickStartLaunchTargets }
 
-    // 服务 / 环境变量 / 端口 / 操作。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.service"), minWidth: 110, weight: 1),
          TableColumn(title: L("column.env"), minWidth: 90, weight: 2),

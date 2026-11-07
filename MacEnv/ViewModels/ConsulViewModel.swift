@@ -25,13 +25,11 @@ final class ConsulViewModel: ObservableObject {
 
     var selectedVersion: ConsulVersion? { versions.first { $0.id == selectedID } ?? versions.first }
 
-    // 端口按版本读（配置是每主版本一份），表格每行显示自己那份配置里的值。
     func port(_ version: ConsulVersion) -> String {
         let ports = services.consul.ports(version)
         return "\(ports.http) / \(ports.dns)"
     }
 
-    // 数据目录按主版本分：Consul 的 raft 存储格式跨大版本不保证兼容。
     func dataURL(_ version: ConsulVersion) -> URL { services.consul.dataDirectory(version) }
     func logURL() -> URL { services.consul.logFile() }
     func running(_ version: ConsulVersion) -> Bool { services.consul.running(version) }
@@ -45,8 +43,6 @@ final class ConsulViewModel: ObservableObject {
             await service.adopt(versions)
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "consul", directory: $0.directory)) })
             if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
-            // 选中的版本先把配置落好：配置是「已存在就不覆盖」，不先落一份的话用户第一次进
-            // 「配置」tab 看到的是空白编辑器，手一滑保存就把空内容写进去，Consul 之后起不来（同 ClickHouse）。
             if let version = selectedVersion { try service.prepare(version) }
         } catch {
             state.message = error.localizedDescription
@@ -69,7 +65,6 @@ final class ConsulViewModel: ObservableObject {
             objectWillChange.send()
         }
         do {
-            // restart 落到 start：start 里会先把还在跑的实例收掉。
             if operation != "stop" { try await service.start(version) }
             else { try await service.stop() }
             state.message = "Consul " + (operation == "start" ? L("message.started") : L("message.stopped"))
@@ -89,7 +84,6 @@ final class ConsulViewModel: ObservableObject {
         }
     }
 
-    // Consul 自带 Web UI（:8500/ui，靠配置里的 ui_config.enabled 打开）。
     func openWebUI(_ version: ConsulVersion) {
         NSWorkspace.shared.open(services.consul.webUI(version))
     }
@@ -135,7 +129,6 @@ final class ConsulViewModel: ObservableObject {
             configText = ""
             return
         }
-        // 进配置页时顺手补一份：没装版本时没有落点，装完 refresh 已经落过了。
         try? services.consul.prepare(version)
         configText = services.consul.configText(version)
     }
@@ -156,7 +149,6 @@ final class ConsulViewModel: ObservableObject {
     }
 }
 
-// 版本管理页的 MacPorts 一栏：加载与装/卸走 ToolService.portCatalogs["consul"]。
 extension ConsulViewModel: PortListHost {
     var portApp: String { "consul" }
 }

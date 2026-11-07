@@ -8,7 +8,6 @@ final class PythonViewModel: ObservableObject, PortListHost {
     @Published var versions: [PythonVersion] = []
     @Published var staticVersions: [StaticVersion] = []
     @Published var staticLoading = false
-    // 版本管理里的 Homebrew 一栏：python / python@3.9 … python@3.14 这一族公式。
     @Published var formulae: [BrewFormulaItem] = []
     @Published var pathMembership: [String: PathMembership] = [:]
     @Published var selectedID: String?
@@ -29,7 +28,6 @@ final class PythonViewModel: ObservableObject, PortListHost {
         if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
         pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, membership($0)) })
         pruneShims()
-        // brew 查不到（没装、或公式被 tap 挡了）不该把上面的扫描结果一起判成失败，丢后台慢慢填。
         Task {
             do { formulae = try await Brew.formulae("python") }
             catch { state.message = error.localizedDescription }
@@ -53,8 +51,6 @@ final class PythonViewModel: ObservableObject, PortListHost {
 
     // MARK: - 环境变量
 
-    // PATH 上加的是 shim 目录（里面 python / python3 / python3.x 三个名字都齐），不是 Python Home
-    // —— Home 里从来没有同时在的两个名字，直接加 Home 的话用户敲另一个就找不到解释器。
     private func shimDirectory(_ version: PythonVersion) -> URL { services.python.shimDirectory(for: version) }
 
     private func membership(_ version: PythonVersion) -> PathMembership {
@@ -63,7 +59,6 @@ final class PythonViewModel: ObservableObject, PortListHost {
 
     func togglePath(_ version: PythonVersion) {
         state.run {
-            // shim 必须在 toggle 之前建好：env/python 要指向它，而软链得按当前版本重建。
             let directory = try self.services.python.shim(for: version)
             try self.services.paths.toggle(kind: "python", directory: directory)
             try await self.services.paths.refresh(force: true)
@@ -72,7 +67,6 @@ final class PythonViewModel: ObservableObject, PortListHost {
         }
     }
 
-    // 版本被删掉之后（brew uninstall 我们不知道什么时候发生）留下的 shim 死链，刷新时顺手清掉。
     private func pruneShims() {
         for directory in services.python.staleShims() {
             try? services.paths.removeLinks(pointingInside: directory)
@@ -106,8 +100,6 @@ final class PythonViewModel: ObservableObject, PortListHost {
     func uninstallStatic(_ version: StaticVersion) {
         state.runStreaming(String(format: L("message.uninstallingFor"), "Python \(version.version)")) { _, _ in
             let directory = self.services.python.versionsDirectory.appendingPathComponent("python-\(version.version)")
-            // 必须在删目录**之前**摘掉指向它内部的 shim 和 env/python 软链：目录没了之后
-            // shim 解不出真身，就只能留一条死链，env/python 会指向一个空壳目录。
             for shim in self.services.python.shims(pointingInside: directory) {
                 try? self.services.paths.removeLinks(pointingInside: shim)
                 try? FileManager.default.removeItem(at: shim)

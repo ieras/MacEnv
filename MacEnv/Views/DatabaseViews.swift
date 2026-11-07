@@ -9,8 +9,6 @@ struct DatabaseManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
 
-    // 版本 / 路径 / 数据目录 / 端口 / 环境变量 / 服务 / 快捷启动 / 操作。
-    // 宽度交给 DataTable 按容器反推：路径列权重最大，四字表头（环境变量、快捷启动）靠 minWidth 兜底。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -66,12 +64,7 @@ struct DatabaseManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(kind); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh(kind) }
             }
             .panelHeader()
             Divider()
@@ -97,13 +90,7 @@ struct DatabaseManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    app.setQuickStart(version.id, enabled: !app.state.quickStartTargets.contains(version.id))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains(version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains(version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: version.id)
                 Menu {
                     Button(L("config.openFile")) { tab = 2; vm.selected[kind] = version.id }
                     Button(L("tab.errorLog")) { vm.selected[kind] = version.id; tab = 3 }
@@ -114,7 +101,6 @@ struct DatabaseManagementView: View {
     }
 
     private var versionManager: some View {
-        // MariaDB 没有 Static：one-env 的静态包接口对它返回空数组。
         let sources = kind == .mysql ? ["Static", "Homebrew", "MacPorts"] : ["Homebrew", "MacPorts"]
         return VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: sources, source: $source,

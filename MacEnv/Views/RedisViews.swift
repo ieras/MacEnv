@@ -8,7 +8,6 @@ struct RedisManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
 
-    // 版本 / 路径 / 数据目录 / 端口 / 环境变量 / 服务 / 快捷启动 / 操作，与数据库页完全一致。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -57,12 +56,7 @@ struct RedisManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()
@@ -88,13 +82,7 @@ struct RedisManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    app.setQuickStart(version.id, enabled: !app.state.quickStartTargets.contains(version.id))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains(version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains(version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: version.id)
                 Menu {
                     Button(L("config.openFile")) { tab = 2; vm.selected = version.id }
                     Button(L("tab.logs")) { vm.selected = version.id; tab = 3 }
@@ -105,7 +93,6 @@ struct RedisManagementView: View {
 
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 没有 Static：one-env 的静态包接口对 redis 返回空数组（redis 官方只发源码，没有 macOS 二进制）。
             VersionManagerHeader(sources: ["Homebrew", "MacPorts"], source: $source,
                                  linkURL: URL(string: "https://redis.io/downloads/")!,
                                  busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
@@ -137,19 +124,24 @@ struct RedisManagementView: View {
         }
     }
 
+    @ViewBuilder
+    private var versionPicker: some View {
+        if !vm.versions.isEmpty {
+            HStack {
+                Picker(L("column.version"), selection: $vm.selected) {
+                    ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
+                }
+                .pickerStyle(.menu)
+                Spacer()
+            }
+            .padding(.horizontal, 20).frame(height: 52)
+            Divider()
+        }
+    }
+
     private var configPanel: some View {
         VStack(spacing: 0) {
-            if !vm.versions.isEmpty {
-                HStack {
-                    Picker(L("column.version"), selection: $vm.selected) {
-                        ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
-                    }
-                    .pickerStyle(.menu)
-                    Spacer()
-                }
-                .padding(.horizontal, 20).frame(height: 52)
-                Divider()
-            }
+            versionPicker
             if let version = vm.selectedVersion() {
                 CodeEditor(text: $vm.configText, editable: true)
                 Divider()
@@ -171,17 +163,7 @@ struct RedisManagementView: View {
 
     private var logPanel: some View {
         VStack(spacing: 0) {
-            if !vm.versions.isEmpty {
-                HStack {
-                    Picker(L("column.version"), selection: $vm.selected) {
-                        ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
-                    }
-                    .pickerStyle(.menu)
-                    Spacer()
-                }
-                .padding(.horizontal, 20).frame(height: 52)
-                Divider()
-            }
+            versionPicker
             CodeEditor(text: $vm.logText, editable: false)
             Divider()
             HStack {

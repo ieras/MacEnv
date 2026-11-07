@@ -49,7 +49,6 @@ final class DatabaseViewModel: ObservableObject {
             versions[kind] = found
             await service.adopt(found)
             pathMembership[kind] = Dictionary(uniqueKeysWithValues: found.map { ($0.id, services.paths.membership(kind: kind.rawValue, directory: $0.directory)) })
-            // brew 丢后台慢慢填，别拖住 refresh 返回（同 PhpViewModel）。
             Task {
                 do { formulae[kind] = try await service.brewFormulae() }
                 catch { state.message = error.localizedDescription }
@@ -118,7 +117,6 @@ final class DatabaseViewModel: ObservableObject {
     @Published var portLoading = false
 
     func loadPortItems(_ kind: DatabaseKind, force: Bool = false) async {
-        // 缓存先上屏（installed 按落点现判），新鲜就到此为止，过期才真跑 port search。
         portItems[kind] = services.tools.portCached(app: kind.rawValue)
         if !force, services.tools.portCacheFresh(app: kind.rawValue) { return }
         guard !portLoading else { return }
@@ -202,7 +200,6 @@ final class DatabaseViewModel: ObservableObject {
     }
 }
 
-// 统一服务注册表条目：数据库一个 VM 管两个 kind，注册表按 kind 各挂一个。
 @MainActor
 struct DatabaseManageable: ServiceManageable {
     let dbKind: DatabaseKind

@@ -12,7 +12,6 @@ final class ClickHouseViewModel: ObservableObject {
     @Published var selectedID: String?
     @Published var configText = ""
     @Published var logText = ""
-    // 配置页要在 config.xml 和 users.xml 之间切，两个都是 MacEnv 自己生成的用户可编辑文件。
     @Published var configTarget = "config.xml"
     @Published var customDirectories = UserDefaults.standard.stringArray(forKey: "macenv.clickhouse.directories") ?? [] {
         didSet { UserDefaults.standard.set(customDirectories, forKey: "macenv.clickhouse.directories") }
@@ -25,7 +24,6 @@ final class ClickHouseViewModel: ObservableObject {
 
     var selectedVersion: ClickHouseVersion? { versions.first { $0.id == selectedID } ?? versions.first }
 
-    // 配置单份、不分版本，所以端口跟选哪个版本无关；一次读全，别让表格每行读两遍盘。
     func port(_ version: ClickHouseVersion) -> String {
         let ports = services.clickhouse.ports()
         return "\(ports.http) / \(ports.tcp)"
@@ -42,12 +40,7 @@ final class ClickHouseViewModel: ObservableObject {
         do {
             try await services.paths.refresh()
             let service = services.clickhouse
-            // 配置是全局单份、且「已存在就不覆盖」—— 不先落一份的话，用户第一次进「配置」tab
-            // 看到的是空白编辑器，手一滑保存就把空内容写进 config.xml；之后 prepare 见文件
-            // 已存在不再生成，ClickHouse 直接起不来。所以刷新时就把配置落好（同 Qdrant）。
             try service.prepare()
-            // 版本来源只认 MacEnv 自己管的目录 + 用户自定义目录 —— 跟 Redis / Database /
-            // PostgreSQL / Qdrant 一致。所以 paths.refresh() 排在扫描之后，只喂下面的 membership。
             versions = try await service.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             await service.adopt(versions)
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "clickhouse", directory: $0.directory)) })
@@ -73,7 +66,6 @@ final class ClickHouseViewModel: ObservableObject {
             objectWillChange.send()
         }
         do {
-            // restart 落到 start：start 里会先把还在跑的实例收掉。
             if operation != "stop" { try await service.start(version) }
             else { try await service.stop() }
             state.message = "ClickHouse " + (operation == "start" ? L("message.started") : L("message.stopped"))

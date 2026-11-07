@@ -1,6 +1,5 @@
 import Foundation
 
-// Nginx：Homebrew 提供二进制，MacEnv 用自己的配置和 PID 托管前台 master。
 @MainActor
 final class NginxService {
     let root: URL
@@ -42,13 +41,10 @@ final class NginxService {
             throw CommandError(message: L("error.nginxDefaultsMissing"))
         }
         for source in try fm.contentsOfDirectory(at: defaults, includingPropertiesForKeys: nil) {
-            // enable-php.conf 是模板，下面按 PHP 版本各展开一份；原样拷过去只会留个带 ##VERSION## 的死文件。
             guard source.lastPathComponent != "enable-php.conf" else { continue }
             let destination = common.appendingPathComponent("conf/" + source.lastPathComponent)
             if !fm.fileExists(atPath: destination.path) { try fm.copyItem(at: source, to: destination) }
         }
-        // 站点里写 `include enable-php-<两位版本>.conf;` 用的就是这些。版本目录名就是两位版本号，
-        // 跟 PhpFpmService.socketPath() 的 socket 名同源，两边不会跑偏。
         if let template = try? String(contentsOf: defaults.appendingPathComponent("enable-php.conf"), encoding: .utf8) {
             let phpFpm = root.appendingPathComponent("server/php-fpm", isDirectory: true)
             let versions = (try? fm.contentsOfDirectory(at: phpFpm, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
@@ -56,8 +52,6 @@ final class NginxService {
                 try? template.replacingOccurrences(of: "##VERSION##", with: version.lastPathComponent)
                     .write(to: common.appendingPathComponent("conf/enable-php-\(version.lastPathComponent).conf"), atomically: true, encoding: .utf8)
             }
-            // 反向清一遍：PHP 被卸载后它的 enable-php-<num>.conf 还留在磁盘上，站点 include 它就会
-            // fastcgi_pass 到一个不存在的 socket。上面那份目录列表是唯一的真相来源，对不上的删掉。
             let confDirectory = common.appendingPathComponent("conf", isDirectory: true)
             let live = Set(versions.map { "enable-php-\($0.lastPathComponent).conf" })
             for file in (try? fm.contentsOfDirectory(at: confDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
@@ -65,11 +59,6 @@ final class NginxService {
                 try? fm.removeItem(at: file)
             }
         }
-        // MacEnv 以当前用户前台跑 nginx，user 指令只在 master 是 root 时才有意义 —— 留着就是每次
-        // 启动往 error.log 里塞一条 [warn]。模板里已经注释掉了，但**老版本装出来的 conf 是代码硬写
-        // 进去的 `user <用户名>;`**，而上面那段拷贝对已存在的文件一律不覆盖，那份脏配置会永远留在
-        // 磁盘上（.default 同理，它是「恢复默认」按钮的来源）。所以这里主动清一遍：
-        // 新装靠模板、老装靠自愈，两条路都干净。只删未注释的行，模板里那行注释原样留着。
         stripUserDirective(config)
         stripUserDirective(defaultConfig)
         var content = try String(contentsOf: config, encoding: .utf8)
@@ -86,8 +75,6 @@ final class NginxService {
         }
     }
 
-    // 只吃未注释的 `user ...;`：正则要求行首（可带缩进）直接就是 user，`#user` 和
-    // `#user  nobody;  # 说明` 这类注释行一个字都不动。内容没变就不写盘。
     private func stripUserDirective(_ file: URL) {
         guard let content = try? String(contentsOf: file, encoding: .utf8) else { return }
         let cleaned = content.replacingOccurrences(of: "(?m)^[ \\t]*user[ \\t]+[^;]+;[^\\n]*\\n?", with: "", options: .regularExpression)
@@ -141,8 +128,6 @@ final class NginxService {
         )
     }
 
-    // 先校验 PID 文件，再按实例目录查找进程。
-    // pid 文件那条路走 libproc 校验可执行路径 —— 不跑子进程、不受沙箱影响，也不怕 setproctitle。
     private func existing() async -> ManagedProcess? {
         if let owned = supervisor.owned(pidFile: pidFile, binary: "nginx") { return owned }
         return try? await supervisor.find("nginx")
@@ -150,7 +135,6 @@ final class NginxService {
 
     func adopt(_ versions: [NginxVersion]) async {
         guard !supervisor.isRunning, let target = await existing() else { return }
-        // 用内核记录的可执行路径匹配版本，不从展示标题里猜。
         guard let version = versions.first(where: { $0.executable.path == target.executable }) else { return }
         runningID = version.id
         supervisor.adopt(target)
@@ -223,7 +207,6 @@ final class NginxService {
         try supervisor.signal(target, SIGHUP)
     }
 
-    // 停止时也校验落盘配置，防止「保存成功」却在下一次启动才发现语法错误。
     func reloadIfRunning() async throws {
         let target = supervisor.target
         let executable: URL

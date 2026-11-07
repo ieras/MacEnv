@@ -1,8 +1,5 @@
 import SwiftUI
 
-// Consul 页：跟其它数据库页同一个骨架 —— 服务 / 版本管理 / 配置 / 日志 四个 tab。
-// 唯一的额外东西是顶栏那个「打开 Web UI」：Consul 自带控制台（:8500/ui），
-// 这是它跟 MySQL / Redis 这类纯服务最不一样的地方。
 struct ConsulManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: ConsulViewModel
@@ -11,8 +8,6 @@ struct ConsulManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
 
-    // 端口列跟 ClickHouse 一样要放下两个端口：HTTP/UI 8500 和 DNS 8600。
-    // 80 不是拍脑袋来的：「8500 / 8600」在 13pt 系统字体下实测 76.1pt，68pt 会截成「8500 / 86…」。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -61,19 +56,13 @@ struct ConsulManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
-                // 自带控制台，只在真的有版本可跑的时候给按钮（否则点开是 404）。
                 if let version = vm.selectedVersion {
                     Button { vm.openWebUI(version) } label: { Image(systemName: "safari") }
                         .buttonStyle(.borderless)
                         .help(L("action.openWebUI") + "（\(vm.port(version))）")
                         .disabled(app.state.busy)
                 }
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()
@@ -99,13 +88,7 @@ struct ConsulManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    app.setQuickStart(version.id, enabled: !app.state.quickStartTargets.contains(version.id))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains(version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains(version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: version.id)
                 Menu {
                     Button(L("config.openFile")) { vm.selectedID = version.id; tab = 2 }
                     Button(L("tab.logs")) { vm.selectedID = version.id; tab = 3 }
@@ -117,9 +100,6 @@ struct ConsulManagementView: View {
 
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 两个来源：one-env 的官方 zip（Static）、MacPorts 的 consul 端口。
-            // 没有 Homebrew 一栏 —— consul 在 homebrew/core 里没有公式，官方只发 cask 和
-            // hashicorp/tap，而本机那个 tap 未信任，brew 直接拒绝加载。
             VersionManagerHeader(sources: ["Static", "MacPorts"], source: $source,
                                  linkURL: URL(string: "https://developer.hashicorp.com/consul")!,
                                  busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
@@ -149,8 +129,6 @@ struct ConsulManagementView: View {
         .task { await vm.loadStatic() }
     }
 
-    // 配置只有一份（按主版本分），MacEnv 生成的 JSON：server / bootstrap_expect / 节点名 /
-    // 监听地址 / 数据目录 / 日志 / UI 开关 / 端口，全在里面，命令行上不再传任何配置参数。
     @ViewBuilder
     private var configPanel: some View {
         if let url = vm.configURL() {
@@ -168,7 +146,6 @@ struct ConsulManagementView: View {
             }
             .onAppear { vm.loadConfig() }
         } else {
-            // 没有装任何版本时配置还没有落点（配置按主版本命名，装完才写）。
             Text(L("message.noDatabaseInstalled") + "Consul" + L("message.installOrAddPath"))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)

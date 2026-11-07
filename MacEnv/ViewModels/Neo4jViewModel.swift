@@ -12,7 +12,6 @@ final class Neo4jViewModel: ObservableObject {
     @Published var selected = ""
     @Published var configText = ""
     @Published var logText = ""
-    // JDK 装卸、换绑定时让 Java 列重算（绑定存在 UserDefaults 里，不是 @Published）。
     @Published private var javaRevision = 0
     @Published var customDirectories: [String] = {
         guard let data = UserDefaults.standard.data(forKey: "macenv.neo4j.directories"),
@@ -32,8 +31,6 @@ final class Neo4jViewModel: ObservableObject {
     func configURL(_ version: Neo4jVersion) -> URL { services.neo4j.configURL(for: version) }
     func dataURL(_ version: Neo4jVersion) -> URL { services.neo4j.dataURL(for: version) }
     func logURL() -> URL? { selectedVersion().map { services.neo4j.logFile(for: $0) } }
-    // 三端口（http/https/bolt）里表格只显示用户在意的两个：浏览器走 http、
-    // 客户端驱动走 bolt，https 默认关闭、列出来只是噪音（同 ClickHouse 双端口写法）。
     func port(_ version: Neo4jVersion) -> String {
         let ports = services.neo4j.ports(for: version)
         return "\(ports.http) / \(ports.bolt)"
@@ -45,8 +42,6 @@ final class Neo4jViewModel: ObservableObject {
         do {
             try await services.paths.refresh()
             let service = services.neo4j
-            // JDK 列表必须先就位：扫 Neo4j 版本要借一个 JAVA_HOME 跑 bin/neo4j version，
-            // 自动绑定也要从这份列表里挑。Java 模块刷新同一批目录，这里单独刷一份。
             service.installedJava = await services.java.installedVersions()
             let found = try await service.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             for version in found { try service.prepare(version) }

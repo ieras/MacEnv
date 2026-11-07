@@ -1,9 +1,5 @@
 import SwiftUI
 
-// Python 是一等语言模块（跟 PHP / Go 同级），自己占一个页面。
-// 两个 tab：已安装（含环境变量开关）、版本管理（静态包 / Homebrew / MacPorts）。
-// 没有 pyenv 那一栏：pyenv 装 Python 是从源码编译，GUI 里几分钟没进度、
-// 失败率高，不值得为对齐 Go 的 GVM 位置硬凑一个。
 struct PythonManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: PythonViewModel
@@ -12,7 +8,6 @@ struct PythonManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
     @State private var confirmUninstall = false
-    // 卸载必须记住点的是哪一行，不能在 alert 里写死公式名 —— PHP 页面就栽过这个跟头。
     @State private var uninstallFormula: String?
 
     var body: some View {
@@ -42,8 +37,6 @@ struct PythonManagementView: View {
 
     // MARK: - 版本管理
 
-    // 三个来源：Static 走 python-build-standalone（one-env 对 python 只给空数组），
-    // 后两个交给第三方工具，我们只负责显示和调它。
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts"], source: $source,
@@ -59,7 +52,6 @@ struct PythonManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
                     BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
-                        // 卸载要过确认弹窗，记住点的是哪一行 —— alert 里不能写死公式名。
                         if action == "uninstall" {
                             uninstallFormula = formula
                             confirmUninstall = true
@@ -86,7 +78,6 @@ struct PythonManagementView: View {
 
     // MARK: - 已安装
 
-    // 版本 / Python Home / 来源 / 环境变量。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 60),
          TableColumn(title: "Python Home", minWidth: 140, weight: 1),
@@ -102,12 +93,7 @@ struct PythonManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()

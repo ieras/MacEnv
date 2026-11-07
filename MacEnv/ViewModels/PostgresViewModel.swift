@@ -39,7 +39,6 @@ final class PostgresViewModel: ObservableObject, PortListHost {
             await service.adopt(found)
             try await services.paths.refresh()
             pathMembership = Dictionary(uniqueKeysWithValues: found.map { ($0.id, services.paths.membership(kind: "postgresql", directory: $0.directory)) })
-            // brew 丢后台慢慢填，别拖住 refresh 返回。
             Task {
                 do { formulae = try await service.brewFormulae() }
                 catch { state.message = error.localizedDescription }
@@ -98,7 +97,6 @@ final class PostgresViewModel: ObservableObject, PortListHost {
         }
     }
 
-    // PG 的配置就是数据目录里的 postgresql.conf（initdb 生成），直接编辑它。
     func loadConfig() {
         guard let version = selectedVersion() else { configText = ""; return }
         configText = (try? String(contentsOf: services.postgres.configURL(for: version), encoding: .utf8)) ?? ""

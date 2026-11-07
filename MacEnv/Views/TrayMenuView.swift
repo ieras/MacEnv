@@ -1,8 +1,5 @@
 import SwiftUI
 
-// 托盘面板：MenuBarExtra(.window) 点状态栏图标弹出的浮层，全 SwiftUI。
-// 开关 / 图标 / 颜色直接复用侧栏同款组件（ServiceSwitch / ServiceIcon / AppTheme），
-// 保证托盘和主窗口的操作手感完全一致；启停逻辑统一走 AppViewModel（toggleKind / launch）。
 struct TrayMenuView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var nginxVM: NginxViewModel
@@ -18,14 +15,8 @@ struct TrayMenuView: View {
 
     private var busy: Bool { app.state.busy }
 
-    // 已勾的快捷启动项。它们出现在上面的独立段落里，下面的分组段就不再重复。
-    private var quickTargets: [LaunchTarget] {
-        app.launchTargets.filter { app.state.quickStartTargets.contains($0.key) }
-    }
+    private var quickTargets: [LaunchTarget] { app.quickStartLaunchTargets }
 
-    // 分组段：照搬 moduleGroups 的分组与顺序（侧栏同款标题）。
-    // 滤掉无服务的模块（hosts/go/java/python 这些没有 ServiceManageable），再滤掉已在快捷启动段出现过的 kind；
-    // 整组滤空就连标题一起不画（比如 redis 勾了快捷启动，「缓存与队列」组整组消失）。
     private var groups: [(title: String, kinds: [String])] {
         let quickKinds = Set(quickTargets.map(\.kind))
         return moduleGroups.compactMap { key, ids in
@@ -62,7 +53,6 @@ struct TrayMenuView: View {
         .frame(width: 280)
     }
 
-    // 顶部电源行 = 快捷启动总开关：一键启停全部已勾项。
     private var masterRow: some View {
         let anyRunning = app.state.quickStartTargets.contains { app.targetRunning($0) }
         return HStack(spacing: 8) {
@@ -86,8 +76,6 @@ struct TrayMenuView: View {
         .contentShape(Rectangle())
     }
 
-    // 分组段的一行：标题 = 点开关会起的那个版本的 target.title（与 toggleKind 的选择一致）。
-    // PHP 是特例：开关 = 全部 php-fpm 全起/全停（同侧栏），版本号无意义，只显示模块名。
     private func kindRow(_ kind: String) -> some View {
         let targets = app.launchTargets.filter { $0.kind == kind }
         let title: String
@@ -149,10 +137,6 @@ struct TrayMenuView: View {
         }
     }
 
-    // 托盘点「设置」：面板刚 dismiss、app 可能处在 accessory（hideOnClose 关过主窗口），
-    // 不先激活的话 Settings 窗口就算建了也在别人后面，看着就是「弹不出」。
-    // macOS 14 起的 selector 是 showSettingsWindow:，13 叫 showPreferencesWindow:，两个都试；
-    // SwiftUI 的 Settings 窗口建了也不保证自动前置，最后兜底提一下。
     private func openSettings() {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)

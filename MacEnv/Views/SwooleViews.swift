@@ -1,7 +1,5 @@
 import SwiftUI
 
-// Swoole CLI 挂在 PHP 页面里当 tab：它的版本管理和运行时文件跟 PHP 是同一套东西，
-// 分开只会让人以为要装两遍。
 struct SwoolePanel: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: SwooleViewModel
@@ -20,15 +18,9 @@ struct SwoolePanel: View {
                     .help(L("action.customPathHint"))
                 Link(destination: URL(string: "https://www.swoole.com/")!) { Image(systemName: "globe") }
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task {
-                        if showingAvailable { await vm.loadStatic(force: true) } else { await vm.refresh() }
-                        refreshing = false
-                    }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) {
+                    if showingAvailable { await vm.loadStatic(force: true) } else { await vm.refresh() }
+                }
             }
             .panelHeader()
             Divider()
@@ -43,7 +35,6 @@ struct SwoolePanel: View {
         .task { await vm.loadStatic() }
     }
 
-    // 版本 / PHP / 路径 / 来源 / 环境变量。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 60),
          TableColumn(title: "PHP", minWidth: 60),

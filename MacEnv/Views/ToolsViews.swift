@@ -1,9 +1,5 @@
 import SwiftUI
 
-// 环境工具页：Homebrew / MacPorts / SDKMAN / GVM / nvm / fnm / rustup 七个「工具本体」的装、卸、更新。
-//
-// 「用这个工具装东西」不在这里 —— 那是各模块版本管理页的来源 tab（Homebrew / MacPorts / …）。
-// 两边各司其职：一个入口管本体，一个入口用本体。
 struct ToolsView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: ToolsViewModel
@@ -23,9 +19,6 @@ struct ToolsView: View {
             default: brewPanel
             }
         }
-        // 搜索框三个 tab 共用一个 @Published，切 tab 时清掉，免得带着上一个工具的
-        // 过滤条件看到一张空表。GVM 只在那时才去检测 ~/.gvm；nvm / fnm 由各自的
-        // ManagerPanel.task 现问（初始 tab 值不触发 onChange，Node 页踩过这个坑）。
         .onChange(of: tab) { value in
             vm.search = ""
             if value == 3 { app.goVM.checkGvm() }
@@ -54,7 +47,6 @@ struct ToolsView: View {
                        path: vm.brewInstalled ? vm.brewPath : "") {
                 HomebrewIcon()
             } actions: {
-                // 下载源：原来在设置页，只有 brew 用得上，所以搬到这里，跟「更新」同一行。
                 Picker("", selection: $app.state.brewSource) {
                     ForEach(BrewSource.allCases) { Text($0.title).tag($0) }
                 }
@@ -104,7 +96,6 @@ struct ToolsView: View {
             ToolHeader(name: "SDKMAN",
                        status: vm.sdkmanInstalled ? L("tools.installed") : L("tools.notInstalled"),
                        path: vm.sdkmanInstalled ? vm.sdkmanPath : "") {
-                // 官方那套是彩色的（红字 + 蓝爆炸底 + 半调点阵），压成单色就是一团黑，所以整张保留原色。
                 AssetIcon(name: "SDKMANIcon")
             } actions: {
                 if vm.sdkmanInstalled {
@@ -152,9 +143,6 @@ struct ToolsView: View {
     }
 }
 
-// 工具本体那一行：名字 + 图标 + 状态徽章 + 操作，路径单独一行、点开就是 Finder。
-// 图标跟在名字后面，跟其他页面一致（设置页的模块卡片也是这么排的）。
-// 图标由调用方给：GVM 是两层叠的、SDKMAN 要保留官方配色，都不是 AssetIcon 一张图能表达的。
 struct ToolHeader<Icon: View, Actions: View>: View {
     let name: String
     let status: String
@@ -191,9 +179,6 @@ struct ToolHeader<Icon: View, Actions: View>: View {
 
 // MARK: - GVM
 
-// GVM 只管 Go，本体管理却要有个地方放 —— 跟 Homebrew 完全同构：
-// 本体在这一页（装 / 卸 / 路径），「用 GVM 装 Go」在 Go 页的版本管理里当来源。
-// 状态和动作留在 GoViewModel（它们本来就是 Go 的东西），这里只读。
 struct GvmPanel: View {
     @ObservedObject var vm: GoViewModel
     @State private var confirmUninstall = false
@@ -240,7 +225,6 @@ struct GvmPanel: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(30)
         } else {
-            // 环境工具页是管本体的：只列 GVM 已装的 Go 版本，装新版本去 Go 页的 GVM 来源。
             GvmVersionTable(vm: vm, installedOnly: true)
         }
     }
@@ -248,13 +232,6 @@ struct GvmPanel: View {
 
 // MARK: - nvm / fnm
 
-// nvm / fnm 只管 Node，本体管理跟 GVM 完全同构：本体在这一页（装 / 更新 / 卸 / 路径），
-// 「用 nvm / fnm 装 Node」在 Node 页的版本管理里当来源 tab。状态和动作留在
-// NodeViewModel（它们本来就是 Node 的东西），这里只读。nvm 和 fnm 面板结构一模一样，
-// 做成一个 view 传 manager 参数，别抄两遍。
-//
-// 「更新」= 重跑官方安装脚本（nvm / fnm 都没有自更新命令，官方脚本幂等）——
-// 比 GVM 面板多一个按钮（GVM 没有更新入口，brew 才有）。
 struct ManagerPanel: View {
     @ObservedObject var vm: NodeViewModel
     let manager: String  // "nvm" / "fnm"
@@ -269,7 +246,6 @@ struct ManagerPanel: View {
             ToolHeader(name: manager,
                        status: installed == true ? L("tools.installed") : L("tools.notInstalled"),
                        path: installed == true ? rootPath : "") {
-                // 官方品牌 logo 原色渲染（fnm 多彩、nvm 绿渐变），template 会压成剪影毁掉。
                 if manager == "nvm" { NvmIcon() } else { FnmIcon() }
             } actions: {
                 if installed == true {
@@ -285,15 +261,11 @@ struct ManagerPanel: View {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        // 检测责任收在面板自己：onChange(of: tab) 对初始 tab 值不触发（Node 页踩过），
-        // 谁显示这个面板谁负责把 nvm/fnm 检测跑一遍 —— 点进来、初始落页都覆盖。
         .task { vm.checkManagers() }
         .alert(L("alert.uninstallManagerTitle"), isPresented: $confirmManagerUninstall) {
             Button(L("action.cancel"), role: .cancel) {}
             Button(L("action.uninstall"), role: .destructive) { vm.managerSelfAction(manager, "uninstall") }
         } message: {
-            // ⚠️ message 闭包在 body 每次求值时立即执行，String(format:) 的 %@ 数量必须跟参数
-            // 严格对上 —— 少一个是运行时 SIGSEGV，编译和单测都抓不到（Node 页面崩过）。
             Text(String(format: L("alert.uninstallManagerMessage"), manager, tilde(rootPath),
                         vm.versions.filter { $0.source == manager }.count))
         }
@@ -308,7 +280,6 @@ struct ManagerPanel: View {
                 pendingUninstall = nil
             }
         } message: {
-            // ⚠️ 同上：2 个 %@（来源 + 版本号）。
             Text(String(format: L("alert.uninstallNodeMessage"), pendingUninstall?.source ?? "", pendingUninstall?.version ?? ""))
         }
     }
@@ -332,7 +303,6 @@ struct ManagerPanel: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(30)
         } else {
-            // 环境工具页是管本体的：只列管理器已装的版本，装新版本去 Node 页的对应来源 tab。
             ManagerVersionListView(vm: vm, manager: manager, installedOnly: true) { version in
                 pendingUninstall = version
             }
@@ -342,12 +312,6 @@ struct ManagerPanel: View {
 
 // MARK: - rustup
 
-// rustup 只管 Rust，本体管理跟 GVM / nvm / fnm 完全同构：本体在这一页（装 / 更新 / 卸 / 路径），
-// 「用 rustup 装 Rust」在 Rust 页的版本管理里当来源 tab。状态和动作留在 RustViewModel
-// （它们本来就是 Rust 的东西），这里只读。
-//
-// 「更新」= 重跑官方安装脚本（rustup 没有可用的自更新命令：`rustup self update` 只对
-// 自编译的 rustup 有效，官方脚本装的是完整版会直接报错），官方脚本幂等，重跑即升级。
 struct RustupPanel: View {
     @ObservedObject var vm: RustViewModel
     @State private var confirmManagerUninstall = false
@@ -373,15 +337,11 @@ struct RustupPanel: View {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        // 检测责任收在面板自己：onChange(of: tab) 对初始 tab 值不触发（Node 页踩过），
-        // 谁显示这个面板谁负责把 rustup 检测跑一遍 —— 点进来、初始落页都覆盖。
         .task { vm.checkRustup() }
         .alert(L("alert.uninstallRustupTitle"), isPresented: $confirmManagerUninstall) {
             Button(L("action.cancel"), role: .cancel) {}
             Button(L("action.uninstall"), role: .destructive) { vm.rustupSelfAction("uninstall") }
         } message: {
-            // ⚠️ message 闭包在 body 每次求值时立即执行，String(format:) 的 %@ 数量必须跟参数
-            // 严格对上 —— 少一个是运行时 SIGSEGV，编译和单测都抓不到（Node 页面崩过）。
             Text(String(format: L("alert.uninstallRustupMessage"), "rustup", tilde(vm.rustupPath),
                         vm.versions.filter { $0.source == "rustup" }.count))
         }
@@ -417,7 +377,6 @@ struct RustupPanel: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(30)
         } else {
-            // 环境工具页是管本体的：只列 rustup 已装的工具链，装新版本去 Rust 页的 rustup 来源 tab。
             RustupVersionListView(vm: vm, installedOnly: true) { version in
                 pendingUninstall = version
             }
@@ -425,10 +384,6 @@ struct RustupPanel: View {
     }
 }
 
-// GVM 的版本表。两种口径：
-//   环境工具页（管本体）→ installedOnly，只列装了的，跟 brew / macports / sdkman 三个 tab 对齐；
-//   Go 页的 GVM 来源（用本体）→ 全量可装清单，那里是装新版本的入口，跟 Static / Brew tab 一个道理。
-// 两处读同一份数据，做成一个 view 别抄两遍 —— 抄两遍的下场是改一处忘一处。
 struct GvmVersionTable: View {
     @ObservedObject var vm: GoViewModel
     var installedOnly = false
@@ -445,9 +400,6 @@ struct GvmVersionTable: View {
             }
             .buttonStyle(.borderless)
             .padding(.horizontal, 20).padding(.vertical, 10)
-            // LazyVGrid 是顺序流布局，单元格数必须和列数严格对齐，所以两种口径各画各的表。
-            // 空提示也按口径走：已装口径跟 brew / macports / sdkman 一个说法，
-            // 可装清单口径跟 MacPorts 来源 tab 一个说法。
             if installedOnly {
                 DataTable(columns: installedColumns, rows: filtered.filter(\.installed), empty: L("tools.empty")) { version in
                     Text(version.version)
@@ -471,7 +423,6 @@ struct GvmVersionTable: View {
         }
     }
 
-    // 默认版本：当前的打勾，没设的给一键切换。
     private func defaultMark(_ version: GvmVersion) -> some View {
         Group {
             if version.isDefault { Image(systemName: "checkmark.circle.fill").foregroundStyle(.blue) }

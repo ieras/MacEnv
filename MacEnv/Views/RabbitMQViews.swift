@@ -3,17 +3,14 @@ import SwiftUI
 struct RabbitMQManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: RabbitMQViewModel
-    // 没有兼容 Erlang 时跳 Erlang 模块（装 / 卸都在那儿）。ContentView 传入跳转闭包，其余调用方用默认空实现。
     var openErlangModule: () -> Void = {}
     @State private var tab = 0
     @State private var source = "Static"
     @State private var customPathEditor = false
     @State private var refreshing = false
     @State private var confirmUninstall = false
-    // 卸载必须记住点的是哪一行，不能在 alert 里写死公式名（同 Go 页面）。
     @State private var uninstallFormula: String?
 
-    // 双端口列宽至少 80 的硬规矩见 AGENTS.md；erlang 列是 Picker，给点分量。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -70,12 +67,7 @@ struct RabbitMQManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()
@@ -102,13 +94,7 @@ struct RabbitMQManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    app.setQuickStart(version.id, enabled: !app.state.quickStartTargets.contains(version.id))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains(version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains(version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: version.id)
                 Menu {
                     Button(L("rabbitmq.openManager")) { NSWorkspace.shared.open(URL(string: "http://127.0.0.1:\(vm.managementPort(version))")!) }
                     Button(L("config.openFile")) { tab = 2; vm.selected = version.id }
@@ -118,9 +104,6 @@ struct RabbitMQManagementView: View {
         }
     }
 
-    // Erlang 列：候选按官方兼容矩阵（RabbitMQService.supportedOtpMajors）过滤后倒序排列，
-    // 没候选就引导去 Erlang 模块 —— 装 / 卸 Erlang 都归那个页面管。
-    // 运行中禁用：换 erl 下次启动才生效，放着在跑的服务动它根基纯属捣乱。
     @ViewBuilder
     private func erlangCell(_ version: RabbitMQVersion) -> some View {
         let candidates = vm.erlangCandidates(version)
@@ -130,7 +113,6 @@ struct RabbitMQManagementView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             Picker("", selection: Binding(get: { vm.selectedErlang(version) }, set: { vm.setErlang(version, $0) })) {
-                // label 用 OTP 大版本（"Erlang 27"）：用户、brew 公式名、官方兼容矩阵全是这个口径。
                 ForEach(candidates, id: \.directory.path) { candidate in
                     Text("Erlang " + candidate.version).tag(candidate.directory.path)
                 }
@@ -140,7 +122,6 @@ struct RabbitMQManagementView: View {
         }
     }
 
-    // 三个来源：官方 generic-unix 静态 tar.xz、Homebrew、MacPorts。
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts"], source: $source,
@@ -160,7 +141,6 @@ struct RabbitMQManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
                     BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
-                        // 卸载要过确认弹窗，记住点的是哪一行 —— alert 里不能写死公式名。
                         if action == "uninstall" {
                             uninstallFormula = formula
                             confirmUninstall = true
@@ -186,19 +166,24 @@ struct RabbitMQManagementView: View {
         .task { await vm.loadStatic() }
     }
 
+    @ViewBuilder
+    private var versionPicker: some View {
+        if !vm.versions.isEmpty {
+            HStack {
+                Picker(L("column.version"), selection: $vm.selected) {
+                    ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
+                }
+                .pickerStyle(.menu)
+                Spacer()
+            }
+            .padding(.horizontal, 20).frame(height: 52)
+            Divider()
+        }
+    }
+
     private var configPanel: some View {
         VStack(spacing: 0) {
-            if !vm.versions.isEmpty {
-                HStack {
-                    Picker(L("column.version"), selection: $vm.selected) {
-                        ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
-                    }
-                    .pickerStyle(.menu)
-                    Spacer()
-                }
-                .padding(.horizontal, 20).frame(height: 52)
-                Divider()
-            }
+            versionPicker
             if let version = vm.selectedVersion() {
                 CodeEditor(text: $vm.configText, editable: true)
                 Divider()
@@ -220,17 +205,7 @@ struct RabbitMQManagementView: View {
 
     private var logPanel: some View {
         VStack(spacing: 0) {
-            if !vm.versions.isEmpty {
-                HStack {
-                    Picker(L("column.version"), selection: $vm.selected) {
-                        ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
-                    }
-                    .pickerStyle(.menu)
-                    Spacer()
-                }
-                .padding(.horizontal, 20).frame(height: 52)
-                Divider()
-            }
+            versionPicker
             CodeEditor(text: $vm.logText, editable: false)
             Divider()
             HStack {

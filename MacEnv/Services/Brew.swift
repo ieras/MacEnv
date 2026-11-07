@@ -1,18 +1,12 @@
 import Foundation
 
-// Homebrew 的公共入口。PHP 和数据库两个模块都要「按公式名查版本 + 执行安装卸载」，
-// 抽出来省一份重复的 JSON 解析。Nginx 的 brew 信息结构不同，留在自己那边。
 enum Brew {
     static var executable: String? {
         ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].first { FileManager.default.isExecutableFile(atPath: $0) }
     }
 
-    // 机器上装了第三方 tap（比如 shivammathur/php）时，裸公式名会解析到那个 tap 上，
-    // brew 以「untrusted tap」为由直接拒绝加载，整个版本列表就空了。限定 homebrew/core/
-    // 就绕开了 —— 返回的 full_name 还是裸名，界面照旧。
     private static func core(_ name: String) -> String { name.contains("/") ? name : "homebrew/core/\(name)" }
 
-    // 查 name 和 name@版本 这一族公式，只留 brew 真实返回的那些。
     static func formulae(_ name: String) async throws -> [BrewFormulaItem] {
         guard let executable else { return [] }
         let search = try await Command.run(executable, ["search", "--formula", "/^\(name)(@[0-9.]+)?$/"], environment: Command.brewEnvironment)
@@ -37,9 +31,6 @@ enum Brew {
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    // 已安装版本只读本地 Cellar，不查询远程公式；第三方 tap 从安装凭据保留。
-    // subdirectory：二进制在 keg 里的上层目录，绝大多数公式是 bin/，
-    // rabbitmq 这类把整套发行版按原样搬进来的（prefix.install Dir["*"]）是 sbin/。
     static func installedBinaries(_ app: String, binary: String, subdirectory: String = "bin") async throws -> [(file: URL, formula: String)] {
         let fm = FileManager.default
         var result: [(URL, String)] = []
@@ -60,26 +51,17 @@ enum Brew {
         return result
     }
 
-    // 安装 / 卸载动辄几分钟（下瓶子、编译、装依赖），输出一律实时喂给任务日志 ——
-    // 只在结束时把 output.text 一次性抛出来，界面全程是一动不动的转圈，出错了也看不到是哪一步。
     static func run(_ operation: String, formula: String,
                     report: @escaping (String) -> Void = { _ in },
                     onStart: ((Process) -> Void)? = nil) async throws {
         guard let executable else { throw CommandError(message: L("error.brewMissing")) }
-        // 安装 / 升级要限定 core，否则裸名一样会撞上未信任的 tap。
-        // 卸载绝不能限定：brew 拿到带 tap 的名字会按 tap 过滤已安装的 keg
-        // （cli/named_args.rb 的 resolve_kegs），本机这些 keg 来自第三方 tap，限定后反而找不到。
         let name = operation == "install" || operation == "upgrade" ? core(formula) : formula
         let arguments = operation == "update" ? ["update"] : [operation, name]
         let status = try await Command.stream(executable, arguments, environment: Command.brewEnvironment,
                                               onStart: onStart, onOutput: report)
-        // 失败原因已经在日志里了（brew 把每一步都打出来了），这里只补一句结论。
         guard status == 0 else { throw CommandError(message: L("error.brewFailed") + "（\(status)）") }
     }
 
-    // brew 列表的展示行：一行 = 公式 + 一个已装版本（没装过的公式给一行空版本）。
-    // 全表按版本号从大到小 —— 最新版本永远在最上面（跟 MacPorts 可装清单同一个口径）。
-    // 表达式拆开写：整条链塞给类型检查器会「unable to type-check in reasonable time」。
     static func listRows(_ formulae: [BrewFormulaItem]) -> [(formula: BrewFormulaItem, version: String?)] {
         let rows: [(formula: BrewFormulaItem, version: String?)] = formulae.flatMap { formula -> [(formula: BrewFormulaItem, version: String?)] in
             if formula.installedVersions.isEmpty { return [(formula, nil as String?)] }

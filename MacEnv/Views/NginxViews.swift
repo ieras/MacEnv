@@ -13,8 +13,6 @@ struct NginxManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
 
-    // 版本 / 路径 / 备注 / 环境变量 / 别名 / 服务 / 快捷启动 / 操作。
-    // 宽度交给 DataTable 按容器反推：路径列权重最大，备注和别名次之。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -92,12 +90,7 @@ struct NginxManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }.panelHeader()
             Divider()
             DataTable(columns: tableColumns, rows: vm.versions, empty: L("message.noNginxInstalled")) { version in
@@ -120,14 +113,7 @@ struct NginxManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    let key = "nginx:" + version.id
-                    app.setQuickStart(key, enabled: !app.state.quickStartTargets.contains(key))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains("nginx:" + version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains("nginx:" + version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: "nginx:" + version.id)
                 Menu {
                     Button(L("tab.config")) { vm.selectedID = version.id; tab = 2 }
                     Button(L("tab.errorLog")) { tab = 3 }
@@ -151,7 +137,6 @@ struct NginxManagementView: View {
             Divider()
             if source == "Homebrew" {
                 if let formula = vm.formula {
-                    // nginx 在 brew 里就一个公式，套成列表项走公共的 brew 列表。
                     BrewListView(formulae: [BrewFormulaItem(name: "nginx", stable: formula.version, installedVersions: formula.installedVersions,
                                                             linkedVersion: formula.linkedVersion, outdated: formula.outdated)],
                                  busy: app.state.installBusy) { action, _ in
@@ -166,7 +151,6 @@ struct NginxManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 }
             } else if source == "MacPorts" {
-                // 装 MacPorts 本体的入口统一收在环境工具页；装好了这里直接给可装清单。
                 if app.toolsVM.macPortsInstalled {
                     PortListView(items: vm.portItems, loading: vm.portLoading, busy: app.state.installBusy,
                                  load: { await vm.loadPortItems() },

@@ -3,14 +3,12 @@ import SwiftUI
 struct Neo4jManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: Neo4jViewModel
-    // 没有兼容 JDK 时跳 Java 模块（装 / 卸 JDK 都在那儿）。ContentView 传入跳转闭包，其余调用方用默认空实现。
     var openJavaModule: () -> Void = {}
     @State private var tab = 0
     @State private var source = "Static"
     @State private var customPathEditor = false
     @State private var refreshing = false
 
-    // 双端口列宽至少 80 的硬规矩见 AGENTS.md；java 列是 Picker，给点分量。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -60,12 +58,7 @@ struct Neo4jManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()
@@ -92,13 +85,7 @@ struct Neo4jManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    app.setQuickStart(version.id, enabled: !app.state.quickStartTargets.contains(version.id))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains(version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains(version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: version.id)
                 Menu {
                     Button(L("neo4j.openBrowser")) { NSWorkspace.shared.open(URL(string: "http://localhost:\(vm.httpPort(version))")!) }
                     Button(L("config.openFile")) { tab = 2; vm.selected = version.id }
@@ -108,9 +95,6 @@ struct Neo4jManagementView: View {
         }
     }
 
-    // Java 列：候选按策略表（Neo4jService.supportedJavaMajors）过滤后倒序排列，
-    // 没候选就引导去 Java 模块 —— 装 / 卸 JDK 都归那个页面管。
-    // 运行中禁用：换 JAVA_HOME 下次启动才生效，放着在跑的服务动它根基纯属捣乱。
     @ViewBuilder
     private func javaCell(_ version: Neo4jVersion) -> some View {
         let candidates = vm.javaCandidates(version)
@@ -120,8 +104,6 @@ struct Neo4jManagementView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             Picker("", selection: Binding(get: { vm.selectedJava(version) }, set: { vm.setJava(version, $0) })) {
-                // label 用完整版本号（"Java 21.0.12"）：大版本号就是第一段，
-                // 同机多个同 major 的 JDK 靠补丁号区分，路径太长表格里放不下。
                 ForEach(candidates, id: \.directory.path) { candidate in
                     Text("Java " + candidate.version).tag(candidate.directory.path)
                 }
@@ -131,7 +113,6 @@ struct Neo4jManagementView: View {
         }
     }
 
-    // 只有一个来源：官方只发社区 tar.gz，brew 只有启动服务的 cask（公式接口查不到）。
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static"], source: $source,
@@ -151,19 +132,24 @@ struct Neo4jManagementView: View {
         .task { await vm.loadStatic() }
     }
 
+    @ViewBuilder
+    private var versionPicker: some View {
+        if !vm.versions.isEmpty {
+            HStack {
+                Picker(L("column.version"), selection: $vm.selected) {
+                    ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
+                }
+                .pickerStyle(.menu)
+                Spacer()
+            }
+            .padding(.horizontal, 20).frame(height: 52)
+            Divider()
+        }
+    }
+
     private var configPanel: some View {
         VStack(spacing: 0) {
-            if !vm.versions.isEmpty {
-                HStack {
-                    Picker(L("column.version"), selection: $vm.selected) {
-                        ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
-                    }
-                    .pickerStyle(.menu)
-                    Spacer()
-                }
-                .padding(.horizontal, 20).frame(height: 52)
-                Divider()
-            }
+            versionPicker
             if let version = vm.selectedVersion() {
                 CodeEditor(text: $vm.configText, editable: true)
                 Divider()
@@ -185,17 +171,7 @@ struct Neo4jManagementView: View {
 
     private var logPanel: some View {
         VStack(spacing: 0) {
-            if !vm.versions.isEmpty {
-                HStack {
-                    Picker(L("column.version"), selection: $vm.selected) {
-                        ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
-                    }
-                    .pickerStyle(.menu)
-                    Spacer()
-                }
-                .padding(.horizontal, 20).frame(height: 52)
-                Divider()
-            }
+            versionPicker
             CodeEditor(text: $vm.logText, editable: false)
             Divider()
             HStack {

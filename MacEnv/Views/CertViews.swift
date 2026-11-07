@@ -1,8 +1,6 @@
 import SwiftUI
 import AppKit
 
-// 站点证书：服务 / 版本管理 / 证书 三个子 tab。
-// 证书是站点的一部分（自动 SSL、手动指定都挂在站点上），所以并进「站点」而不单列侧边栏条目。
 struct CertificatePanelView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: MkCertViewModel
@@ -15,7 +13,6 @@ struct CertificatePanelView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 二级 tab 固定宽度，不撑满整行 —— 跟一级 tab 一样宽就分不出哪层是哪层了。
             SegmentedTabs(titles: [L("tab.installed"), L("tab.versions"), L("mkcert.certificates")], selection: $tab)
                 .frame(width: 330)
                 .padding(.horizontal, 20).padding(.vertical, 12)
@@ -48,14 +45,11 @@ struct CertificatePanelView: View {
 
     // MARK: - 已安装
 
-    // 跟 Composer / Swoole CLI 的「已安装」页同一套：顶栏是标题 + 图标 + 自定义目录 + 刷新，
-    // 下面一张 DataTable。根 CA 的装 / 卸 / 检测不在这里，都在「证书」页顶栏。
     private var installedPanel: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 SelectableTitle(text: "MkCert")
                 SSLIcon().frame(width: 22, height: 22)
-                // 多版本时给个下拉 —— 「证书」页签发用的就是这里选中的那个。
                 if vm.versions.count > 1 {
                     Picker("", selection: $vm.selected) {
                         ForEach(vm.versions) { version in Text(version.version).tag(version.id) }
@@ -76,7 +70,6 @@ struct CertificatePanelView: View {
         }
     }
 
-    // 列跟 Composer 对齐，中间插一列「来源」（Homebrew / Static / MacPorts）。
     private var installedColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 60),
          TableColumn(title: L("column.path"), minWidth: 140, weight: 1),
@@ -147,7 +140,6 @@ struct CertificatePanelView: View {
                         .buttonStyle(.borderless)
                         .help(L("mkcert.caroot") + " " + tilde(vm.caroot))
                     }
-                    // 装完亮出来，不然用户看不出这一步到底成没成。
                     if vm.caTrusted {
                         Label(L("mkcert.caTrusted"), systemImage: "checkmark.seal.fill")
                             .font(.callout).foregroundStyle(AppTheme.green)
@@ -158,11 +150,7 @@ struct CertificatePanelView: View {
                 Spacer()
                 Button { Task { await hostVM.loadCertificates() } } label: { Image(systemName: "arrow.clockwise") }
                     .help(L("action.reload"))
-                // 根 CA 的装 / 卸 / 检测。放这一排是为了跟证书列表挨着 ——
-                // 换过 CA 之后这些站点的证书就得重签，两件事本来就分不开。
                 if vm.selectedVersion != nil {
-                    // 重复装是幂等的（钥匙串按证书去重，实测装三次仍只有一条），但 GUI 里
-                    // 每次都会弹一次系统授权框 —— 已经信任了就别让用户白点、白弹。
                     if !vm.caTrusted {
                         Button { vm.installCA() } label: { Image(systemName: "arrow.down.circle") }
                             .help(L("mkcert.installCA")).disabled(app.state.busy)
@@ -192,8 +180,6 @@ struct CertificatePanelView: View {
         }
     }
 
-    // 一站一卡，不用 DataTable：每个站点要摆 cert + key 两条长路径加到期时间、指纹，
-    // 表格列塞不下，而且 DataTable 全局 .lineLimit(1) 会把多行内容压成一行。
     private func certificateCard(_ host: Host) -> some View {
         let paths = hostVM.service.certificatePaths(host)
         let info = hostVM.certificates[host.id]
@@ -223,7 +209,6 @@ struct CertificatePanelView: View {
         .overlay(RoundedRectangle(cornerRadius: AppTheme.radiusCard).stroke(AppTheme.stroke))
     }
 
-    // 卡片里的 cert / key 路径。窄列放不下按钮，靠选中复制 —— 反正这两个路径是给人看的。
     private func pathLine(_ label: String, _ path: String) -> some View {
         HStack(spacing: 6) {
             Text(label).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)

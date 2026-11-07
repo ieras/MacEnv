@@ -16,8 +16,6 @@ final class ToolsViewModel: ObservableObject {
     @Published var confirmMacPortsUninstall = false
     @Published var confirmSDKMANUninstall = false
 
-    // 装 / 卸掉一个工具会连带改掉一堆模块的版本列表（brew 卸了，nginx/php/mysql 全没了），
-    // 但工具页看不到那些 VM。由 AppViewModel 注入一个「刷全部」的回调，别让这里反向依赖它。
     var onRefreshAll: (() async -> Void)?
 
     init(state: AppState, services: Services) {
@@ -29,8 +27,6 @@ final class ToolsViewModel: ObservableObject {
     var macPortsInstalled: Bool { services.tools.macPortsInstalled }
     var sdkmanInstalled: Bool { services.tools.sdkmanInstalled }
 
-    // 有长任务在跑就锁住按钮：runStreaming 本来就会丢掉并发请求，
-    // 但按钮亮着不响应比直接变灰更让人困惑。
     var busy: Bool { state.task != nil }
 
     var brewPath: String { services.tools.brewPrefix }
@@ -41,7 +37,6 @@ final class ToolsViewModel: ObservableObject {
         guard !loading else { return }
         loading = true
         defer { loading = false }
-        // 三个工具的探测互不依赖，并行跑。
         async let brew = services.tools.brewVersion()
         async let brewList = services.tools.brewItems()
         async let port = services.tools.macPortsVersion()
@@ -95,8 +90,6 @@ final class ToolsViewModel: ObservableObject {
     func uninstallMacPorts() {
         state.runStreaming(L("tools.uninstallMacPorts")) { report, _ in
             try await self.services.tools.uninstallMacPorts(report: report)
-            // 摘 MacEnv 自己写的 PATH 软链，再清 shell 配置里那几行 —— 软链和 PATH 都指向
-            // /opt/local，目录删了它们就是悬空的，留着下次开 shell 会报一行错。
             try self.services.paths.removeLinks(pointingInside: URL(fileURLWithPath: "/opt/local", isDirectory: true))
             _ = try self.services.paths.removeLines(containing: "/opt/local", from: [".zprofile", ".zshrc", ".profile", ".bash_profile", ".bash_login"].map { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent($0) })
             await self.finish()
@@ -136,7 +129,6 @@ final class ToolsViewModel: ObservableObject {
         }
     }
 
-    // 工具换了，所有模块的版本列表都可能是旧的，一起刷。
     private func finish() async {
         await refresh()
         await onRefreshAll?()

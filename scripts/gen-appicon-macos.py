@@ -55,8 +55,7 @@ def main() -> int:
 
     src = fill_corners(Image.open(SRC).convert("RGBA"))
     for size in SIZES:
-        # 每个尺寸单独缩图案、单独套遮罩：整体缩放会把抗锯齿边缘再糊一次，
-        # 圆角占比会从 20.5% 漂到 18%。
+        # 每个尺寸单独缩图案 + 套遮罩
         body = round(size * BODY / CANVAS)
         art = src.resize((body, body), Image.LANCZOS)
         alpha = np.array(art.getchannel("A")).astype(np.uint16) * np.array(rounded_mask(body, RADIUS * body / BODY)) // 255

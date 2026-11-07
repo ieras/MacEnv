@@ -7,9 +7,6 @@ struct PhpManagementView: View {
     @State private var source = "Static"
     @State private var customPathEditor = false
     @State private var confirmUninstall = false
-    // 卸载必须记住「是哪一行」。之前这里没有这个状态，alert 里写死了 formula: "php"，
-    // 于是在任何一行点卸载都去执行 `brew uninstall php` —— 机器上根本没有叫 php 的公式，
-    // 必然失败。而且本机那三个 PHP 是 shivammathur/php tap 装的，名字得逐行带过来。
     @State private var uninstallFormula: String?
     @State private var refreshing = false
     @State private var extensionTab = 0
@@ -27,8 +24,6 @@ struct PhpManagementView: View {
         } content: {
             page
         }
-        // 单参数写法：双参数的 onChange(of:initial:_:) 要 macOS 14，本工程最低 13。
-        // 切到哪一页就装哪一页的数据，不预加载 —— 三个面板各要读一次 php -i 和 php.ini。
         .onChange(of: tab) { tab in
             switch tab {
             case 2: vm.loadIni()
@@ -68,9 +63,6 @@ struct PhpManagementView: View {
         }
     }
 
-    // 三个面板共用的表头：版本切换器 + 当前路径 + 右侧动作按钮。
-    // 每个面板都得自己挂 onChange(of: selectedID) —— switch 只挂载当前那一页，
-    // iniPanel 上的 onChange 在别的页是不存在的。
     private func panelHeader<Actions: View>(_ title: String, path: String, @ViewBuilder actions: () -> Actions) -> some View {
         HStack(spacing: 12) {
             Text(title).font(.title3)
@@ -86,9 +78,6 @@ struct PhpManagementView: View {
         .panelHeader()
     }
 
-    // 「服务」这一栏只给 php-fpm：别的 PHP 运行时（php CLI / Swoole CLI / Composer）
-    // 都只需要环境变量，不需要常驻进程。
-    // 版本 / 路径 / 来源 / 环境变量 / 服务 / 操作。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -106,12 +95,7 @@ struct PhpManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }.panelHeader()
             Divider()
             DataTable(columns: tableColumns, rows: vm.versions, empty: L("message.noPhpInstalled")) { version in
@@ -130,13 +114,9 @@ struct PhpManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                // php-fpm 的启停已经全绑在 nginx 联动上（起 nginx 拉全部、停 nginx 全停），
-                // 不再提供快捷启动勾选 —— nginx 勾了快捷启动就等于 fpm 跟着走。
                 Menu {
                     Button(L("action.openFolder")) { NSWorkspace.shared.open(version.directory) }
                     Button(L("action.editPhpIni")) { vm.selectedID = version.id; tab = 2 }
-                    // 坏掉的版本就在这一行上，卸载入口放这儿比绕去「版本管理」页顺手。
-                    // 只有 Homebrew 装的 keg 才带 formula，Static / 自定义目录没有。
                     if let formula = version.formula {
                         Divider()
                         Button(L("action.uninstall")) {
@@ -164,7 +144,6 @@ struct PhpManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
                     BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
-                        // 卸载要过确认弹窗，记住点的是哪个公式 —— alert 里不能写死公式名。
                         if action == "uninstall" {
                             uninstallFormula = formula
                             confirmUninstall = true
@@ -237,7 +216,6 @@ struct PhpManagementView: View {
                     ForEach(filteredFunctions) { item in
                         HStack {
                             Text(item.name).frame(maxWidth: .infinity, alignment: .leading)
-                            // 开关只改内存里的勾选状态，点保存才落盘 —— 免得每勾一下写一次 php.ini。
                             Toggle("", isOn: Binding(get: { item.disabled },
                                                      set: { _ in vm.toggleDisableFunction(item) }))
                                 .toggleStyle(ServiceSwitch()).labelsHidden()
@@ -279,7 +257,6 @@ struct PhpManagementView: View {
                 SegmentedTabs(titles: [L("extensions.loaded"), L("extensions.available")], selection: $extensionTab)
                     .frame(width: 180)
                 Spacer()
-                // 两边的扩展各管各的 PHP：Homebrew 的 tap 只配 Homebrew PHP，MacPorts 的只配 MacPorts PHP。
                 SegmentedTabs(items: [(L("extensions.sourceBrew"), "brew"), (L("extensions.sourceMacPorts"), "macports")],
                               selection: Binding(get: { vm.extensionSource }, set: { vm.extensionSource = $0 }))
                     .frame(width: 220)
@@ -319,13 +296,9 @@ struct PhpManagementView: View {
                     .padding(30).frame(maxWidth: .infinity, alignment: .leading)
                 Spacer()
             } else if vm.extensionSource == "macports" && !vm.macportsUsable {
-                // MacPorts 的 .so 是给 MacPorts 自己的 PHP 编译的，拷到别家的 PHP 上加载不了。
-                // 与其让用户装了才发现，不如一开始就拦住。
                 Text(L("extensions.macportsMismatch")).foregroundStyle(.secondary)
                     .padding(30).frame(maxWidth: .infinity, alignment: .leading)
             } else if vm.extensionDirectory.isEmpty {
-                // static-php-cli 的 prebuilt 是静态链接，扩展编进二进制里了，没有扩展目录可放 .so。
-                // 与其让用户点了安装再失败，不如一开始就说清楚。
                 Text(L("extensions.unsupportedHint")).foregroundStyle(.secondary)
                     .padding(30).frame(maxWidth: .infinity, alignment: .leading)
             } else {

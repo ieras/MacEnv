@@ -2,10 +2,7 @@
 set -euo pipefail
 root="${0:A:h}/.."
 cd "$root"
-# 发布包必须走 Release。Debug 产物是几十 KB 的 stub + MacEnv.debug.dylib，
-# 窗口标题栏形态、sidebar 的 top safe area inset 跟正式版不一样 —— 拿 Debug 包验收 UI
-# 会漏掉「视觉行整体下移、点击热区留在原位」这类只在正式版出现的错位。
-# clean 是必须的：单元测试会把 MacEnvTests.xctest 装进 app 的 Contents/PlugIns。
+# 发布构建（Release）
 xcodebuild -project MacEnv.xcodeproj -scheme MacEnv -configuration Release \
   -destination 'platform=macOS,arch=arm64' -derivedDataPath build/ReleaseDerivedData \
   OTHER_SWIFT_FLAGS='-Xfrontend -disable-sandbox' \
@@ -19,7 +16,7 @@ for item in Contents/Resources/Assets.car Contents/Resources/AppIcon.icns Conten
 done
 if [ -e "$app/Contents/PlugIns" ]; then echo "产物含测试 bundle：Contents/PlugIns"; missing=1; fi
 
-# 产物形态校验：确认这次真的出的是独立 Release 可执行文件，不是 Debug 的 stub。
+# 产物形态校验
 binary="$app/Contents/MacOS/MacEnv"
 if [ ! -f "$binary" ]; then
   echo "主程序不存在：$binary"

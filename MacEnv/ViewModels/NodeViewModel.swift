@@ -8,7 +8,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
     @Published var versions: [NodeVersion] = []
     @Published var staticVersions: [StaticVersion] = []
     @Published var staticLoading = false
-    // 版本管理里的 Homebrew 一栏：node 和 node@20 / node@22 这一族公式。
     @Published var formulae: [BrewFormulaItem] = []
     @Published var pathMembership: [String: PathMembership] = [:]
     @Published var selectedID: String?
@@ -16,11 +15,8 @@ final class NodeViewModel: ObservableObject, PortListHost {
         didSet { UserDefaults.standard.set(customDirectories, forKey: "macenv.node.directories") }
     }
 
-    // nvm / fnm 装没装（nil = 还没检测出来，界面不显示它们的安装入口）。版本管理页现问。
     @Published var nvmInstalled: Bool?
     @Published var fnmInstalled: Bool?
-    // 安装路径（环境工具页的面板要显示，点开就是 Finder）。跟装没装一起检测时顺手缓存 ——
-    // 不能每次渲染都去问一遍登录 shell。
     @Published var nvmRootPath = ""
     @Published var fnmDirectoryPath = ""
 
@@ -33,8 +29,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
 
     func refresh() async {
         do {
-            // 先问一次登录 shell 拿真实 PATH，再把 PATH 里的目录也当扫描目标 ——
-            // 用户可能用 nvm / fnm / 官方 pkg 装了 node 装在非默认位置。
             try await services.paths.refresh()
             versions = await services.node.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
@@ -43,8 +37,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
         } catch {
             state.message = error.localizedDescription
         }
-        // brew 查不到（没装、或公式被 tap 挡了）不该把上面的扫描结果一起判成失败。
-        // 丢后台慢慢填，别拖住 refresh 返回（同 GoViewModel）。
         Task {
             do { formulae = try await Brew.formulae("node") }
             catch { state.message = error.localizedDescription }
@@ -68,9 +60,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
 
     // MARK: - PATH
 
-    // 五路来源同一个 kind —— env/node 软链全局只有一个，启用新版本自动顶掉旧的，
-    // 这就是「当前 node 版本」的语义。directory 传 Node 根，
-    // PathService.managedPaths 自动补它下面的 bin（node/npm/npx 都齐）。
     func togglePath(_ version: NodeVersion) {
         state.run {
             try self.services.paths.toggle(kind: "node", directory: version.directory)
@@ -80,9 +69,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
         }
     }
 
-    // 版本被删掉（brew uninstall node / nvm uninstall，都是我们不知道的时刻发生的）之后，
-    // env/node 软链变死链 —— PATH 里那条路径还在，但 node 已经不在了，敲什么都 not found。
-    // 刷新时清掉。死链的目标目录已经没了，removeLinks 只做路径字符串比较，照样删得掉。
     private func pruneEnvLink() {
         let fm = FileManager.default
         let link = services.paths.envDirectory.appendingPathComponent("node")
@@ -132,9 +118,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
 
     // MARK: - nvm / fnm
 
-    // 进版本管理页时现问文件系统 / 命令 —— 用户可能在别处刚装好，装没装要现查。
-    // 顺手把安装路径也缓存下来：环境工具页的面板（ToolHeader）要显示路径，
-    // 而 nvmRoot() 要跑登录 shell 问 NVM_DIR，不能让界面每次渲染都跑一遍。
     func checkManagers() {
         Task {
             let nvmRoot = await services.node.nvmRoot()
@@ -146,9 +129,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
         }
     }
 
-    // nvm / fnm 的装卸与设默认：命令代理（zsh 流式输出进任务日志浮层），跑完刷新。
-    // 它们的版本目录变了，已安装列表要跟着变 —— 同 gvm() 在 GoViewModel 里的做法。
-    // action: install / uninstall / alias（设默认：nvm 跑 alias default，fnm 跑 default）。
     func managerAction(_ manager: String, _ action: String, _ version: String) {
         guard !version.isEmpty else { return }
         let title: String
@@ -176,11 +156,6 @@ final class NodeViewModel: ObservableObject, PortListHost {
 
     // MARK: - 本体装卸（安装 / 更新 / 卸载 nvm / fnm 自己）
 
-    // 装和更新跑同一条命令（官方脚本幂等，重跑即升级），只是任务标题不同；
-    // 卸载是秒级的本地操作（删目录 + 清 rc），走同步短任务不需要流式日志。
-    // 卸载顺序不能反：先摘 env 软链（否则 PATH 里留一条指向已删目录的路径），
-    // 再删目录，最后清 shell 配置里的初始化行 —— 那行 source 指向不存在的文件，
-    // 留着只会报错（同 GoViewModel.uninstallGvm）。
     func managerSelfAction(_ manager: String, _ action: String) {
         if action == "uninstall" {
             state.run {

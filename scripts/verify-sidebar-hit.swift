@@ -1,8 +1,4 @@
-// 发布版侧栏点击命中验收：按系统 AX 树里每一行「真实可见」的 frame 中心去点，
-// 再读回选中行的 frame 与右侧页面标题，确认点哪行就选中哪行。
-// 背景：2026-11-06 修过一次「视觉行下移 52pt、手写 onTapGesture 热区不动」的发布版 bug，
-// Debug 包复现不出来，所以这个工具只能对 Release 包跑。
-// 用法：swiftc -O scripts/verify-sidebar-hit.swift -o /tmp/macenv-verify-sidebar && /tmp/macenv-verify-sidebar
+// Release 包侧栏点击验收
 import AppKit
 import ApplicationServices
 import CoreGraphics
@@ -68,9 +64,6 @@ func outlineRows(_ window: AXUIElement) -> [Row] {
     }.sorted { $0.frame.minY < $1.frame.minY }
 }
 
-// 每次点击前都现读 frame：切页那一帧 List 可能重排，用启动时缓存的坐标会把点击打空。
-// 可视边界取 AXOutline 的 frame，不是窗口边界 —— 滚出滚动区的行 AX 里还在，
-// frame 会跑到标题栏底下，按窗口边界过滤会把「点不到的行」算成失败。
 func visibleRows(_ window: AXUIElement, _ bounds: CGRect) -> [Row] {
     guard let outline = findFirst(window, role: "AXOutline"), let clip = axFrame(outline) else { return [] }
     return outlineRows(window).filter {
@@ -79,7 +72,6 @@ func visibleRows(_ window: AXUIElement, _ bounds: CGRect) -> [Row] {
     }
 }
 
-// ModulePage 的大标题：详情区左侧、窗口上半部，第一个非空 AXStaticText。
 func detailTitle(_ window: AXUIElement, _ bounds: CGRect) -> String {
     var texts: [AXUIElement] = []
     collect(window, role: "AXStaticText", into: &texts)
@@ -95,8 +87,6 @@ func detailTitle(_ window: AXUIElement, _ bounds: CGRect) -> String {
 }
 
 func click(_ point: CGPoint) {
-    // CGEvent 是往前台窗口发的。工具跑在终端里，随时可能被别的 app 抢回焦点，
-    // 一次失焦后面所有点击就全打空了（选中的还是上一行，看着像「热区错位」其实是没点到）。
     _ = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
         .first?.activate(options: [])
     usleep(150_000)
@@ -156,8 +146,7 @@ func verifyVisible(_ window: AXUIElement, _ bounds: CGRect, _ label: String) -> 
     for index in visible.indices {
         let current = visibleRows(window, bounds)
         guard index < current.count else { fail("\(label)第 \(index + 1) 行在切页后从 AX 树里消失了") }
-        let row = current[index]
-        // x 落在行内文字带上，避开右侧的启停开关和快捷启动电源键。
+        var row = current[index]
         let point = CGPoint(x: row.frame.minX + 84, y: row.frame.midY)
         click(point)
         usleep(450_000)
@@ -169,6 +158,21 @@ func verifyVisible(_ window: AXUIElement, _ bounds: CGRect, _ label: String) -> 
             title = detailTitle(window, bounds)
             if let y = selectedY, abs(y - row.frame.midY) < 4 { break }
             usleep(300_000)
+        }
+
+        if !(selectedY.map({ abs($0 - row.frame.midY) < 4 }) ?? false) {
+            let retry = visibleRows(window, bounds)
+            if index < retry.count {
+                row = retry[index]
+                click(CGPoint(x: row.frame.minX + 84, y: row.frame.midY))
+                usleep(450_000)
+                for _ in 0..<3 {
+                    selectedY = outlineRows(window).first { $0.selected }?.frame.midY
+                    title = detailTitle(window, bounds)
+                    if let y = selectedY, abs(y - row.frame.midY) < 4 { break }
+                    usleep(300_000)
+                }
+            }
         }
 
         let localY = row.frame.midY - bounds.minY
@@ -185,11 +189,9 @@ func verifyVisible(_ window: AXUIElement, _ bounds: CGRect, _ label: String) -> 
 
 print("窗口 frame=(\(Int(bounds.minX)),\(Int(bounds.minY)) \(Int(bounds.width))x\(Int(bounds.height)))")
 let wheelPoint = CGPoint(x: bounds.minX + 84, y: bounds.midY)
-// app 会记住上次的滚动位置，先强制回顶，否则「顶部」这一轮验的其实还是底部那批行。
 scrollSidebar(wheelPoint, lines: 40, times: 10)
 let top = verifyVisible(window, bounds, "顶部")
 
-// 语言运行时那一组默认在滚动区外，滚到底再验一遍，不给错位留死角。
 scrollSidebar(wheelPoint, lines: -10, times: 8)
 let bottom = verifyVisible(window, bounds, "滚动后")
 

@@ -1,9 +1,5 @@
 import Foundation
 
-// Maven 没有常驻进程，只管「机器上有哪些、把哪个放进 PATH」，
-// 跟 Java / Go 同构。版本管理来源：Static（官方包）、Homebrew、MacPorts、SDKMAN。
-// 跟 Java 不同：mvn 自己会沿 PATH 找 java 或退到 /usr/libexec/java_home，所以 PATH 里
-// 放好 bin 就够了，不需要额外 export MAVEN_HOME。
 @MainActor
 final class MavenService {
     let root: URL
@@ -49,9 +45,6 @@ final class MavenService {
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
 
-    // MacPorts 的 maven 端口落在 /opt/local/share/java/<端口名>/bin/mvn，端口名带版本号，
-    // 所以那一层是**父目录**、得枚举一层；Homebrew 的 /opt/homebrew/opt/maven 反过来
-    // **自己就是包根**，bin/mvn 就在它下面。两种混进一个数组统一多枚举一层，Homebrew 就废了。
     private var defaultParents: [(URL, String)] {
         [ (tools.sdkmanRoot.appendingPathComponent("candidates/maven", isDirectory: true), "SDKMAN"),
           (URL(fileURLWithPath: "/opt/local/share/java", isDirectory: true), "MacPorts") ]
@@ -61,8 +54,6 @@ final class MavenService {
         ["/opt/homebrew/opt/maven", "/usr/local/opt/maven"].map { (URL(fileURLWithPath: $0, isDirectory: true), "Homebrew") }
     }
 
-    // 跑 `mvn -v` 最准，但没 JDK 时脚本会提前退出、连版本都不打印，所以目录名能抠出版本就先抠，
-    // 免得白起一个进程（maven-3.9.16 / SDKMAN 的 3.9.16 都带版本号）。
     private func probe(_ executable: URL) async -> String? {
         let output = try? await Command.run(executable.path, ["-v"])
         return firstCapture(#"Apache Maven ([0-9][^ ]*)"#, in: output?.text ?? "")
@@ -80,8 +71,6 @@ final class MavenService {
 
     // MARK: - SDKMAN
 
-    // 装没装不看 `sdk list maven` 的标记 —— 它只列当前渠道能下载的版本，已装老版本可能已下架。
-    // 直接扫 candidates/maven 目录，再拿 current 软链判默认。
     func sdkmanMavenVersions() async throws -> [SdkmanVersion] {
         guard tools.sdkmanInstalled else { throw CommandError(message: L("error.sdkmanMissing")) }
         let command = "source \(singleQuoted(tools.sdkmanInitScript.path)) && sdk list maven"
@@ -93,7 +82,6 @@ final class MavenService {
         }
     }
 
-    // install / uninstall / default 三个动作语法一样，只写一份。
     func sdkman(_ action: String, identifier: String,
                 report: @escaping (String) -> Void, onStart: @escaping (Process) -> Void) async throws {
         let command = "source \(singleQuoted(tools.sdkmanInitScript.path)) && sdk \(action) maven \(singleQuoted(identifier))"
@@ -101,8 +89,6 @@ final class MavenService {
         guard status == 0 else { throw CommandError(message: L("error.toolCommandFailed") + "（\(status)）") }
     }
 
-    // `sdk list maven` 是平铺的版本号（每行若干 token，可能有 > / * 标记），不按 4 列表格排。
-    // 已安装 / 默认改扫目录判，不信输出里的标记（格式一变就废）。
     static func parseSdkmanOther(_ output: String) -> [String] {
         output.split(separator: "\n").flatMap { line in
             line.split(whereSeparator: \.isWhitespace).compactMap { token -> String? in

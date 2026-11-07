@@ -3,54 +3,36 @@ import AppKit
 import Combine
 import ServiceManagement
 
-// 模块分组与顺序的唯一来源：设置页的模块开关、侧边栏的条目都按它渲染。
-// 要调顺序、换分组，只改这一个数组。
-//
-// 没有 "sidebar.console" 这一组：控制台只剩快捷启动和环境工具，而它在侧边栏里是硬编码画的
-// （设置页不把它当模块开关）。留一个空组会在设置页画出「标题 + 点了没反应的开关 + 空白网格」。
 let moduleGroups: [(String, [String])] = [
     ("sidebar.web", ["hosts", "nginx"]),
     ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant", "neo4j"]),
-    // 缓存与消息队列：Redis（缓存）+ RabbitMQ（消息队列）。
     ("sidebar.cache", ["redis", "rabbitmq"]),
-    // 服务治理：服务发现 / 配置中心这一类组件，不是数据库也不是缓存。
-    // 顺序：consul 在 etcd 前面。
     ("sidebar.governance", ["consul", "etcd"]),
     ("sidebar.language", ["php", "go", "java", "python", "node", "rust", "erlang"]),
 ]
 
-// 控制台组的内容。它跟 moduleGroups 一样要同时喂给侧栏和设置页，
-// 只是因为它那组的标题是手画的，不能塞进上面那个数组，所以单列一份。
 let consoleModules = ["tools"]
 
 func moduleName(_ id: String) -> String { L("module." + id) }
 
-// 长任务（装 / 卸 / 下载 / 解包）的进度。日志浮层显示它；跑完留在原地等用户关 ——
-// 失败原因就在最后几行，自动关掉等于让用户没法看。
 struct TaskProgress {
     let id = UUID()
     let title: String
     let packageDirectory: String?
     var log = ""
     var running = true
-    // 普通命令持有 Process；提权命令由 Command 按独立进程组清理。
     var process: Process?
 }
 
-// 全局共享状态：忙碌、提示、外观、语言、快捷启动。
 @MainActor
 final class AppState: ObservableObject {
     @Published var busy = false
     @Published var task: TaskProgress?
     private var streamingTask: Task<Void, Never>?
 
-    // 服务启停看 busy；装 / 卸 / 下载是长任务（task），两码事。安装按钮、版本页刷新按钮
-    // 要看 installBusy —— 不然安装跑着按钮还能再点，第二次点击被 runStreaming 静默丢掉。
     var taskRunning: Bool { task?.running == true }
     var installBusy: Bool { busy || taskRunning }
     var runningTaskTitle: String? { task?.running == true ? task?.title : nil }
-    // 提示可能跟上一条一模一样（同一个开关连点两次），光靠 message 的值没法让视图知道「又来了一条」，
-    // 所以每次赋值都换一个 token，浮层靠 token 变化重新计时。
     @Published var message = "" {
         didSet { if !message.isEmpty { messageToken = UUID() } }
     }
@@ -68,7 +50,6 @@ final class AppState: ObservableObject {
         ?? StaticCatalogService.defaultEndpoint.absoluteString {
         didSet { UserDefaults.standard.set(catalogURL, forKey: "macenv.catalog.url") }
     }
-    // 开机启动走 SMAppService（macOS 13 起内置），不用登录项的旧 API。
     @Published var autoLaunch = UserDefaults.standard.bool(forKey: "macenv.autoLaunch") {
         didSet {
             do {
@@ -101,7 +82,6 @@ final class AppState: ObservableObject {
     @Published var codeFontSize = UserDefaults.standard.object(forKey: "macenv.code.fontSize") as? Double ?? 14 {
         didSet { UserDefaults.standard.set(codeFontSize, forKey: "macenv.code.fontSize") }
     }
-    // 模块开关：控制在侧边栏显示哪些条目。没配过的 key 一律按开启处理。
     @Published var modules = (UserDefaults.standard.dictionary(forKey: "macenv.modules") as? [String: Bool]) ?? [:] {
         didSet { UserDefaults.standard.set(modules, forKey: "macenv.modules") }
     }
@@ -111,19 +91,15 @@ final class AppState: ObservableObject {
 
     private var quickStartFile: URL { macEnvDirectory.appendingPathComponent("quick-start.json") }
 
-    // 快捷启动僵尸 key 的清洗钩子：任何写操作（run / runStreaming）跑完调一次。
-    // 实现由 AppViewModel 注入 —— launchTargets 在它那儿，state 不该知道服务。
     var pruneQuickStart: (() -> Void)?
 
     init() {
         if let data = try? Data(contentsOf: quickStartFile), let value = try? JSONDecoder().decode([String].self, from: data) {
-            // php-fpm 的启停已全绑 nginx 联动，快捷启动里不再提供勾选，历史勾选一次清掉。
             quickStartTargets = value.filter { !$0.hasPrefix("php:") }
         }
         applyEnvironment()
     }
 
-    // brew 源 + 代理：统一注入给所有子进程（Command.run 会合并这一份）。
     private func applyEnvironment() {
         var environment = brewSource.environment
         if proxyEnabled && !proxyHost.isEmpty {
@@ -140,8 +116,6 @@ final class AppState: ObservableObject {
     }
 }
 
-// 各 ViewModel 的「跑一段异步活」都是同一套：全局 busy 挡住并发，跑完释放，出错弹提示。
-// 七个 VM 里一字不差，所以放在 state 上。
 extension AppState {
     func run(_ work: @escaping () async throws -> Void) {
         guard !busy else { return }
@@ -154,15 +128,9 @@ extension AppState {
         }
     }
 
-    // 长任务（装 / 卸 / 下载 / 解包）：**不走全局 busy** —— 装一个 PHP 要几分钟，点亮 busy
-    // 会让侧栏所有服务开关全灰，那是误导（起停服务和装软件没关系）。单独开一条任务日志，
-    // 右下角浮层实时刷。
-    //
-    // report 追加日志；attach 把子进程交上来，取消按钮才能真杀掉它。
     func runStreaming(_ title: String, packageDirectory: URL? = nil,
                       _ work: @escaping (_ report: @escaping (String) -> Void, _ attach: @escaping (Process) -> Void) async throws -> Void) {
         guard !busy, task == nil else {
-            // 同一时间只跑一个长任务。 silently 丢掉点击用户会以为「点了没反应」，明说。
             message = L("message.taskInProgress")
             return
         }
@@ -188,7 +156,6 @@ extension AppState {
         }
     }
 
-    // 安装只锁正在替换的包，其他版本与服务仍可使用。
     func isChanging(_ directory: URL) -> Bool {
         taskRunning && task?.packageDirectory == directory.resolvingSymlinksInPath().path
     }
@@ -200,8 +167,6 @@ extension AppState {
 
     func dismissTask() { if !taskRunning { task = nil } }
 
-    // brew / curl 的进度条用 \r 原地刷新同一行，直接拼进日志会糊成一长条，
-    // 所以 \r 处理成「丢掉当前行重写」，\n 才是真的换行。只留最后 20000 字。
     private func appendTaskLog(_ text: String) {
         guard var progress = task else { return }
         var lines = progress.log.components(separatedBy: "\n")
@@ -220,15 +185,10 @@ extension AppState {
     }
 }
 
-// 统一服务入口：Nginx / MySQL / MariaDB / PHP-FPM 各出一个条目，跨服务调度全部走它，
-// 加新服务不用再改 AppViewModel 的任何 if-else。
-// operate 给 UI 用（自管 busy + 提示消息）；perform 给批量启动用（launch 已管 busy，错误由它汇总）。
 @MainActor
 protocol ServiceManageable {
     var kind: String { get }
     var targets: [LaunchTarget] { get }
-    // 端口固定、一次只能跑一个版本的服务为 true；nginx / php 每版本独立端口（进程），允许多个。
-    // 快捷启动的互斥和侧栏开关都按它走 —— 加新服务默认就有，不用再记着接线。
     var singleInstance: Bool { get }
     func isRunning(_ versionID: String) -> Bool
     func port(_ versionID: String) -> String?
@@ -241,10 +201,8 @@ protocol ServiceManageable {
 
 @MainActor
 extension ServiceManageable {
-    // 数据库 / redis / postgresql / clickhouse / qdrant / consul / etcd 全是端口固定一实例。
     var singleInstance: Bool { true }
 
-    // 侧栏开关用：优先起勾了快捷启动的版本，没配就用列表第一个（各服务扫描结果已按版本从大到小排）。
     func preferredTarget(quickStart: [String]) -> LaunchTarget? {
         targets.first { quickStart.contains($0.key) } ?? targets.first
     }
@@ -254,7 +212,6 @@ extension ServiceManageable {
 final class AppViewModel: ObservableObject {
     var state = AppState()
     let services = Services()
-    // 注册表顺序即首页/侧栏的展示与启动顺序。
     let serviceEntries: [any ServiceManageable]
     let nginxVM: NginxViewModel
     let databaseVM: DatabaseViewModel
@@ -308,8 +265,6 @@ final class AppViewModel: ObservableObject {
         hostVM = HostViewModel(state: state, services: services)
         toolsVM = ToolsViewModel(state: state, services: services)
         serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, neo4jVM, rabbitmqVM, consulVM, etcdVM]
-        // 卸掉 Homebrew 会把 nginx / php / mysql / redis / go 一起带走，工具页看不到那些 VM，
-        // 所以由这里注入一个「刷全部」的回调 —— 反过来让工具页依赖 AppViewModel 是转圈依赖。
         toolsVM.onRefreshAll = { [weak self] in await self?.refreshAll() }
         services.nginx.onExit = { [weak self] in self?.nginxVM.syncRunning() }
         services.phpFpm.onExit = { [weak self] in self?.phpVM.objectWillChange.send() }
@@ -323,20 +278,11 @@ final class AppViewModel: ObservableObject {
         services.clickhouse.onExit = { [weak self] in self?.clickhouseVM.objectWillChange.send() }
         services.consul.onExit = { [weak self] in self?.consulVM.objectWillChange.send() }
         services.etcd.onExit = { [weak self] in self?.etcdVM.objectWillChange.send() }
-        // state 是独立的 ObservableObject，转发后观察本类的视图才会随它重绘。
         state.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
-        // 侧栏 Java / Python / NodeJs / Rust 的数量读的是 app.javaVM 等属性链
-        // （那几个 VM 没进 ContentView 的 @ObservedObject 列表），子 VM 的 @Published
-        // 变化不会自动冒泡到本类 —— 不转发的话侧栏数字永远停在启动时的 0，只有点进页面
-        // （页面自己 @ObservedObject 持有 VM）才刷得出来。Java / Python 之前碰巧能显示，
-        // 是搭上了别的 @Published 变化触发的重算，同一颗雷。
         javaVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         pythonVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         nodeVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         rustVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
-        // 任何装/卸跑完都清洗一遍快捷启动：指向已不存在版本的 key 当场删掉，
-        // 不然 quick-start.json 里会攒僵尸 key（计数对不上列表就是它闹的）。
-        // 启动时 refreshAll 已把全部版本扫完，不必担心「还没扫到就误删」。
         state.pruneQuickStart = { [weak self] in
             guard let self else { return }
             let valid = Set(self.launchTargets.map(\.key))
@@ -350,6 +296,10 @@ final class AppViewModel: ObservableObject {
 
     var launchTargets: [LaunchTarget] { serviceEntries.flatMap { $0.targets } }
 
+    var quickStartLaunchTargets: [LaunchTarget] {
+        launchTargets.filter { state.quickStartTargets.contains($0.key) }
+    }
+
     func targetRunning(_ key: String) -> Bool {
         guard let target = launchTargets.first(where: { $0.key == key }) else { return false }
         return entry(target.kind)?.isRunning(target.versionID) ?? false
@@ -360,16 +310,12 @@ final class AppViewModel: ObservableObject {
     func setQuickStart(_ key: String, enabled: Bool) {
         state.quickStartTargets.removeAll { $0 == key }
         guard enabled, let target = launchTargets.first(where: { $0.key == key }) else { return }
-        // 端口固定的服务一次只能跑一个版本，快捷启动也只认一个；
-        // nginx / php 每版本独立端口（进程），允许勾多个。
         if let entry = entry(target.kind), entry.singleInstance {
             state.quickStartTargets.removeAll { entry.targets.map(\.key).contains($0) }
         }
         state.quickStartTargets.append(key)
     }
 
-    // 一个 kind 的聚合运行态：nginx / php / 数据库各有自己的判定，其余按「任一版本在跑」。
-    // 侧栏开关的 get 与托盘开关共用这里，保证两边显示一致。
     func kindRunning(_ kind: String) -> Bool {
         if kind == "nginx" { return nginxVM.isRunning }
         if kind == "php" { return phpVM.fpmRunningAny }
@@ -377,8 +323,6 @@ final class AppViewModel: ObservableObject {
         return launchTargets.contains { $0.kind == kind && targetRunning($0.key) }
     }
 
-    // 一个 kind 的整档启停，逻辑与侧栏 ServiceSwitch 的各 case 完全一致（托盘复用同一份）。
-    // 关 = 停掉该 kind 全部版本；开 = 优先起勾了快捷启动的版本，没配就起版本号最大的（redis 家族用首版，versions 已按版本号降序）。
     func toggleKind(_ kind: String) {
         guard !state.busy else { return }
         if kind == "php" {
@@ -431,8 +375,6 @@ final class AppViewModel: ObservableObject {
                 }
             }
             state.message = failures.isEmpty ? (stop ? L("message.environmentStopped") : L("message.environmentStarted")) : failures.joined(separator: "\n")
-            // nginx 起成功就联动把所有 php-fpm 拉起来（站点离不开 fpm），起失败则不拉；
-            // 停 nginx 时联动全停 fpm。侧栏 nginx 开关和电源键都走这里。
             if !stop && nginxCount > 0 && nginxFailed == 0 { await phpVM.startAll() }
             if stop && nginxCount > 0 { await phpVM.stopAll() }
         }
@@ -443,11 +385,7 @@ final class AppViewModel: ObservableObject {
     }
 
     func refreshAll() async {
-        // Nginx 必须排在 PHP 后面：它 prepare() 时要去 server/php-fpm 下数版本目录，
-        // 才能展开出对应的 enable-php-<版本>.conf。反过来跑那一刻目录还不存在，就漏了。
-        // PATH 的登录 shell 询问也在这一步完成，后面的 VM 全部命中缓存。
         await phpVM.refresh()
-        // 其余互不依赖，并行跑，总时长从"所有之和"变成"最慢的那个"。
         async let swoole: Void = swooleVM.refresh()
         async let composer: Void = composerVM.refresh()
         async let go: Void = goVM.refresh()

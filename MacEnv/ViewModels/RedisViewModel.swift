@@ -42,7 +42,6 @@ final class RedisViewModel: ObservableObject, PortListHost {
             await service.adopt(found)
             try await services.paths.refresh()
             pathMembership = Dictionary(uniqueKeysWithValues: found.map { ($0.id, services.paths.membership(kind: "redis", directory: $0.directory)) })
-            // brew 丢后台慢慢填，别拖住 refresh 返回。
             Task {
                 do { formulae = try await service.brewFormulae() }
                 catch { state.message = error.localizedDescription }

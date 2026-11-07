@@ -53,7 +53,6 @@ final class GradleViewModel: ObservableObject, PortListHost {
     @Published var portLoading = false
     var portApp: String { "gradle" }
 
-    // 只把 bin 塞进 PATH 就够：gradlew 启动会自己找 java，不需要额外 export GRADLE_HOME。
     func togglePath(_ version: GradleVersion) {
         state.run {
             try self.services.paths.toggle(kind: "gradle", directory: version.directory)

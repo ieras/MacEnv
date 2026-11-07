@@ -1,8 +1,5 @@
 import SwiftUI
 
-// Erlang 页面：两个 tab —— 已安装（含环境变量开关）、版本管理（Homebrew / MacPorts）。
-// 没有静态包栏：官方 macOS 没有预编译发行版，装 Erlang 只有 brew / MacPorts / kerl 三条路，
-// 前两个交给第三方工具，我们只负责显示和调它；kerl 是用户自己的目录，扫进来即可。
 struct ErlangManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: ErlangViewModel
@@ -11,7 +8,6 @@ struct ErlangManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
     @State private var confirmUninstall = false
-    // 卸载必须记住点的是哪一行，不能在 alert 里写死公式名（同 Go 页面）。
     @State private var uninstallFormula: String?
 
     var body: some View {
@@ -64,7 +60,6 @@ struct ErlangManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
                     BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
-                        // 卸载要过确认弹窗，记住点的是哪一行 —— alert 里不能写死公式名。
                         if action == "uninstall" {
                             uninstallFormula = formula
                             confirmUninstall = true
@@ -80,7 +75,6 @@ struct ErlangManagementView: View {
 
     // MARK: - 已安装
 
-    // 版本 / ERL_ROOT / 来源 / 环境变量。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 60),
          TableColumn(title: "ERL_ROOT", minWidth: 140, weight: 1),
@@ -96,12 +90,7 @@ struct ErlangManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()

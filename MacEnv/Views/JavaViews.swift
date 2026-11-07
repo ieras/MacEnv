@@ -1,8 +1,5 @@
 import SwiftUI
 
-// Java 跟 Go 同构（一等语言模块）：没有常驻进程，所以两个 tab ——
-// 已安装（含环境变量开关）、版本管理（Static / Homebrew / MacPorts / SDKMAN）。
-// SDKMAN 的**本体**在环境工具页，这里只把「用 SDKMAN 装的 JDK」当一个来源。
 struct JavaManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: JavaViewModel
@@ -12,7 +9,6 @@ struct JavaManagementView: View {
     @State private var refreshing = false
     @State private var confirmUninstall = false
     @State private var confirmSdkmanUninstall = false
-    // 卸载必须记住点的是哪一行，不能在 alert 里写死名字 —— PHP 页面就栽过这个跟头。
     @State private var uninstallFormula: String?
     @State private var uninstallSdkman: SdkmanVersion?
 
@@ -23,7 +19,6 @@ struct JavaManagementView: View {
             page
         }
         .task { await vm.loadStatic() }
-        // SDKMAN 的列表要打网络，切到那一栏再拉，别在进页面时就等它。
         .onChange(of: source) { value in if value == "SDKMAN" { Task { await vm.loadSdkman() } } }
         .sheet(isPresented: $customPathEditor) { CustomPathEditor(title: "Java", paths: $vm.customDirectories) }
         .alert(L("alert.uninstallJavaTitle"), isPresented: $confirmUninstall) {
@@ -54,8 +49,6 @@ struct JavaManagementView: View {
 
     // MARK: - 版本管理
 
-    // 四个来源：Static（我们自己下的官方包）、Homebrew、MacPorts、SDKMAN。
-    // 后三个交给第三方工具，我们只负责显示和调它。没装对应工具时给一句指路，不丢一张空表过来。
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
             VersionManagerHeader(sources: ["Static", "Homebrew", "MacPorts", "SDKMAN"], source: $source,
@@ -71,7 +64,6 @@ struct JavaManagementView: View {
                     Link(L("brew.install"), destination: URL(string: "https://brew.sh")!).padding(.horizontal, 24)
                 } else {
                     BrewListView(formulae: vm.formulae, busy: app.state.installBusy) { action, formula in
-                        // 卸载要过确认弹窗，记住点的是哪一行 —— alert 里不能写死公式名。
                         if action == "uninstall" {
                             uninstallFormula = formula
                             confirmUninstall = true
@@ -102,8 +94,6 @@ struct JavaManagementView: View {
         }
     }
 
-    // `sdk list java` 是「可下载」列表，已装 / 默认由本地目录和 current 软链判定，所以这里
-    // 既能装也能卸。Use 列的 > 和 * 我们不看 —— 输出格式变了它就废了。
     private var sdkmanColumns: [TableColumn] {
         [TableColumn(title: L("column.library"), minWidth: 90, weight: 1),
          TableColumn(title: L("column.vendor"), minWidth: 90, weight: 1),
@@ -153,7 +143,6 @@ struct JavaManagementView: View {
 
     // MARK: - 已安装
 
-    // 版本 / 发行商 / JDK Home / 来源 / 环境变量。宽度交给 DataTable 按容器反推。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 70),
          TableColumn(title: L("column.vendor"), minWidth: 110, weight: 1),
@@ -170,12 +159,7 @@ struct JavaManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()

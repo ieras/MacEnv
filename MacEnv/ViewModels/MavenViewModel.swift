@@ -53,8 +53,6 @@ final class MavenViewModel: ObservableObject, PortListHost {
     @Published var portLoading = false
     var portApp: String { "maven" }
 
-    // 只把 bin 塞进 PATH 就够：mvn 自己会沿 PATH 找 java / 用 /usr/libexec/java_home 兜底，
-    // 不像 Java 那样需要额外 export JAVA_HOME。
     func togglePath(_ version: MavenVersion) {
         state.run {
             try self.services.paths.toggle(kind: "maven", directory: version.directory)

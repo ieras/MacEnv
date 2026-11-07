@@ -21,13 +21,9 @@ final class ComposerViewModel: ObservableObject {
 
     func refresh() async {
         do {
-            // 先问一次登录 shell 拿真实 PATH；GUI 启动的 app 继承不到用户 rc 里改过的 PATH。
             try await services.paths.refresh()
-            // PATH 里的目录也一起扫：用户可能在别处（~/composer/bin 之类）装了 composer，
-            // shell 里能跑、MacEnv 里却看不到。
             versions = try services.composer.installedVersions(customDirectories: customDirectories + services.paths.allPath)
             pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "composer", directory: $0.directory)) })
-            // brew 丢后台慢慢填，别拖住 refresh 返回（同 PhpViewModel）。
             Task {
                 do { formulae = try await Brew.formulae("composer") }
                 catch { state.message = error.localizedDescription }

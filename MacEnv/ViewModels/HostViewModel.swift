@@ -7,13 +7,10 @@ final class HostViewModel: ObservableObject {
 
     @Published var hosts: [Host] = []
     @Published var selectedID: String?
-    // 已签发证书的到期时间和指纹，按 host.id 索引。没签发过的站点不在里面。
     @Published var certificates: [String: CertificateInfo] = [:]
     @Published var logText = ""
     @Published var logKind = "access"
     @Published var hostsSynced = false
-    // 自签根 CA：文件在不在、有没有被系统信任。两个分开记 ——
-    // 文件都没有时「重新安装根证书」点了也没用，那种情况按钮干脆不出现。
     @Published var rootCAExists = false
     @Published var rootCATrusted = false
     @Published var autoWriteHosts = UserDefaults.standard.object(forKey: "macenv.hosts.autoWrite") as? Bool ?? true {
@@ -31,8 +28,6 @@ final class HostViewModel: ObservableObject {
     var rootCertificate: URL { service.rootCertificate }
     var templateDirectory: URL { service.templateDirectory }
 
-    // PHP 版本下拉只给「有 enable-php-<两位版本>.conf」的那些。NginxService.prepare 是照
-    // server/php-fpm/<num> 目录铺的，下拉跟它同源，才不会选到一个 nginx 加载不了的版本。
     var phpVersions: [String] {
         let url = services.root.appendingPathComponent("server/php-fpm", isDirectory: true)
         return ((try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? [])
@@ -56,8 +51,6 @@ final class HostViewModel: ObservableObject {
 
     // MARK: - 增删改
 
-    // 保存一个站点。顺序不能乱：先补伪静态（会改 root），再签证书（要用最终的别名列表），
-    // 最后才落 vhost 和 host.json。
     func apply(_ host: Host) {
         state.run {
             var item = host
@@ -99,7 +92,6 @@ final class HostViewModel: ObservableObject {
         }
     }
 
-    // 多个写入口共用这份回滚：语法或磁盘写入失败时，vhost、证书和 JSON 一起恢复。
     private func commit(_ write: () async throws -> Void) async throws {
         _ = try service.load()
         let fm = FileManager.default
@@ -120,7 +112,6 @@ final class HostViewModel: ObservableObject {
                 for (index, file) in files.enumerated() {
                     let saved = backup.appendingPathComponent(String(index))
                     if file == service.caDirectory, fm.fileExists(atPath: file.path) {
-                        // 根 CA 可能已经写入钥匙串，回滚站点不能删除它的私钥或换掉信任身份。
                         for entry in try fm.contentsOfDirectory(at: file, includingPropertiesForKeys: nil)
                         where !entry.lastPathComponent.hasPrefix("MacEnv-Root-CA") { try fm.removeItem(at: entry) }
                         if fm.fileExists(atPath: saved.path) {
@@ -142,7 +133,6 @@ final class HostViewModel: ObservableObject {
         }
     }
 
-    // 每个站点的证书到期时间和指纹。没有证书文件的站点直接跳过，界面按「未签发」显示。
     func loadCertificates() async {
         var result: [String: CertificateInfo] = [:]
         for host in hosts {
@@ -179,8 +169,6 @@ final class HostViewModel: ObservableObject {
         }
     }
 
-    // Park：选一个目录，它下面每个子目录自动展开成一个站点（<子目录名>.<站点名>）。
-    // 名字已经存在的跳过，所以重复点不会造出一堆重复站点。
     func park(_ host: Host) {
         state.run {
             let root = URL(fileURLWithPath: host.root, isDirectory: true)
@@ -247,9 +235,6 @@ final class HostViewModel: ObservableObject {
         }
     }
 
-    // 写系统 hosts，返回给界面拼在提示后面的那段。用户取消授权不算失败 ——
-    // 站点本身已经建好了，hosts 那一步单独说清楚就行。
-    // forced：删除站点时用，绕开「自动写入」开关（见 delete）。
     private func writeHosts(forced: Bool = false) async -> String? {
         guard forced || autoWriteHosts else { return nil }
         do {
@@ -261,7 +246,6 @@ final class HostViewModel: ObservableObject {
         }
     }
 
-    // /etc/hosts 是只读就能看的，判断我们的标记块在不在，不用提权。
     private func synced() -> Bool {
         let block = service.hostsBlock(hosts).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !block.isEmpty else { return true }
@@ -270,7 +254,6 @@ final class HostViewModel: ObservableObject {
 
     // MARK: - 站点配置文件
 
-    // 每个 site 一份 nginx vhost：vhost/nginx/<id>.conf，文件名用 id 而不是 name。
     func configText(_ host: Host) -> String {
         (try? String(contentsOf: service.nginxDirectory.appendingPathComponent("\(host.id).conf"), encoding: .utf8)) ?? ""
     }

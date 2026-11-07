@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Gradle 跟 Maven 同构：没有常驻进程，两个 tab —— 已安装（含 PATH 开关）、版本管理（Static / Homebrew / MacPorts / SDKMAN）。
 struct GradleManagementView: View {
     @ObservedObject var app: AppViewModel
     @ObservedObject var vm: GradleViewModel
@@ -13,7 +12,6 @@ struct GradleManagementView: View {
     @State private var uninstallFormula: String?
     @State private var uninstallSdkman: SdkmanVersion?
 
-    // 本体不包 ModulePage 外壳——它作为 Java 模块页里的一个 tab 被嵌入，外壳由 Java 页统一给。
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SegmentedTabs(titles: [L("tab.installed"), L("tab.versions")], selection: $tab)
@@ -154,12 +152,7 @@ struct GradleManagementView: View {
                 Button { customPathEditor = true } label: { Image(systemName: "folder.badge.plus") }
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()

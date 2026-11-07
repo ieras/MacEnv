@@ -7,8 +7,6 @@ final class QdrantService {
     private(set) var runningVersion: QdrantVersion?
     var onExit: (() -> Void)?
 
-    // 配置 / 数据 / 日志 / pid 全放这里（MacEnv 自己管的目录），不往 Homebrew 的 Cellar 包目录里写，
-    // 那玩意儿是只读的，硬写会崩。跟 redis 一个道理（redis 的 db 目录也在 server/redis 下）。
     var directory: URL { root.appendingPathComponent("server/qdrant", isDirectory: true) }
     var versionsDirectory: URL { directory.appendingPathComponent("versions", isDirectory: true) }
     var pidFile: URL { directory.appendingPathComponent("qdrant.pid") }
@@ -32,8 +30,6 @@ final class QdrantService {
 
     func port(for version: QdrantVersion) -> Int { Self.parsePort(try? String(contentsOf: configURL(for: version), encoding: .utf8)) ?? defaultPort }
 
-    // Qdrant 的 config 是 YAML，http_port 缩进在 service: 下；storage_path / snapshots_path
-    // 一律写绝对路径，不用相对 cwd 的 ./storage（cwd 一飘数据就不知道去哪了）。
     static func parsePort(_ content: String?) -> Int? {
         for line in (content ?? "").split(whereSeparator: \.isNewline) {
             let value = line.trimmingCharacters(in: .whitespaces)
@@ -47,7 +43,6 @@ final class QdrantService {
     }
 
     static func parseVersion(_ text: String) -> String? {
-        // qdrant --version 输出："qdrant 1.12.0"（大小写不敏感）。
         firstCapture(#"(?i)qdrant[ ]?v?(\d+(?:\.\d+){1,3})"#, in: text)
     }
 
@@ -58,8 +53,6 @@ final class QdrantService {
         try fm.createDirectory(at: snapshotsURL(for: version), withIntermediateDirectories: true)
         let file = configURL(for: version)
         guard !fm.fileExists(atPath: file.path) else { return }
-        // 现代 Qdrant 二进制自带 dashboard（:6333/dashboard），不单独下载 web-ui。
-        // on_disk 日志写到固定文件，日志面板才有内容可读（默认只打 stdout）。
         let content = """
         log_level: INFO
         storage:
@@ -79,8 +72,6 @@ final class QdrantService {
         try content.write(to: file, atomically: true, encoding: .utf8)
     }
 
-    // 只有静态包一条路：官方没发 brew 公式、MacPorts 也没有 port。
-    // 所以只扫静态目录和用户自定义目录。
     func installedVersions(customDirectories: [String] = []) async throws -> [QdrantVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String)] = []
@@ -110,8 +101,6 @@ final class QdrantService {
 
     func adopt(_ versions: [QdrantVersion]) async {
         guard !supervisor.isRunning else { return }
-        // Qdrant 是 Rust 二进制，不改写 argv（不像 redis/postgres 的 setproctitle），
-        // 但走 pid 文件认领最稳，跟 redis/postgres 同构。
         guard let existing = supervisor.owned(pidFile: pidFile, binary: "qdrant"),
               let version = versions.first(where: { $0.executable.path == existing.executable }) else { return }
         runningVersion = version
@@ -124,15 +113,11 @@ final class QdrantService {
             try await supervisor.terminate(existing, force: true)
         }
         let errorLog = directory.appendingPathComponent("qdrant-\(version.version)-start-error.log")
-        // 前台跑 qdrant --config-path，不是 nohup/daemon —— 否则父进程秒退托管句柄失效。
         let item = try supervisor.launch(at: version.executable,
                                          arguments: ["--config-path", configURL(for: version).path],
                                          directory: version.directory,
                                          environment: ProcessInfo.processInfo.environment,
                                          errorLog: errorLog)
-        // 探活问 HTTP 口的 /readyz：Qdrant 起好之前它回 503（这个端点 v1.5.0 起就有），
-        // 所以 curl 必须带 --fail，否则 503 也被当成成功。比干等固定秒数准
-        // （同 ClickHouse 的 /ping、PG 的 pg_isready）。超时必须报错，进程存活不代表服务已经就绪。
         let port = port(for: version)
         do {
             var ready = false

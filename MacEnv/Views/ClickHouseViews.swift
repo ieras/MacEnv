@@ -8,8 +8,6 @@ struct ClickHouseManagementView: View {
     @State private var customPathEditor = false
     @State private var refreshing = false
 
-    // 端口列比其它数据库宽：ClickHouse 同时开 HTTP 8123 和原生 9000，两个都要显示。
-    // 80 的由来同 Consul：「8123 / 9000」实测 73.6pt，原来的 68pt 一直是被截断的。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("column.version"), minWidth: 50),
          TableColumn(title: L("column.path"), minWidth: 120, weight: 6),
@@ -58,12 +56,7 @@ struct ClickHouseManagementView: View {
                     .buttonStyle(.borderless)
                     .help(L("action.customPathHint"))
                 Spacer()
-                Button {
-                    refreshing = true
-                    Task { await vm.refresh(); refreshing = false }
-                } label: { Image(systemName: "arrow.clockwise") }
-                .help(L("action.refreshVersions"))
-                .disabled(app.state.busy || refreshing)
+                RefreshButton(refreshing: $refreshing, busy: app.state.busy) { await vm.refresh() }
             }
             .panelHeader()
             Divider()
@@ -89,13 +82,7 @@ struct ClickHouseManagementView: View {
                 )
                 .disabled(app.state.busy)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    app.setQuickStart(version.id, enabled: !app.state.quickStartTargets.contains(version.id))
-                } label: {
-                    Image(systemName: app.state.quickStartTargets.contains(version.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(app.state.quickStartTargets.contains(version.id) ? .blue : .secondary)
-                }
-                .buttonStyle(.borderless).help(L("action.quickStartHint"))
+                QuickStartCheckButton(app: app, key: version.id)
                 Menu {
                     Button(L("config.openFile")) { vm.selectedID = version.id; tab = 2 }
                     Button(L("tab.logs")) { vm.selectedID = version.id; tab = 3 }
@@ -106,8 +93,6 @@ struct ClickHouseManagementView: View {
 
     private var versionManager: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 只有一个来源：官方只发 cask（brew 公式接口查不到）、MacPorts 没有 port，
-            // 能装的只有 one-env 的静态包。
             VersionManagerHeader(sources: ["Static"], source: $source,
                                  linkURL: URL(string: "https://clickhouse.com/docs/install")!,
                                  busy: app.state.installBusy, refreshing: refreshing, onRefresh: {
@@ -125,8 +110,6 @@ struct ClickHouseManagementView: View {
         .task { await vm.loadStatic() }
     }
 
-    // config.xml 和 users.xml 都是 MacEnv 生成的，两个都可编辑 —— 前者管端口/目录，
-    // 后者管用户（root / root）。
     private var configPanel: some View {
         VStack(spacing: 0) {
             HStack {

@@ -1,8 +1,5 @@
 import Foundation
 
-// Gradle 没有常驻进程，只管「机器上有哪些、把哪个放进 PATH」，跟 Maven 同构。
-// 版本管理来源：Static（官方包）、Homebrew、MacPorts、SDKMAN。gradle 自带 gradlew 封装，
-// 只把 bin 放进 PATH 即可，不需要额外 export GRADLE_HOME。
 @MainActor
 final class GradleService {
     let root: URL
@@ -48,10 +45,6 @@ final class GradleService {
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }
     }
 
-    // MacPorts 的 gradle 端口按 java PortGroup 装在 /opt/local/share/java/<端口名>/bin/gradle
-    // （端口名带版本号，gradle / gradle8 各一份；/opt/local/bin/gradle 只是它的一条软链），
-    // 所以那一层是**父目录**、得枚举一层；Homebrew 的 /opt/homebrew/opt/gradle 反过来
-    // **自己就是包根**，bin/gradle 就在它下面。两种混进一个数组统一多枚举一层，Homebrew 就废了。
     private var defaultParents: [(URL, String)] {
         [ (tools.sdkmanRoot.appendingPathComponent("candidates/gradle", isDirectory: true), "SDKMAN"),
           (URL(fileURLWithPath: "/opt/local/share/java", isDirectory: true), "MacPorts") ]
@@ -61,8 +54,6 @@ final class GradleService {
         ["/opt/homebrew/opt/gradle", "/usr/local/opt/gradle"].map { (URL(fileURLWithPath: $0, isDirectory: true), "Homebrew") }
     }
 
-    // 跑 `gradle -v` 打印首行「Gradle 9.8.0」，没 JDK 时 gradle 起不来，所以目录名能抠出色版本就先抠
-    // （gradle-9.8.0 / SDKMAN 的 9.8.0 都带版本号）。
     private func probe(_ executable: URL) async -> String? {
         let output = try? await Command.run(executable.path, ["-v"])
         return firstCapture(#"Gradle ([0-9][^ ]*)"#, in: output?.text ?? "")

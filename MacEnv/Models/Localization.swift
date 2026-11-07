@@ -56,7 +56,6 @@ enum ThemeMode: String, CaseIterable, Identifiable {
     }
 }
 
-// Brew 下载源。只改我们调 brew 时注入的环境变量，不动用户自己的 brew 配置。
 enum BrewSource: String, CaseIterable, Identifiable {
     case official, tencent, tsinghua, aliyun, ustc
 
@@ -72,7 +71,6 @@ enum BrewSource: String, CaseIterable, Identifiable {
         }
     }
 
-    // 现代 brew 认这两个：API 域给公式元数据，瓶子域给预编译包。官方源留空（不覆盖）。
     var environment: [String: String] {
         switch self {
         case .official: return [:]

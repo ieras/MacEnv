@@ -8,7 +8,6 @@ final class JavaViewModel: ObservableObject, PortListHost {
     @Published var versions: [JavaVersion] = []
     @Published var staticVersions: [StaticVersion] = []
     @Published var staticLoading = false
-    // 版本管理里的 Homebrew 一栏：openjdk 和 openjdk@大版本 这一族公式。
     @Published var formulae: [BrewFormulaItem] = []
     @Published var sdkmanVersions: [SdkmanVersion] = []
     @Published var sdkmanLoading = false
@@ -32,7 +31,6 @@ final class JavaViewModel: ObservableObject, PortListHost {
         versions = await services.java.installedVersions(customDirectories: customDirectories + services.paths.allPath)
         if !versions.contains(where: { $0.id == selectedID }) { selectedID = versions.first?.id }
         pathMembership = Dictionary(uniqueKeysWithValues: versions.map { ($0.id, services.paths.membership(kind: "java", directory: $0.directory)) })
-        // brew 查不到（没装、或公式被 tap 挡了）不该把上面的扫描结果一起判成失败，丢后台慢慢填。
         Task {
             do { formulae = try await Brew.formulae("openjdk") }
             catch { state.message = error.localizedDescription }
@@ -55,9 +53,6 @@ final class JavaViewModel: ObservableObject, PortListHost {
     @Published var portLoading = false
     var portApp: String { "java" }
 
-    // Java 的 PATH 入口是 JDK Home 那一级，PATH 上加的是它下面的 bin —— PathService 两种都写。
-    // 同一个开关顺带 export JAVA_HOME（指向 JDK Home 本身）：Maven / Gradle 启动时先读它，
-    // 只改 PATH 的话它们用的还是系统里版本最高的那个 JDK。
     func togglePath(_ version: JavaVersion) {
         state.run {
             try self.services.paths.toggle(kind: "java", directory: version.directory)
@@ -90,9 +85,6 @@ final class JavaViewModel: ObservableObject, PortListHost {
 
     func uninstallStatic(_ version: StaticVersion) {
         state.runStreaming(String(format: L("message.uninstallingFor"), "Java \(version.version)")) { _, _ in
-            // 必须在删目录**之前**摘软链：目录没了之后软链解不出真身，就只能留一条死链，
-            // JAVA_HOME 会指向一个不存在的 JDK —— PATH 里多一条死路径顶多是慢，
-            // JAVA_HOME 错了 mvn / gradlew 是直接罢工。
             try? self.services.paths.removeLinks(pointingInside: self.services.java.versionsDirectory.appendingPathComponent("java-\(version.version)"))
             try self.services.catalog("java").uninstall(version)
             self.staticVersions = try await self.services.catalog("java").fetch(customEndpoint: self.state.catalogURL)
@@ -117,7 +109,6 @@ final class JavaViewModel: ObservableObject, PortListHost {
         catch { state.message = error.localizedDescription }
     }
 
-    // action 是 install / uninstall / default。sdk install 成功后自己会设成默认，不用再调一次。
     func sdkman(_ action: String, version: SdkmanVersion) {
         let title = action == "default"
             ? String(format: L("message.sdkmanDefaultSet"), version.identifier)
@@ -125,7 +116,6 @@ final class JavaViewModel: ObservableObject, PortListHost {
         state.runStreaming(title) { report, attach in
             try await self.services.java.sdkmanJava(action, identifier: version.identifier, report: report, onStart: attach)
             await self.loadSdkman()
-            // 装的这个 JDK 要出现在「已安装」里，那边得跟着刷。
             await self.refresh()
         }
     }

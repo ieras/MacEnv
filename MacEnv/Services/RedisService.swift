@@ -26,7 +26,6 @@ final class RedisService {
 
     func running(_ version: RedisVersion) -> Bool { supervisor.isRunning && runningVersion?.id == version.id }
 
-    // redis.conf 是「键 值」空格分隔，不是 my.cnf 那种 key=value。
     func port(for version: RedisVersion) -> Int {
         guard let content = try? String(contentsOf: configURL(for: version), encoding: .utf8) else { return 6379 }
         for line in content.split(whereSeparator: \.isNewline) {
@@ -86,7 +85,6 @@ final class RedisService {
                 if fm.isExecutableFile(atPath: file.path) { candidates.append((file, "Static", nil)) }
             }
         }
-        // MacPorts 的 redis 直接落在 /opt/local/bin，不像数据库那样待在 /opt/local/lib/<name>/bin 下。
         let macPorts = URL(fileURLWithPath: "/opt/local/bin/redis-server")
         if fm.isExecutableFile(atPath: macPorts.path) { candidates.append((macPorts, "MacPorts", nil)) }
         var seen = Set<String>()
@@ -94,7 +92,6 @@ final class RedisService {
         for (file, source, formula) in candidates {
             let executable = file.resolvingSymlinksInPath()
             guard fm.isExecutableFile(atPath: executable.path), seen.insert(executable.path).inserted else { continue }
-            // redis-server -v 输出：Redis server v=7.2.5 sha=00000000:0 malloc=libc bits=64 build=...
             let output = try await Command.run(executable.path, ["-v"])
             guard let version = firstCapture(#"v=(\d+(?:\.\d+){1,3})"#, in: output.text) else { continue }
             result.append(RedisVersion(version: version, directory: executable.deletingLastPathComponent().deletingLastPathComponent(), executable: executable, source: source, formula: formula))
@@ -106,7 +103,6 @@ final class RedisService {
 
     func adopt(_ versions: [RedisVersion]) async {
         guard !supervisor.isRunning else { return }
-        // 服务会改写 argv；由启动记录与内核身份一起确认归属。
         guard let existing = supervisor.owned(pidFile: pidFile, binary: "redis-server"),
               let version = versions.first(where: { $0.executable.path == existing.executable }) else { return }
         runningVersion = version
@@ -124,7 +120,6 @@ final class RedisService {
                                          directory: version.directory,
                                          environment: ProcessInfo.processInfo.environment,
                                          errorLog: startupLog)
-        // 配置写错时 redis 会立刻退出。等半秒再判活，别把「秒退」当成启动成功。
         for _ in 0..<5 where item.isRunning { try await Task.sleep(nanoseconds: 100_000_000) }
         guard item.isRunning else {
             supervisor.forget()
@@ -147,7 +142,6 @@ final class RedisService {
         try? FileManager.default.removeItem(at: pidFile)
     }
 
-    // redis-cli shutdown 会先把数据落盘再退出，比直接发 SIGTERM 稳。
     private func shutdown(_ version: RedisVersion) async throws {
         let cli = version.executable.deletingLastPathComponent().appendingPathComponent("redis-cli")
         guard FileManager.default.isExecutableFile(atPath: cli.path) else { return }

@@ -2,10 +2,7 @@
 set -euo pipefail
 root="${0:A:h}/.."
 cd "$root"
-# 开发构建（Debug）。产物是 stub + MacEnv.debug.dylib，窗口标题栏形态 / safe area inset
-# 跟正式版不同，不能拿它验收发布版 UI —— 发布验收走 scripts/build-release-app.sh。
-# 单元测试会把 MacEnvTests.xctest 装进 app 的 Contents/PlugIns，
-# 所以每次构建前先 clean，保证产物里没有测试代码。
+# 开发构建（Debug）
 xcodebuild -project MacEnv.xcodeproj -scheme MacEnv -configuration Debug \
   -destination 'platform=macOS,arch=arm64' -derivedDataPath build/DerivedData \
   OTHER_SWIFT_FLAGS='-Xfrontend -disable-sandbox' \

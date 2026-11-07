@@ -45,7 +45,6 @@ struct HostManagementView: View {
 
     // MARK: - 站点列表
 
-    // 列声明：宽度交给 DataTable 按容器实际宽度反推，不再手填像素。
     private var tableColumns: [TableColumn] {
         [TableColumn(title: L("host.columnName"), minWidth: 80, weight: 2),
          TableColumn(title: L("column.alias"), minWidth: 90, weight: 2),
@@ -88,8 +87,6 @@ struct HostManagementView: View {
                 if host.useSSL { Image(systemName: "lock.fill").font(.caption2).foregroundStyle(AppTheme.green) }
             }
             Text(host.aliases.joined(separator: "、")).foregroundStyle(.secondary)
-            // 路径列只显示末级目录名（/Users/ieras/Sites/laravel → laravel），完整路径挂在
-            // 悬停提示里；点名字开目录，右边的复制按钮拷完整路径 —— 和域名列一个套路。
             HStack(spacing: 6) {
                 Button {
                     NSWorkspace.shared.open(URL(fileURLWithPath: host.root, isDirectory: true))
@@ -167,8 +164,6 @@ struct HostManagementView: View {
                 Text(String(format: L("hosts.trustHint"), tilde(vm.rootCertificate.path))).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack(spacing: 12) {
                     Button(L("hosts.reveal")) { NSWorkspace.shared.activateFileViewerSelecting([vm.hostsFile]) }
-                    // 已经信任了就把按钮收掉：再点一次还是弹一次系统授权框，纯折腾用户。
-                    // 根 CA 都还没生成（没签过证书）时也不显示 —— 那时点下去什么都不会发生。
                     if vm.rootCAExists {
                         if vm.rootCATrusted {
                             Label(L("mkcert.caTrusted"), systemImage: "checkmark.seal.fill")
@@ -249,7 +244,6 @@ struct HostEditorView: View {
 
     init(vm: HostViewModel, host: Host) {
         self.vm = vm
-        // 新建时预填一个随机域名（macenv-test-<uuid>.test），点保存就能直接建站点。
         var item = host
         if !vm.hosts.contains(where: { $0.id == host.id }), item.name.isEmpty {
             item.name = "macenv-test-" + String(UUID().uuidString.prefix(8)).lowercased() + ".test"
@@ -294,7 +288,6 @@ struct HostEditorView: View {
                             TextField("80", value: $host.port, format: .number).textFieldStyle(.roundedBorder).frame(width: 80)
                         }
                     }
-                    // 勾了「启用 HTTPS」才展开证书那一摊，否则表单一直挂着四五个用不上的字段。
                     VStack(alignment: .leading, spacing: 14) {
                         Toggle(L("host.ssl"), isOn: $host.useSSL).toggleStyle(ServiceSwitch())
                         if host.useSSL {
@@ -350,7 +343,6 @@ struct HostEditorView: View {
         .onAppear { if rewriteTemplates.isEmpty { rewriteTemplates = loadRewriteTemplates() } }
     }
 
-    // 内置伪静态模板（RewriteDefaults/ 目录下的 .conf）。
     private func loadRewriteTemplates() -> [(String, String)] {
         guard let url = Bundle.main.url(forResource: "RewriteDefaults", withExtension: nil),
               let files = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else { return [] }
@@ -376,9 +368,6 @@ struct HostEditorView: View {
             .overlay(RoundedRectangle(cornerRadius: AppTheme.radiusCard).stroke(AppTheme.stroke))
     }
 
-    // 路径输入框：框里显示 ~，落库时展开回绝对路径。站点根目录和证书 / 私钥共用。
-    // host.root 必须**始终**是绝对路径：自动识别伪静态要拿它去 fileExists，写 vhost 时也是
-    // 原样塞进 nginx 配置，而 nginx 不认 ~ —— 之前占位符写着 ~/Sites/myapp 但真敲进去是坏的。
     private func pathField(_ text: Binding<String>, _ placeholder: String, directory: Bool) -> some View {
         HStack(spacing: 8) {
             TextField(placeholder, text: Binding(

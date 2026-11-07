@@ -24,29 +24,23 @@ final class ClickHouseService {
         }
     }
 
-    // ClickHouse 的配置是 MacEnv 自己写的两个 XML，不是像 PG 那样由 initdb 生成 ——
-    // 跟 MySQL 的 my.cnf 一条路。数据目录单份，切版本沿用同一份数据（官方向下兼容）。
     func logFile() -> URL { logDirectory.appendingPathComponent("server.log") }
 
     func running(_ version: ClickHouseVersion) -> Bool { supervisor.isRunning && runningVersion?.id == version.id }
 
-    // 配置只有一份（不分版本），端口一次读全 —— 表格每行都要显示，一行读两遍盘没必要。
     func ports() -> (http: Int, tcp: Int) {
         let text = configText()
         return (Self.xmlValue("http_port", in: text) ?? 8123, Self.xmlValue("tcp_port", in: text) ?? 9000)
     }
 
     func configText() -> String { (try? String(contentsOf: configFile, encoding: .utf8)) ?? "" }
-    func usersText() -> String { (try? String(contentsOf: usersFile, encoding: .utf8)) ?? "" }
 
-    // 配置只有一份（不分版本），所以取标签值不用传 version。
     static func xmlValue(_ tag: String, in content: String) -> Int? {
         guard let start = content.range(of: "<\(tag)>"),
               let end = content.range(of: "</\(tag)>", range: start.upperBound..<content.endIndex) else { return nil }
         return Int(content[start.upperBound..<end.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
-    // 已经存在的配置绝不覆盖 —— 用户改过的端口、内存限制要是被下次启动冲掉，那是灾难。
     func prepare() throws {
         let fm = FileManager.default
         try fm.createDirectory(at: dataDirectory, withIntermediateDirectories: true)
@@ -81,8 +75,6 @@ final class ClickHouseService {
         """
     }
 
-    // 超级用户就是 root / root，不给 default 空密码账号留后门。
-    // access_management 打开，否则 root 建不了库、建不了别的用户，跟 MySQL 的 root 不是一个量级。
     private func usersContent() -> String {
         """
         <clickhouse>
@@ -108,12 +100,9 @@ final class ClickHouseService {
     }
 
     static func parseVersion(_ text: String) -> String? {
-        // clickhouse --version 输出："ClickHouse version 26.9.12.8-stable (official build)."
         firstCapture(#"(\d+\.\d+\.\d+\.\d+(?:-[A-Za-z]+)?)"#, in: text)
     }
 
-    // 不扫 Homebrew：官方只提供 cask，brew 的公式接口（Brew.formulae）根本查不到，
-    // 扫了也是白扫。MacPorts 同样没有 port。所以只剩静态包和自定义目录。
     func installedVersions(customDirectories: [String] = []) async throws -> [ClickHouseVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String)] = []
@@ -154,14 +143,11 @@ final class ClickHouseService {
         if let existing = supervisor.owned(pidFile: pidFile, binary: "clickhouse") {
             try await supervisor.terminate(existing, force: true)
         }
-        // 前台跑 server 子命令，不加 --daemonize —— fork 成守护进程后父进程秒退，
-        // 托管句柄立刻失效（redis 的 daemonize no、PG 的 pg_ctl start 都是同一个坑）。
         let item = try supervisor.launch(at: version.executable,
                                          arguments: ["server", "--config-file=\(configFile.path)"],
                                          directory: version.directory,
                                          environment: ProcessInfo.processInfo.environment,
                                          errorLog: logDirectory.appendingPathComponent("server.start.err.log"))
-        // 探活问 HTTP 口的 /ping：ClickHouse 起来后它一定回 200，比干等固定秒数准。
         let port = ports().http
         do {
             var ready = false
