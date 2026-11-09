@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""生成 AppIcons/tile/ 下根 README 图标墙用的「圆角方形卡片」。
+"""生成 AppIcons/tile/ 下根 README 图标墙用的「圆角方形卡片」，以及 AppIcons/wall/ 下的一行一张合成图。
 
 为什么把圆角轮廓烘焙进图片：GitHub 的 HTML sanitizer 会剥掉 style 属性
 （html-pipeline 的 SanitizationFilter 白名单里没有 style），border-radius 在 README 里用不了。
+为什么整行合成一张图：多张固定像素宽的 <img> 在容器变窄时必然换行，
+一行一张图配 width="100%" 才不会换行，而且永远铺满容器宽度。
 
 输入  AppIcons/png/<名字>-{light,dark}.png   128×128
 输出  AppIcons/tile/<名字>-{light,dark}.png  96×96 逻辑（×2 倍 = 192×192 像素）
+      AppIcons/wall/<主题>-<行号>.png      2080×240 透明底，10 列槽位
 
-加一个新图标：把渲染好的 png 放进 AppIcons/png/，然后在 ICONS 里加一项，重跑本脚本。
-脚本会重生成全部 tile（幂等，同样的输入出同样的字节）。
+加一个新图标：把渲染好的 png 放进 AppIcons/png/，然后在 ICONS 里加一项，
+按 README 的行数调 WALL_ROWS，重跑本脚本。脚本会重生成全部 tile 与 wall（幂等）。
 
 依赖 Pillow：/Users/ieras/.workbuddy-ai/binaries/python/versions/3.13.12/bin/python3
 """
@@ -87,4 +90,25 @@ for suffix, bg, stroke, label_c in THEMES:
         im.quantize(colors=128, method=Image.FASTOCTREE).save(
             f"{OUT}/{name}-{suffix}.png", optimize=True)
 
+WALL = os.path.join(ROOT, "AppIcons/wall")
+os.makedirs(WALL, exist_ok=True)
+
+WALL_ROWS = [10, 9, 8, 8]        # 每行图标数，顺序对齐 README 图标墙
+SLOT, TILE_PX, ROW_H = 208, 192, 240
+WIDTH = SLOT * max(WALL_ROWS)
+GAP_X = (SLOT - TILE_PX) // 2
+GAP_Y = (ROW_H - TILE_PX) // 2
+
+for suffix, *_ in THEMES:
+    offset = 0
+    for index, count in enumerate(WALL_ROWS, 1):
+        strip = Image.new("RGBA", (WIDTH, ROW_H), (0, 0, 0, 0))
+        x0 = (WIDTH - count * SLOT) // 2
+        for column, (name, _) in enumerate(ICONS[offset:offset + count]):
+            tile = Image.open(f"{OUT}/{name}-{suffix}.png").convert("RGBA")
+            strip.alpha_composite(tile, (x0 + column * SLOT + GAP_X, GAP_Y))
+        strip.save(f"{WALL}/{suffix}-{index}.png", optimize=True)
+        offset += count
+
 print(f"wrote {len(ICONS) * len(THEMES)} tiles to {OUT}")
+print(f"wrote {len(WALL_ROWS) * len(THEMES)} wall strips to {WALL}")

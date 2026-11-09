@@ -30,6 +30,56 @@ macOS 上的本地开发环境管理器。用 SwiftUI 画界面、AppKit 管窗�
 <img src="AppIcons/screenshots/tray-menu.png" width="283" alt="MacEnv 菜单栏图标与托盘菜单">
 </div>
 
+## 环境要求
+
+- macOS 13 或更高版本
+- Xcode（需要完整的 SwiftUI SDK）
+- 可选：Homebrew，用于检测和安装 Homebrew 版本的服务
+
+## 安装
+
+从 Releases 页面按芯片挑一个包下载，连同它对应的 `.sha256` 校验文件：
+
+| 芯片 | 下载 |
+| --- | --- |
+| Apple Silicon（M 系列） | `MacEnv-arm64.zip` |
+| Intel | `MacEnv-x86_64.zip` |
+
+拿不准就看「关于本机」里的「芯片」一行。解压后把 `MacEnv.app` 拖进「应用程序」。想确认下载完整，先校验再解压：
+
+```sh
+shasum -a 256 -c MacEnv-arm64.zip.sha256
+```
+
+发布包是 ad-hoc 签名的，没有 Apple Developer ID 证书，也没有经过公证。首次打开时 Gatekeeper 会拦下来：轻则提示「无法验证开发者」，重则直接说「已损坏，无法打开」。这是未签名应用被拦下的正常表现，不是文件真的坏了。按下面任意一种方式放行，只需做一次，之后双击就能开：
+
+- **命令行**（最省事，也最管用）：`xattr -cr /Applications/MacEnv.app`
+- **系统设置**：打开「系统设置」→「隐私与安全性」，在下方找到被拦下的那条提示，点「仍要打开」
+- **右键打开**：在 Finder 里右键 `MacEnv.app` → 「打开」→ 弹窗里再点一次「打开」。报「已损坏」时这条路常常走不通，那就用上面两条
+
+**不要**用 `sudo spctl --master-disable` 去关 Gatekeeper。那一条是全局生效的，会让整台机器对**所有**应用都失去来源检查，为了装一个本地开发工具不值当。
+
+从源码自己构建的产物同样是 ad-hoc 签名，用上面任一方式打开即可。
+
+## 图标
+
+MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，跟随系统外观自动切换：绝大多数图标是单色剪影，颜色由主题色决定；Homebrew、菜单栏和 GVM 字标自带配色，浅色深色各一套文件。
+
+<div align="center">
+<p><strong>浅色主题 · 蓝色图标</strong></p>
+<div align="center"><img src="AppIcons/wall/light-1.png" width="100%" alt="Nginx、MySQL、MariaDB、Redis、PostgreSQL、ClickHouse、Qdrant、Neo4j、RabbitMQ、Consul"></div>
+<div align="center"><img src="AppIcons/wall/light-2.png" width="100%" alt="etcd、PHP、Go、Java、Python、Node、Rust、Erlang、Maven"></div>
+<div align="center"><img src="AppIcons/wall/light-3.png" width="100%" alt="Gradle、Homebrew、MacPorts、SDKMAN、nvm、fnm、Composer、Swoole CLI"></div>
+<div align="center"><img src="AppIcons/wall/light-4.png" width="100%" alt="环境工具、SSL 证书、快捷启动、菜单栏、GVM 矢量字标、GVM 彩色字标、GVM 单色字标、GVM 渐变原版"></div>
+<p><strong>深色主题 · 白色图标</strong></p>
+<div align="center"><img src="AppIcons/wall/dark-1.png" width="100%" alt="Nginx、MySQL、MariaDB、Redis、PostgreSQL、ClickHouse、Qdrant、Neo4j、RabbitMQ、Consul"></div>
+<div align="center"><img src="AppIcons/wall/dark-2.png" width="100%" alt="etcd、PHP、Go、Java、Python、Node、Rust、Erlang、Maven"></div>
+<div align="center"><img src="AppIcons/wall/dark-3.png" width="100%" alt="Gradle、Homebrew、MacPorts、SDKMAN、nvm、fnm、Composer、Swoole CLI"></div>
+<div align="center"><img src="AppIcons/wall/dark-4.png" width="100%" alt="环境工具、SSL 证书、快捷启动、菜单栏、GVM 矢量字标、GVM 彩色字标、GVM 单色字标、GVM 渐变原版"></div>
+</div>
+
+图标墙每行一张合成图（`scripts/gen-appicons-tiles.py` 由 `tile/` 图块生成），一行占满容器宽度。源 SVG、128 × 128 渲染图与逐块图块都在 [`AppIcons/`](AppIcons/)，逐个图标的完整清单和渲染说明见那边的 README。
+
 ## 功能
 
 ### 快捷启动
@@ -137,124 +187,6 @@ Java 是「已安装 + 版本管理 + Maven + Gradle」四个页签，后两个�
 - 模块：按分组开关侧边栏条目，分组标题旁的开关可以一键全开或全关
 
 界面提供简体中文、繁体中文、English、日本語四种语言，可以跟随系统。
-
-## 图标
-
-MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，跟随系统外观自动切换：绝大多数图标是单色剪影，颜色由主题色决定；Homebrew、菜单栏和 GVM 字标自带配色，浅色深色各一套文件。
-
-<div align="center">
-<p><strong>浅色主题 · 蓝色图标</strong></p>
-<img src="AppIcons/tile/nginx-light.png" width="86" hspace="1" alt="Nginx">
-<img src="AppIcons/tile/mysql-light.png" width="86" hspace="1" alt="MySQL">
-<img src="AppIcons/tile/mariadb-light.png" width="86" hspace="1" alt="MariaDB">
-<img src="AppIcons/tile/redis-light.png" width="86" hspace="1" alt="Redis">
-<img src="AppIcons/tile/postgresql-light.png" width="86" hspace="1" alt="PostgreSQL">
-<img src="AppIcons/tile/clickhouse-light.png" width="86" hspace="1" alt="ClickHouse">
-<img src="AppIcons/tile/qdrant-light.png" width="86" hspace="1" alt="Qdrant">
-<img src="AppIcons/tile/neo4j-light.png" width="86" hspace="1" alt="Neo4j">
-<img src="AppIcons/tile/rabbitmq-light.png" width="86" hspace="1" alt="RabbitMQ">
-<img src="AppIcons/tile/consul-light.png" width="86" hspace="1" alt="Consul">
-<br>
-<img src="AppIcons/tile/etcd-light.png" width="86" hspace="1" alt="etcd">
-<img src="AppIcons/tile/php-light.png" width="86" hspace="1" alt="PHP">
-<img src="AppIcons/tile/go-light.png" width="86" hspace="1" alt="Go">
-<img src="AppIcons/tile/java-light.png" width="86" hspace="1" alt="Java">
-<img src="AppIcons/tile/python-light.png" width="86" hspace="1" alt="Python">
-<img src="AppIcons/tile/node-light.png" width="86" hspace="1" alt="Node">
-<img src="AppIcons/tile/rust-light.png" width="86" hspace="1" alt="Rust">
-<img src="AppIcons/tile/erlang-light.png" width="86" hspace="1" alt="Erlang">
-<img src="AppIcons/tile/maven-light.png" width="86" hspace="1" alt="Maven">
-<br>
-<img src="AppIcons/tile/gradle-light.png" width="86" hspace="1" alt="Gradle">
-<img src="AppIcons/tile/homebrew-light.png" width="86" hspace="1" alt="Homebrew">
-<img src="AppIcons/tile/macports-light.png" width="86" hspace="1" alt="MacPorts">
-<img src="AppIcons/tile/sdkman-light.png" width="86" hspace="1" alt="SDKMAN">
-<img src="AppIcons/tile/nvm-light.png" width="86" hspace="1" alt="nvm">
-<img src="AppIcons/tile/fnm-light.png" width="86" hspace="1" alt="fnm">
-<img src="AppIcons/tile/composer-light.png" width="86" hspace="1" alt="Composer">
-<img src="AppIcons/tile/swoole-light.png" width="86" hspace="1" alt="Swoole CLI">
-<br>
-<img src="AppIcons/tile/tools-light.png" width="86" hspace="1" alt="环境工具">
-<img src="AppIcons/tile/ssl-light.png" width="86" hspace="1" alt="SSL 证书">
-<img src="AppIcons/tile/start-light.png" width="86" hspace="1" alt="快捷启动">
-<img src="AppIcons/tile/tray-light.png" width="86" hspace="1" alt="菜单栏">
-<img src="AppIcons/tile/gvm-light.png" width="86" hspace="1" alt="GVM 矢量字标">
-<img src="AppIcons/tile/gvm-wordmark-color-light.png" width="86" hspace="1" alt="GVM 彩色字标">
-<img src="AppIcons/tile/gvm-wordmark-solid-light.png" width="86" hspace="1" alt="GVM 单色字标">
-<img src="AppIcons/tile/gvm-logo-light.png" width="86" hspace="1" alt="GVM 渐变原版">
-<p><strong>深色主题 · 白色图标</strong></p>
-<img src="AppIcons/tile/nginx-dark.png" width="86" hspace="1" alt="Nginx">
-<img src="AppIcons/tile/mysql-dark.png" width="86" hspace="1" alt="MySQL">
-<img src="AppIcons/tile/mariadb-dark.png" width="86" hspace="1" alt="MariaDB">
-<img src="AppIcons/tile/redis-dark.png" width="86" hspace="1" alt="Redis">
-<img src="AppIcons/tile/postgresql-dark.png" width="86" hspace="1" alt="PostgreSQL">
-<img src="AppIcons/tile/clickhouse-dark.png" width="86" hspace="1" alt="ClickHouse">
-<img src="AppIcons/tile/qdrant-dark.png" width="86" hspace="1" alt="Qdrant">
-<img src="AppIcons/tile/neo4j-dark.png" width="86" hspace="1" alt="Neo4j">
-<img src="AppIcons/tile/rabbitmq-dark.png" width="86" hspace="1" alt="RabbitMQ">
-<img src="AppIcons/tile/consul-dark.png" width="86" hspace="1" alt="Consul">
-<br>
-<img src="AppIcons/tile/etcd-dark.png" width="86" hspace="1" alt="etcd">
-<img src="AppIcons/tile/php-dark.png" width="86" hspace="1" alt="PHP">
-<img src="AppIcons/tile/go-dark.png" width="86" hspace="1" alt="Go">
-<img src="AppIcons/tile/java-dark.png" width="86" hspace="1" alt="Java">
-<img src="AppIcons/tile/python-dark.png" width="86" hspace="1" alt="Python">
-<img src="AppIcons/tile/node-dark.png" width="86" hspace="1" alt="Node">
-<img src="AppIcons/tile/rust-dark.png" width="86" hspace="1" alt="Rust">
-<img src="AppIcons/tile/erlang-dark.png" width="86" hspace="1" alt="Erlang">
-<img src="AppIcons/tile/maven-dark.png" width="86" hspace="1" alt="Maven">
-<br>
-<img src="AppIcons/tile/gradle-dark.png" width="86" hspace="1" alt="Gradle">
-<img src="AppIcons/tile/homebrew-dark.png" width="86" hspace="1" alt="Homebrew">
-<img src="AppIcons/tile/macports-dark.png" width="86" hspace="1" alt="MacPorts">
-<img src="AppIcons/tile/sdkman-dark.png" width="86" hspace="1" alt="SDKMAN">
-<img src="AppIcons/tile/nvm-dark.png" width="86" hspace="1" alt="nvm">
-<img src="AppIcons/tile/fnm-dark.png" width="86" hspace="1" alt="fnm">
-<img src="AppIcons/tile/composer-dark.png" width="86" hspace="1" alt="Composer">
-<img src="AppIcons/tile/swoole-dark.png" width="86" hspace="1" alt="Swoole CLI">
-<br>
-<img src="AppIcons/tile/tools-dark.png" width="86" hspace="1" alt="环境工具">
-<img src="AppIcons/tile/ssl-dark.png" width="86" hspace="1" alt="SSL 证书">
-<img src="AppIcons/tile/start-dark.png" width="86" hspace="1" alt="快捷启动">
-<img src="AppIcons/tile/tray-dark.png" width="86" hspace="1" alt="菜单栏">
-<img src="AppIcons/tile/gvm-dark.png" width="86" hspace="1" alt="GVM 矢量字标">
-<img src="AppIcons/tile/gvm-wordmark-color-dark.png" width="86" hspace="1" alt="GVM 彩色字标">
-<img src="AppIcons/tile/gvm-wordmark-solid-dark.png" width="86" hspace="1" alt="GVM 单色字标">
-<img src="AppIcons/tile/gvm-logo-dark.png" width="86" hspace="1" alt="GVM 渐变原版">
-</div>
-
-源文件与 128 × 128 渲染图在 [`AppIcons/`](AppIcons/)，逐个图标的完整清单和渲染说明见那边的 README。
-
-## 环境要求
-
-- macOS 13 或更高版本
-- Xcode（需要完整的 SwiftUI SDK）
-- 可选：Homebrew，用于检测和安装 Homebrew 版本的服务
-
-## 安装
-
-从 Releases 页面按芯片挑一个包下载，连同它对应的 `.sha256` 校验文件：
-
-| 芯片 | 下载 |
-| --- | --- |
-| Apple Silicon（M 系列） | `MacEnv-arm64.zip` |
-| Intel | `MacEnv-x86_64.zip` |
-
-拿不准就看「关于本机」里的「芯片」一行。解压后把 `MacEnv.app` 拖进「应用程序」。想确认下载完整，先校验再解压：
-
-```sh
-shasum -a 256 -c MacEnv-arm64.zip.sha256
-```
-
-发布包是 ad-hoc 签名的，没有 Apple Developer ID 证书，也没有经过公证。首次打开时 Gatekeeper 会拦下来：轻则提示「无法验证开发者」，重则直接说「已损坏，无法打开」。这是未签名应用被拦下的正常表现，不是文件真的坏了。按下面任意一种方式放行，只需做一次，之后双击就能开：
-
-- **命令行**（最省事，也最管用）：`xattr -cr /Applications/MacEnv.app`
-- **系统设置**：打开「系统设置」→「隐私与安全性」，在下方找到被拦下的那条提示，点「仍要打开」
-- **右键打开**：在 Finder 里右键 `MacEnv.app` → 「打开」→ 弹窗里再点一次「打开」。报「已损坏」时这条路常常走不通，那就用上面两条
-
-**不要**用 `sudo spctl --master-disable` 去关 Gatekeeper。那一条是全局生效的，会让整台机器对**所有**应用都失去来源检查，为了装一个本地开发工具不值当。
-
-从源码自己构建的产物同样是 ad-hoc 签名，用上面任一方式打开即可。
 
 ## 构建和运行
 
