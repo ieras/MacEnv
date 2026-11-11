@@ -73,6 +73,20 @@ final class ConsulService {
         firstCapture(#"Consul v(\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?)"#, in: text)
     }
 
+    // 过期元数据
+    static func clearStaleServerMetadata(_ dataDirectory: URL) {
+        let fm = FileManager.default
+        let file = dataDirectory.appendingPathComponent("server_metadata.json")
+        guard let data = try? Data(contentsOf: file),
+              let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let lastSeen = (object["last_seen_unix"] as? NSNumber)?.doubleValue else { return }
+        let maxAge: TimeInterval = 168 * 3600
+        guard Date().timeIntervalSince1970 - lastSeen > maxAge else { return }
+        let backup = dataDirectory.appendingPathComponent("server_metadata.json.stale.bak")
+        try? fm.removeItem(at: backup)
+        try? fm.moveItem(at: file, to: backup)
+    }
+
     func installedVersions(customDirectories: [String] = []) async throws -> [ConsulVersion] {
         let fm = FileManager.default
         var candidates: [(URL, String)] = []
@@ -116,6 +130,7 @@ final class ConsulService {
 
     func start(_ version: ConsulVersion) async throws {
         try prepare(version)
+        Self.clearStaleServerMetadata(dataDirectory(version))
         if let existing = supervisor.owned(pidFile: pidFile, binary: "consul") {
             try await supervisor.terminate(existing, force: true)
         }

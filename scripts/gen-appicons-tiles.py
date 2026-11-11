@@ -28,7 +28,8 @@ os.makedirs(OUT, exist_ok=True)
 ICONS = [
     ("nginx", "Nginx"), ("mysql", "MySQL"), ("mariadb", "MariaDB"), ("redis", "Redis"),
     ("postgresql", "PostgreSQL"), ("clickhouse", "ClickHouse"), ("qdrant", "Qdrant"), ("neo4j", "Neo4j"),
-    ("rabbitmq", "RabbitMQ"),
+    ("rabbitmq", "RabbitMQ"), ("kafka", "Kafka"),
+    ("minio", "MinIO"), ("rustfs", "RustFS"),
     ("consul", "Consul"), ("etcd", "etcd"),
     ("php", "PHP"), ("go", "Go"), ("java", "Java"), ("python", "Python"), ("node", "Node"), ("rust", "Rust"),
     ("erlang", "Erlang"),
@@ -93,7 +94,7 @@ for suffix, bg, stroke, label_c in THEMES:
 WALL = os.path.join(ROOT, "AppIcons/wall")
 os.makedirs(WALL, exist_ok=True)
 
-WALL_ROWS = [10, 9, 8, 8]        # 每行图标数，顺序对齐 README 图标墙
+WALL_ROWS = [10, 10, 10, 8]      # 每行图标数，顺序对齐 README 图标墙
 SLOT, TILE_PX, ROW_H = 208, 192, 240
 WIDTH = SLOT * max(WALL_ROWS)
 GAP_X = (SLOT - TILE_PX) // 2

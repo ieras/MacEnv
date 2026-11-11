@@ -688,3 +688,47 @@ final class RuntimeRegressionTests: XCTestCase {
         state.dismissTask()
     }
 }
+
+// MARK: - Consul 过期元数据
+
+@MainActor
+final class ConsulStaleMetadataTests: XCTestCase {
+    private var dir: URL!
+
+    override func setUp() async throws {
+        dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("macenv-consul-" + UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    }
+
+    override func tearDown() async throws {
+        try? FileManager.default.removeItem(at: dir)
+    }
+
+    private func writeMetadata(_ unix: TimeInterval) throws {
+        try Data("{\"last_seen_unix\":\(Int(unix))}".utf8)
+            .write(to: dir.appendingPathComponent("server_metadata.json"))
+    }
+
+    func testStaleMetadataIsMovedToBackup() throws {
+        try writeMetadata(Date().timeIntervalSince1970 - TimeInterval(35 * 86400))
+        ConsulService.clearStaleServerMetadata(dir)
+        let fm = FileManager.default
+        XCTAssertFalse(fm.fileExists(atPath: dir.appendingPathComponent("server_metadata.json").path))
+        XCTAssertTrue(fm.fileExists(atPath: dir.appendingPathComponent("server_metadata.json.stale.bak").path))
+    }
+
+    func testFreshMetadataIsKept() throws {
+        try writeMetadata(Date().timeIntervalSince1970)
+        ConsulService.clearStaleServerMetadata(dir)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: dir.appendingPathComponent("server_metadata.json").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: dir.appendingPathComponent("server_metadata.json.stale.bak").path))
+    }
+
+    func testMissingOrBrokenMetadataIsIgnored() throws {
+        ConsulService.clearStaleServerMetadata(dir)
+        try Data("not json".utf8).write(to: dir.appendingPathComponent("server_metadata.json"))
+        ConsulService.clearStaleServerMetadata(dir)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: dir.appendingPathComponent("server_metadata.json").path))
+    }
+}

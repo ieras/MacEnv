@@ -6,7 +6,8 @@ import ServiceManagement
 let moduleGroups: [(String, [String])] = [
     ("sidebar.web", ["hosts", "nginx"]),
     ("sidebar.database", ["mysql", "mariadb", "postgresql", "clickhouse", "qdrant", "neo4j"]),
-    ("sidebar.cache", ["redis", "rabbitmq"]),
+    ("sidebar.objectStorage", ["minio", "rustfs"]),
+    ("sidebar.cache", ["redis", "rabbitmq", "kafka"]),
     ("sidebar.governance", ["consul", "etcd"]),
     ("sidebar.language", ["php", "go", "java", "python", "node", "rust", "erlang"]),
 ]
@@ -237,6 +238,9 @@ final class AppViewModel: ObservableObject {
     let gradleVM: GradleViewModel
     let hostVM: HostViewModel
     let toolsVM: ToolsViewModel
+    let minioVM: MinioViewModel
+    let rustfsVM: RustFSViewModel
+    let kafkaVM: KafkaViewModel
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -264,7 +268,10 @@ final class AppViewModel: ObservableObject {
         gradleVM = GradleViewModel(state: state, services: services)
         hostVM = HostViewModel(state: state, services: services)
         toolsVM = ToolsViewModel(state: state, services: services)
-        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, neo4jVM, rabbitmqVM, consulVM, etcdVM]
+        minioVM = MinioViewModel(state: state, services: services)
+        rustfsVM = RustFSViewModel(state: state, services: services)
+        kafkaVM = KafkaViewModel(state: state, services: services)
+        serviceEntries = [nginxVM, DatabaseManageable(dbKind: .mysql, vm: databaseVM), DatabaseManageable(dbKind: .mariadb, vm: databaseVM), phpVM, redisVM, postgresVM, clickhouseVM, qdrantVM, neo4jVM, rabbitmqVM, consulVM, etcdVM, minioVM, rustfsVM, kafkaVM]
         toolsVM.onRefreshAll = { [weak self] in await self?.refreshAll() }
         services.nginx.onExit = { [weak self] in self?.nginxVM.syncRunning() }
         services.phpFpm.onExit = { [weak self] in self?.phpVM.objectWillChange.send() }
@@ -278,6 +285,9 @@ final class AppViewModel: ObservableObject {
         services.clickhouse.onExit = { [weak self] in self?.clickhouseVM.objectWillChange.send() }
         services.consul.onExit = { [weak self] in self?.consulVM.objectWillChange.send() }
         services.etcd.onExit = { [weak self] in self?.etcdVM.objectWillChange.send() }
+        services.minio.onExit = { [weak self] in self?.minioVM.objectWillChange.send() }
+        services.rustfs.onExit = { [weak self] in self?.rustfsVM.objectWillChange.send() }
+        services.kafka.onExit = { [weak self] in self?.kafkaVM.objectWillChange.send() }
         state.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         javaVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
         pythonVM.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
@@ -407,8 +417,11 @@ final class AppViewModel: ObservableObject {
         async let rabbitmq: Void = rabbitmqVM.refresh()
         async let consul: Void = consulVM.refresh()
         async let etcd: Void = etcdVM.refresh()
+        async let minio: Void = minioVM.refresh()
+        async let rustfs: Void = rustfsVM.refresh()
+        async let kafka: Void = kafkaVM.refresh()
         async let cert: Void = certVM.refresh()
         async let hosts: Void = hostVM.refresh()
-        _ = await (swoole, composer, go, java, python, node, rust, erlang, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, neo4j, rabbitmq, consul, etcd, cert, hosts)
+        _ = await (swoole, composer, go, java, python, node, rust, erlang, maven, gradle, nginx, mysql, mariadb, redis, postgres, clickhouse, qdrant, neo4j, rabbitmq, consul, etcd, minio, rustfs, kafka, cert, hosts)
     }
 }

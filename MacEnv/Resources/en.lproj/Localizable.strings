@@ -3,6 +3,7 @@
 "sidebar.console" = "Console";
 "sidebar.quickStart" = "Quick start";
 "sidebar.web" = "Web server";
+"sidebar.objectStorage" = "Object Storage";
 "sidebar.database" = "Database";
 "sidebar.cache" = "Cache & Queue";
 "sidebar.governance" = "Service Governance";
@@ -155,6 +156,7 @@
 "message.stopped" = "stopped";
 "message.databaseAlreadyRunning" = "Another version is running, stop it before starting ";
 "message.neo4jJavaWhileRunning" = "Cannot change Java while Neo4j is running, stop it first";
+"message.kafkaJavaWhileRunning" = "Cannot change Java while Kafka is running, stop it first";
 "message.rabbitmqErlangWhileRunning" = "Cannot change Erlang while RabbitMQ is running, stop it first";
 "message.environmentStarted" = "Selected environment started";
 "message.environmentStopped" = "Selected environment stopped";
@@ -180,6 +182,8 @@
 "error.nginxDefaultsMissing" = "Missing Nginx default config resource";
 "error.databaseStartFailed" = "Failed to start";
 "error.neo4jJavaMissing" = "No Java runtime selected, cannot start Neo4j";
+"error.kafkaJavaMissing" = "No Java 17+ runtime selected, cannot start Kafka";
+"error.kafkaFormatFailed" = "Failed to format KRaft storage";
 "error.rabbitmqErlangMissing" = "No Erlang runtime selected, cannot start RabbitMQ";
 "error.databaseDataDirIncomplete" = "%@ data directory is incomplete, remove %@ and retry";
 "error.mariadbInstallerMissing" = "MariaDB data directory initialiser not found";
@@ -207,12 +211,22 @@
 "module.redis" = "Redis";
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
+"module.minio" = "MinIO";
+"module.rustfs" = "RustFS";
 "module.neo4j" = "Neo4j";
 "module.rabbitmq" = "RabbitMQ";
+"module.kafka" = "Kafka";
 "qdrant.openDashboard" = "Open Dashboard";
+"minio.openConsole" = "Open Console";
+"minio.chooseDataDir" = "Choose Data Directory";
+"rustfs.openConsole" = "Open console";
+"rustfs.chooseDataDir" = "Choose data directory";
+"rustfs.errorLog" = "Error log";
+"rustfs.configHint" = "Uncomment a line to enable it. Restart the service after saving.";
 "neo4j.openBrowser" = "Open Browser";
 "rabbitmq.openManager" = "Open Management UI";
 "neo4j.installJava" = "Install compatible Java";
+"kafka.installJava" = "Install Java 17+";
 "rabbitmq.installErlang" = "Install compatible Erlang";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";

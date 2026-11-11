@@ -217,17 +217,25 @@ final class ProcessSupervisor {
 
     var isRunning: Bool { target != nil }
 
-    func launch(at executable: URL, arguments: [String], directory: URL, environment: [String: String], errorLog: URL) throws -> Process {
+    func launch(at executable: URL, arguments: [String], directory: URL, environment: [String: String], errorLog: URL, outputLog: URL? = nil) throws -> Process {
         try Data().write(to: errorLog)
         let handle = try FileHandle(forWritingTo: errorLog)
         defer { try? handle.close() }
+        let outputHandle: FileHandle?
+        if let outputLog {
+            try Data().write(to: outputLog)
+            outputHandle = try FileHandle(forWritingTo: outputLog)
+        } else {
+            outputHandle = nil
+        }
+        defer { try? outputHandle?.close() }
         let item = Process()
         item.executableURL = executable
         item.arguments = arguments
         item.currentDirectoryURL = directory
         item.environment = environment
         item.standardInput = FileHandle.nullDevice
-        item.standardOutput = FileHandle.nullDevice
+        item.standardOutput = outputHandle ?? FileHandle.nullDevice
         item.standardError = handle
         item.terminationHandler = { [weak self] finished in
             Task { @MainActor in
@@ -279,7 +287,8 @@ final class ProcessSupervisor {
         }
         let executable = URL(fileURLWithPath: String(cString: path)).resolvingSymlinksInPath().path
         let startedAt = info.pbi_start_tvsec * 1_000_000 + info.pbi_start_tvusec
-        if !arguments.contains(where: { $0 == marker || $0.contains(marker + "/") }) {
+        let launchedHere = process?.processIdentifier == pid && process?.isRunning == true
+        if !launchedHere && !arguments.contains(where: { $0 == marker || $0.contains(marker + "/") }) {
             let receipt = URL(fileURLWithPath: marker).appendingPathComponent("process-\(pid).json")
             guard let data = try? Data(contentsOf: receipt), let saved = try? JSONDecoder().decode(ManagedProcess.self, from: data),
                   saved.pid == pid, saved.startedAt == startedAt, saved.executable == executable else { return nil }

@@ -67,14 +67,14 @@ MacEnv 用到的全部图标。浅色主题是蓝色、深色主题是白色，�
 
 <div align="center">
 <p><strong>浅色主题 · 蓝色图标</strong></p>
-<div align="center"><img src="AppIcons/wall/light-1.png" width="100%" alt="Nginx、MySQL、MariaDB、Redis、PostgreSQL、ClickHouse、Qdrant、Neo4j、RabbitMQ、Consul"></div>
-<div align="center"><img src="AppIcons/wall/light-2.png" width="100%" alt="etcd、PHP、Go、Java、Python、Node、Rust、Erlang、Maven"></div>
-<div align="center"><img src="AppIcons/wall/light-3.png" width="100%" alt="Gradle、Homebrew、MacPorts、SDKMAN、nvm、fnm、Composer、Swoole CLI"></div>
+<div align="center"><img src="AppIcons/wall/light-1.png" width="100%" alt="Nginx、MySQL、MariaDB、Redis、PostgreSQL、ClickHouse、Qdrant、Neo4j、RabbitMQ、Kafka"></div>
+<div align="center"><img src="AppIcons/wall/light-2.png" width="100%" alt="MinIO、RustFS、Consul、etcd、PHP、Go、Java、Python、Node、Rust"></div>
+<div align="center"><img src="AppIcons/wall/light-3.png" width="100%" alt="Erlang、Maven、Gradle、Homebrew、MacPorts、SDKMAN、nvm、fnm、Composer、Swoole CLI"></div>
 <div align="center"><img src="AppIcons/wall/light-4.png" width="100%" alt="环境工具、SSL 证书、快捷启动、菜单栏、GVM 矢量字标、GVM 彩色字标、GVM 单色字标、GVM 渐变原版"></div>
 <p><strong>深色主题 · 白色图标</strong></p>
-<div align="center"><img src="AppIcons/wall/dark-1.png" width="100%" alt="Nginx、MySQL、MariaDB、Redis、PostgreSQL、ClickHouse、Qdrant、Neo4j、RabbitMQ、Consul"></div>
-<div align="center"><img src="AppIcons/wall/dark-2.png" width="100%" alt="etcd、PHP、Go、Java、Python、Node、Rust、Erlang、Maven"></div>
-<div align="center"><img src="AppIcons/wall/dark-3.png" width="100%" alt="Gradle、Homebrew、MacPorts、SDKMAN、nvm、fnm、Composer、Swoole CLI"></div>
+<div align="center"><img src="AppIcons/wall/dark-1.png" width="100%" alt="Nginx、MySQL、MariaDB、Redis、PostgreSQL、ClickHouse、Qdrant、Neo4j、RabbitMQ、Kafka"></div>
+<div align="center"><img src="AppIcons/wall/dark-2.png" width="100%" alt="MinIO、RustFS、Consul、etcd、PHP、Go、Java、Python、Node、Rust"></div>
+<div align="center"><img src="AppIcons/wall/dark-3.png" width="100%" alt="Erlang、Maven、Gradle、Homebrew、MacPorts、SDKMAN、nvm、fnm、Composer、Swoole CLI"></div>
 <div align="center"><img src="AppIcons/wall/dark-4.png" width="100%" alt="环境工具、SSL 证书、快捷启动、菜单栏、GVM 矢量字标、GVM 彩色字标、GVM 单色字标、GVM 渐变原版"></div>
 </div>
 

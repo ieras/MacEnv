@@ -13,7 +13,7 @@ AppIcons/
 ```
 
 > 下面这张表是**放大看**用的：每个图标 128 px、一屏只放几个。
-> 要一眼看全，看根目录 README 的「图标」一节（引用的是 `wall/` 里的行图，35 个图标 × 明暗两套）。
+> 要一眼看全，看根目录 README 的「图标」一节（引用的是 `wall/` 里的行图，38 个图标 × 明暗两套）。
 > 图块的圆角方形轮廓是**烘焙进 PNG 的**，不是 CSS —— GitHub 的 HTML sanitizer 会剥掉 `style` 属性
 > （`html-pipeline` 的 `SanitizationFilter` 白名单里没有 `style`），`border-radius` 在 README 里用不了。
 
@@ -47,7 +47,7 @@ AppIcons/
 | --- | :-: | :-: |
 | **Nginx** | <img src="png/nginx-light.png" width="128"> | <img src="png/nginx-dark.png" width="128"> |
 
-## 数据库与缓存
+## 数据库、缓存与对象存储
 
 | 图标 | 亮色版（蓝） | 暗色版（白） |
 | --- | :-: | :-: |
@@ -59,6 +59,9 @@ AppIcons/
 | **Qdrant** | <img src="png/qdrant-light.png" width="128"> | <img src="png/qdrant-dark.png" width="128"> |
 | **Neo4j** | <img src="png/neo4j-light.png" width="128"> | <img src="png/neo4j-dark.png" width="128"> |
 | **RabbitMQ** | <img src="png/rabbitmq-light.png" width="128"> | <img src="png/rabbitmq-dark.png" width="128"> |
+| **Kafka** | <img src="png/kafka-light.png" width="128"> | <img src="png/kafka-dark.png" width="128"> |
+| **MinIO** | <img src="png/minio-light.png" width="128"> | <img src="png/minio-dark.png" width="128"> |
+| **RustFS** | <img src="png/rustfs-light.png" width="128"> | <img src="png/rustfs-dark.png" width="128"> |
 
 ## 服务治理
 

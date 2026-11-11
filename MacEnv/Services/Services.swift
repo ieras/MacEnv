@@ -30,6 +30,9 @@ final class Services {
     let node: NodeService
     let rust: RustService
     let erlang: ErlangService
+    let minio: MinioService
+    let rustfs: RustFSService
+    let kafka: KafkaService
     private let catalogs: [String: StaticCatalogService]
 
     init(root: URL = macEnvDirectory) {
@@ -57,7 +60,11 @@ final class Services {
             "node": StaticCatalogService(root: root, app: "node", binaryNames: ["node"], displayName: "Node",
                                          source: { try await NodeService.parseDist(NodeService.distEntries()) }),
             "rust": StaticCatalogService(root: root, app: "rust", binaryNames: ["rustc"], displayName: "Rust",
-                                         source: { try await RustService.versions() })
+                                         source: { try await RustService.versions() }),
+            "minio": StaticCatalogService(root: root, app: "minio", binaryNames: ["minio"], displayName: "MinIO"),
+            "rustfs": StaticCatalogService(root: root, app: "rustfs", binaryNames: ["rustfs"], displayName: "RustFS"),
+            "kafka": StaticCatalogService(root: root, app: "kafka", binaryNames: ["kafka-server-start.sh"], displayName: "Kafka",
+                                          source: { try await KafkaService.versions() })
         ]
         nginx = NginxService(root: root)
         paths = PathService(root: root)
@@ -81,6 +88,9 @@ final class Services {
         node = NodeService(root: root)
         rust = RustService(root: root)
         erlang = ErlangService(root: root)
+        minio = MinioService(root: root)
+        rustfs = RustFSService(root: root)
+        kafka = KafkaService(root: root)
         hosts = HostService(root: root)
         tools = ToolService(root: root)
         java = JavaService(root: root, tools: tools)

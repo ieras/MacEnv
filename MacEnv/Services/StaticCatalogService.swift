@@ -106,7 +106,8 @@ final class StaticCatalogService {
         if version.url.pathExtension == "zip" {
             status = try await Command.stream("/usr/bin/unzip", ["-q", archive.path, "-d", staging.path], onStart: onStart, onOutput: report)
         } else {
-            status = try await Command.stream("/usr/bin/tar", [version.url.pathExtension == "gz" ? "-xzf" : "-xJf", archive.path, "-C", staging.path], onStart: onStart, onOutput: report)
+            let gzip = ["gz", "tgz"].contains(version.url.pathExtension)
+            status = try await Command.stream("/usr/bin/tar", [gzip ? "-xzf" : "-xJf", archive.path, "-C", staging.path], onStart: onStart, onOutput: report)
         }
         guard status == 0 else {
             try fm.removeItem(at: archive)

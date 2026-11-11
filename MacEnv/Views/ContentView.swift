@@ -18,6 +18,9 @@ struct ContentView: View {
     @ObservedObject var rabbitmqVM: RabbitMQViewModel
     @ObservedObject var consulVM: ConsulViewModel
     @ObservedObject var etcdVM: EtcdViewModel
+    @ObservedObject var minioVM: MinioViewModel
+    @ObservedObject var rustfsVM: RustFSViewModel
+    @ObservedObject var kafkaVM: KafkaViewModel
     @State private var selectedPage = "nginx"
     @State private var toastVisible = false
     @State private var toastDismissTask: Task<Void, Never>?
@@ -95,6 +98,12 @@ struct ContentView: View {
                     ConsulManagementView(app: app, vm: consulVM)
                 } else if page == "etcd" {
                     EtcdManagementView(app: app, vm: etcdVM)
+                } else if page == "minio" {
+                    MinioManagementView(app: app, vm: minioVM)
+                } else if page == "rustfs" {
+                    RustFSManagementView(app: app, vm: rustfsVM)
+                } else if page == "kafka" {
+                    KafkaManagementView(app: app, vm: kafkaVM) { selectedPage = "java" }
                 } else if let kind = DatabaseKind(rawValue: page) {
                     DatabaseManagementView(app: app, vm: databaseVM, kind: kind).id(kind)
                 } else {
@@ -294,7 +303,7 @@ struct ContentView: View {
             .labelsHidden().toggleStyle(ServiceSwitch())
             .disabled(busy || phpVM.versions.isEmpty)
             .help(L("sidebar.phpToggleHint"))
-        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant", "neo4j", "rabbitmq":
+        case "redis", "consul", "etcd", "postgresql", "clickhouse", "qdrant", "neo4j", "rabbitmq", "minio", "rustfs", "kafka":
             if let entry = app.entry(id) {
                 Toggle("", isOn: Binding(
                     get: { entry.targets.contains { app.targetRunning($0.key) } },

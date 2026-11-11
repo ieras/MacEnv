@@ -23,8 +23,20 @@ struct QdrantIcon: View {
     var body: some View { AssetIcon(name: "QdrantIcon") }
 }
 
+struct MinioIcon: View {
+    var body: some View { AssetIcon(name: "MinioIcon") }
+}
+
+struct RustFSIcon: View {
+    var body: some View { AssetIcon(name: "RustFSIcon") }
+}
+
 struct Neo4jIcon: View {
     var body: some View { AssetIcon(name: "Neo4jIcon") }
+}
+
+struct KafkaIcon: View {
+    var body: some View { AssetIcon(name: "KafkaIcon") }
 }
 
 struct RabbitMQIcon: View {
@@ -311,12 +323,15 @@ struct ServiceIcon: View {
         case "php": PhpIcon()
         case "redis": RedisIcon()
         case "qdrant": QdrantIcon()
+        case "minio": MinioIcon()
+        case "rustfs": RustFSIcon()
         case "postgresql": AssetIcon(name: "PostgresIcon")
         case "clickhouse": AssetIcon(name: "ClickHouseIcon")
         case "consul": AssetIcon(name: "ConsulIcon")
         case "etcd": AssetIcon(name: "EtcdIcon")
         case "neo4j": Neo4jIcon()
         case "rabbitmq": RabbitMQIcon()
+        case "kafka": KafkaIcon()
         default: DatabaseIcon(kind: DatabaseKind(rawValue: kind) ?? .mysql)
         }
     }

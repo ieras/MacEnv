@@ -165,6 +165,28 @@ struct QdrantVersion: Identifiable, Hashable {
 
 extension QdrantVersion: ServiceVersion {}
 
+struct RustFSVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+extension RustFSVersion: ServiceVersion {}
+
+struct MinioVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+extension MinioVersion: ServiceVersion {}
+
 struct Neo4jVersion: Identifiable, Hashable {
     let version: String
     let directory: URL
@@ -175,6 +197,17 @@ struct Neo4jVersion: Identifiable, Hashable {
 }
 
 extension Neo4jVersion: ServiceVersion {}
+
+struct KafkaVersion: Identifiable, Hashable {
+    let version: String
+    let directory: URL
+    let executable: URL
+    let source: String
+
+    var id: String { executable.path }
+}
+
+extension KafkaVersion: ServiceVersion {}
 
 struct RabbitMQVersion: Identifiable, Hashable {
     let version: String

@@ -3,6 +3,7 @@
 "sidebar.console" = "控制台";
 "sidebar.quickStart" = "快捷启动";
 "sidebar.web" = "Web 服务";
+"sidebar.objectStorage" = "对象存储";
 "sidebar.database" = "数据库";
 "sidebar.cache" = "缓存与队列";
 "sidebar.governance" = "服务治理";
@@ -155,6 +156,7 @@
 "message.stopped" = "已停止";
 "message.databaseAlreadyRunning" = "已有其他版本运行，请先停止后再启动 ";
 "message.neo4jJavaWhileRunning" = "服务运行中不能更换 Java，请先停止 Neo4j";
+"message.kafkaJavaWhileRunning" = "服务运行中不能更换 Java，请先停止 Kafka";
 "message.rabbitmqErlangWhileRunning" = "服务运行中不能更换 Erlang，请先停止 RabbitMQ";
 "message.environmentStarted" = "所选环境已启动";
 "message.environmentStopped" = "所选环境已停止";
@@ -180,6 +182,8 @@
 "error.nginxDefaultsMissing" = "缺少 Nginx 默认配置资源";
 "error.databaseStartFailed" = "启动失败";
 "error.neo4jJavaMissing" = "未选择 Java 运行时，无法启动 Neo4j";
+"error.kafkaJavaMissing" = "未选择 Java 17+ 运行时，无法启动 Kafka";
+"error.kafkaFormatFailed" = "KRaft 存储格式化失败";
 "error.rabbitmqErlangMissing" = "未选择 Erlang 运行时，无法启动 RabbitMQ";
 "error.databaseDataDirIncomplete" = "%@ 数据目录初始化不完整，请清理 %@ 后重试";
 "error.mariadbInstallerMissing" = "未找到 MariaDB 数据目录初始化命令";
@@ -207,12 +211,22 @@
 "module.redis" = "Redis";
 "module.postgresql" = "PostgreSQL";
 "module.qdrant" = "Qdrant";
+"module.minio" = "MinIO";
+"module.rustfs" = "RustFS";
 "module.neo4j" = "Neo4j";
 "module.rabbitmq" = "RabbitMQ";
+"module.kafka" = "Kafka";
 "qdrant.openDashboard" = "打开 Dashboard";
+"minio.openConsole" = "打开控制台";
+"minio.chooseDataDir" = "选择数据目录";
+"rustfs.openConsole" = "打开控制台";
+"rustfs.chooseDataDir" = "选择数据目录";
+"rustfs.errorLog" = "错误日志";
+"rustfs.configHint" = "取消注释以启用配置项，保存后需重启服务生效。";
 "neo4j.openBrowser" = "打开 Browser";
 "rabbitmq.openManager" = "打开管理界面";
 "neo4j.installJava" = "安装兼容的 Java";
+"kafka.installJava" = "安装 Java 17+";
 "rabbitmq.installErlang" = "安装兼容的 Erlang";
 "module.clickhouse" = "ClickHouse";
 "module.consul" = "Consul";

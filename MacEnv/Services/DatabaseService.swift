@@ -93,7 +93,8 @@ final class DatabaseService {
             let executable = file.resolvingSymlinksInPath()
             guard fm.isExecutableFile(atPath: executable.path), seen.insert(executable.path).inserted else { continue }
             let output = try await Command.run(executable.path, ["--version"])
-            guard let version = versionFromOutput(output.text) else { continue }
+            guard output.text.localizedCaseInsensitiveContains("mariadb") == (kind == .mariadb),
+                  let version = versionFromOutput(output.text) else { continue }
             result.append(DatabaseVersion(kind: kind, version: version, directory: executable.deletingLastPathComponent().deletingLastPathComponent(), executable: executable, source: source, formula: formula))
         }
         return result.sorted { $0.version.compare($1.version, options: .numeric) == .orderedDescending }

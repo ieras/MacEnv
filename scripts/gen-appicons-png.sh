@@ -19,8 +19,11 @@ ICONS=(
   postgresql:PostgresIcon:postgresql.svg
   clickhouse:ClickHouseIcon:clickhouse.svg
   qdrant:QdrantIcon:qdrant.svg
+  minio:MinioIcon:minio.svg
+  rustfs:RustFSIcon:rustfs.svg
   neo4j:Neo4jIcon:neo4j.svg
   rabbitmq:RabbitMQIcon:rabbitmq.svg
+  kafka:KafkaIcon:kafka.svg
   consul:ConsulIcon:consul.svg
   etcd:EtcdIcon:etcd.svg
   php:PhpIcon:php.svg

@@ -46,7 +46,7 @@ struct MacEnvApp: App {
 
     var body: some Scene {
         Window(L("app.name"), id: "main") {
-            ContentView(app: model, nginxVM: model.nginxVM, databaseVM: model.databaseVM, redisVM: model.redisVM, certVM: model.certVM, phpVM: model.phpVM, hostVM: model.hostVM, goVM: model.goVM, erlangVM: model.erlangVM, postgresVM: model.postgresVM, clickhouseVM: model.clickhouseVM, qdrantVM: model.qdrantVM, neo4jVM: model.neo4jVM, rabbitmqVM: model.rabbitmqVM, consulVM: model.consulVM, etcdVM: model.etcdVM)
+            ContentView(app: model, nginxVM: model.nginxVM, databaseVM: model.databaseVM, redisVM: model.redisVM, certVM: model.certVM, phpVM: model.phpVM, hostVM: model.hostVM, goVM: model.goVM, erlangVM: model.erlangVM, postgresVM: model.postgresVM, clickhouseVM: model.clickhouseVM, qdrantVM: model.qdrantVM, neo4jVM: model.neo4jVM, rabbitmqVM: model.rabbitmqVM, consulVM: model.consulVM, etcdVM: model.etcdVM, minioVM: model.minioVM, rustfsVM: model.rustfsVM, kafkaVM: model.kafkaVM)
                 .frame(minWidth: 900, minHeight: 620)
                 .environmentObject(model.state)
                 .id(model.state.language)

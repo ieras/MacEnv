@@ -108,6 +108,18 @@
 		100000000000000000000108 /* EtcdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000108 /* EtcdService.swift */; };
 		100000000000000000000109 /* EtcdViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000109 /* EtcdViewModel.swift */; };
 		100000000000000000000110 /* EtcdViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000110 /* EtcdViews.swift */; };
+		100000000000000000000220 /* MinioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000220 /* MinioService.swift */; };
+		100000000000000000000221 /* MinioViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000221 /* MinioViewModel.swift */; };
+		100000000000000000000222 /* MinioViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000222 /* MinioViews.swift */; };
+		100000000000000000000223 /* MinioServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000223 /* MinioServiceTests.swift */; };
+		100000000000000000000230 /* RustFSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000230 /* RustFSService.swift */; };
+		100000000000000000000231 /* RustFSViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000231 /* RustFSViewModel.swift */; };
+		100000000000000000000232 /* RustFSViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000232 /* RustFSViews.swift */; };
+		100000000000000000000233 /* RustFSServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000233 /* RustFSServiceTests.swift */; };
+		100000000000000000000240 /* KafkaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000240 /* KafkaService.swift */; };
+		100000000000000000000241 /* KafkaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000241 /* KafkaViewModel.swift */; };
+		100000000000000000000242 /* KafkaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000242 /* KafkaViews.swift */; };
+		100000000000000000000243 /* KafkaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000243 /* KafkaServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -228,6 +240,18 @@
 		200000000000000000000108 /* EtcdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtcdService.swift; sourceTree = "<group>"; };
 		200000000000000000000109 /* EtcdViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtcdViewModel.swift; sourceTree = "<group>"; };
 		200000000000000000000110 /* EtcdViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtcdViews.swift; sourceTree = "<group>"; };
+		200000000000000000000220 /* MinioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinioService.swift; sourceTree = "<group>"; };
+		200000000000000000000221 /* MinioViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinioViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000222 /* MinioViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinioViews.swift; sourceTree = "<group>"; };
+		200000000000000000000223 /* MinioServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinioServiceTests.swift; sourceTree = "<group>"; };
+		200000000000000000000230 /* RustFSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustFSService.swift; sourceTree = "<group>"; };
+		200000000000000000000231 /* RustFSViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustFSViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000232 /* RustFSViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustFSViews.swift; sourceTree = "<group>"; };
+		200000000000000000000233 /* RustFSServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustFSServiceTests.swift; sourceTree = "<group>"; };
+		200000000000000000000240 /* KafkaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KafkaService.swift; sourceTree = "<group>"; };
+		200000000000000000000241 /* KafkaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KafkaViewModel.swift; sourceTree = "<group>"; };
+		200000000000000000000242 /* KafkaViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KafkaViews.swift; sourceTree = "<group>"; };
+		200000000000000000000243 /* KafkaServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KafkaServiceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -323,6 +347,9 @@
 				2000000000000000000000A0 /* PythonService.swift */,
 				200000000000000000000200 /* NodeService.swift */,
 				200000000000000000000204 /* RustService.swift */,
+				200000000000000000000220 /* MinioService.swift */,
+				200000000000000000000230 /* RustFSService.swift */,
+				200000000000000000000240 /* KafkaService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -342,6 +369,9 @@
 				200000000000000000000216 /* RabbitMQViewModel.swift */,
 				200000000000000000000106 /* ConsulViewModel.swift */,
 				200000000000000000000109 /* EtcdViewModel.swift */,
+				200000000000000000000221 /* MinioViewModel.swift */,
+				200000000000000000000231 /* RustFSViewModel.swift */,
+				200000000000000000000241 /* KafkaViewModel.swift */,
 				200000000000000000000075 /* MkCertViewModel.swift */,
 				200000000000000000000040 /* PhpViewModel.swift */,
 				200000000000000000000044 /* SwooleViewModel.swift */,
@@ -374,6 +404,9 @@
 				200000000000000000000217 /* RabbitMQViews.swift */,
 				200000000000000000000107 /* ConsulViews.swift */,
 				200000000000000000000110 /* EtcdViews.swift */,
+				200000000000000000000222 /* MinioViews.swift */,
+				200000000000000000000232 /* RustFSViews.swift */,
+				200000000000000000000242 /* KafkaViews.swift */,
 				200000000000000000000076 /* CertViews.swift */,
 				200000000000000000000034 /* Components.swift */,
 				200000000000000000000035 /* SettingsView.swift */,
@@ -426,6 +459,9 @@
 				200000000000000000000218 /* ErlangServiceTests.swift */,
 				200000000000000000000219 /* RabbitMQServiceTests.swift */,
 				200000000000000000000111 /* StaticCatalogInstallTests.swift */,
+				200000000000000000000223 /* MinioServiceTests.swift */,
+				200000000000000000000233 /* RustFSServiceTests.swift */,
+				200000000000000000000243 /* KafkaServiceTests.swift */,
 			);
 			path = MacEnvTests;
 			sourceTree = "<group>";
@@ -624,6 +660,15 @@
 				100000000000000000000204 /* RustService.swift in Sources */,
 				100000000000000000000205 /* RustViewModel.swift in Sources */,
 				100000000000000000000206 /* RustViews.swift in Sources */,
+				100000000000000000000220 /* MinioService.swift in Sources */,
+				100000000000000000000221 /* MinioViewModel.swift in Sources */,
+				100000000000000000000222 /* MinioViews.swift in Sources */,
+				100000000000000000000230 /* RustFSService.swift in Sources */,
+				100000000000000000000231 /* RustFSViewModel.swift in Sources */,
+				100000000000000000000232 /* RustFSViews.swift in Sources */,
+				100000000000000000000240 /* KafkaService.swift in Sources */,
+				100000000000000000000241 /* KafkaViewModel.swift in Sources */,
+				100000000000000000000242 /* KafkaViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -640,6 +685,9 @@
 				100000000000000000000211 /* Neo4jServiceTests.swift in Sources */,
 				100000000000000000000218 /* ErlangServiceTests.swift in Sources */,
 				100000000000000000000219 /* RabbitMQServiceTests.swift in Sources */,
+				100000000000000000000223 /* MinioServiceTests.swift in Sources */,
+				100000000000000000000233 /* RustFSServiceTests.swift in Sources */,
+				100000000000000000000243 /* KafkaServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
